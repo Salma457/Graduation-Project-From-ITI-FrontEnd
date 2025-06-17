@@ -1,19 +1,20 @@
 import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import Login from './pages/Login.jsx';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <>
-      <div className='bg-amber-400 p-3'>
-        <h2>Welcome Abdo!</h2>
-        <p className='text-blue-500'> hello</p>
-      </div>
-    
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<div className=""><h1>Home Page</h1></div>} />
+        <Route path="/login" element={<Login/>} />
+      </Routes>
+    </Router>
   )
 }
 
