@@ -93,7 +93,6 @@ const job = useSelector(state => state.jobPost.jobDetails);
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto">
-          {/* Header Card */}
           <div className="bg-white/80 backdrop-blur-xl border border-red-200/50 rounded-3xl p-8 mb-8 shadow-2xl hover:shadow-red-500/10 transition-all duration-500 transform hover:-translate-y-1">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
               <div className="flex-1">
