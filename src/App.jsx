@@ -4,6 +4,7 @@ import Register from './pages/Register.jsx';
 import Login from './pages/Login.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import viteLogo from '../public/vite.svg';
+import PostsList from './Posts/components/PostsList.jsx';
 
 function App() {
 
@@ -14,6 +15,8 @@ function App() {
         <Route path="/register" element={<Register/>} />
         <Route path="/login" element={<Login/>} />
         <Route path="/reset-password" element={<ResetPassword/>} />
+        <Route path="/posts" element={<PostsList/>} />
+        
       </Routes>
     </Router>
   )
