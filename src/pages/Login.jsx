@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Register.css";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -89,6 +90,29 @@ const Login = () => {
             </div>
             <button type="submit" className="register-button">Login</button>
           </form>
+          <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '1rem'}}>
+            <Link to="/register" style={{color: '#e35d5b', fontWeight: 600}}>Don't have an account? Register</Link>
+            <button
+              type="button"
+              className="register-link"
+              style={{background: 'none', border: 'none', color: '#e35d5b', cursor: 'pointer', fontWeight: 600, padding: 0}}
+              onClick={async () => {
+                if (!formData.email) {
+                  setErrors(prev => ({...prev, email: 'Please enter your email to reset password.'}));
+                  return;
+                }
+                try {
+                
+                  const response =  await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
+                  setGeneralError('Password reset link sent to your email.');
+                } catch (error) {
+                  setGeneralError('Failed to send reset link. Please try again.');
+                }
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
         </div>
       </div>
       <div className="register-hero">
