@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import "./Register.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { setRole } from '../store/userSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,7 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
+  const dispatch = useDispatch();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,10 +42,12 @@ const Login = () => {
     }
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login', formData);
-      console.log('Login successful!', response);
+      console.log('Login successful!', response.data.user.role);
 
       // store access-token in localstorage
       localStorage.setItem('access-token', response.data.access_token);
+      // set user role in global state
+      dispatch(setRole(response.data.user.role));
 
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
