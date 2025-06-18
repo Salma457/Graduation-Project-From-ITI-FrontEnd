@@ -108,7 +108,6 @@ const job = useSelector(state => state.jobPost.jobDetails);
                   {job.description}
                 </p>
                 
-                {/* Quick Info Pills */}
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-2 bg-red-50 backdrop-blur-sm border border-red-200 rounded-full px-4 py-2 hover:bg-red-100 transition-all duration-300">
                     <MapPin className="w-4 h-4 text-red-500" />
