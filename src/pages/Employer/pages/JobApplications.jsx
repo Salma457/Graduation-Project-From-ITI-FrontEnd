@@ -210,7 +210,7 @@ const JobApplications = () => {
               <User className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Applications Found</h3>
-            <p className="text-gray-600">No applications match your filter or search.</p>
+            <p className="text-gray-600">No applications match your filter or search</p>
           </div>
         ) : (
           <>
