@@ -278,7 +278,7 @@ const JobApplications = () => {
                         {/* Action Buttons */}
                         <div className="flex gap-2">
                           <button
-                            className="flex-1 flex items-center justify-center bg-red-700 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-800 transition-colors"
+                            className="flex-1 flex items-center justify-center bg-red-700 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
                             onClick={() => setOpenCoverLetter(index)}
                           >
                             <Info className="w-4 h-4 mr-1" />
