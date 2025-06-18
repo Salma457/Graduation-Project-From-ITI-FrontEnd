@@ -6,8 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
-    role: "",
+    password: ""
   });
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
@@ -26,10 +25,6 @@ const Login = () => {
     }
     if (!userData.password || typeof userData.password !== 'string') {
       errors.password = 'Password is required.';
-    }
-    const allowedRoles = ['itian', 'employer'];
-    if (!userData.role || !allowedRoles.includes(userData.role)) {
-      errors.role = 'Role is required and must be itian or employer.';
     }
     return errors;
   }
@@ -79,15 +74,6 @@ const Login = () => {
               <input type="password" id="password" name="password" className="register-input" placeholder="Password" onChange={handleInputChange} />
               {errors.password && <div className="input-error">{errors.password}</div>}
             </div>
-            <div className="register-field">
-              <label htmlFor="role" className="register-label">Role</label>
-              <select id="role" name="role" className="register-input" value={formData.role} onChange={handleInputChange}>
-                <option value="" disabled>Select Role</option>
-                <option value="itian">ITIAN</option>
-                <option value="employer">Employer</option>
-              </select>
-              {errors.role && <div className="input-error">{errors.role}</div>}
-            </div>
             <button type="submit" className="register-button">Login</button>
           </form>
           <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '1rem'}}>
@@ -104,8 +90,10 @@ const Login = () => {
                 try {
                 
                   const response =  await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
+                  console.log(response);
                   setGeneralError('Password reset link sent to your email.');
                 } catch (error) {
+                  console.log(error)
                   setGeneralError('Failed to send reset link. Please try again.');
                 }
               }}
