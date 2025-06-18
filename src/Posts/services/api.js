@@ -12,7 +12,7 @@ const getAuthHeaders = () => {
 
 // Posts
 export const fetchPosts = async () => {
-  const response = await axios.get(`${API_BASE_URL}/myposts`, {
+  const response = await axios.get(`${API_BASE_URL}/posts`, {
     headers: getAuthHeaders()
   });
   return response.data;

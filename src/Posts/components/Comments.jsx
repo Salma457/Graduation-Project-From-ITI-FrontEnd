@@ -17,18 +17,19 @@ const Comments = ({ postId }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
 
+  const loadComments = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchComments(postId);
+      setComments(data);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadComments = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchComments(postId);
-        setComments(data);
-      } catch (error) {
-        console.error('Error loading comments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadComments();
   }, [postId]);
 
@@ -37,8 +38,8 @@ const Comments = ({ postId }) => {
     
     try {
       setLoading(true);
-      const createdComment = await addComment(postId, newComment);
-      setComments(prev => [createdComment, ...prev]);
+      await addComment(postId, newComment);
+      await loadComments();
       setNewComment('');
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -52,19 +53,8 @@ const Comments = ({ postId }) => {
     
     try {
       setLoading(true);
-      const createdReply = await addReply(postId, commentId, replyText);
-
-      
-      setComments(prev => prev.map(comment => {
-        if (comment.id === commentId) {
-          return {
-            ...comment,
-            replies: [...(comment.replies || []), createdReply]
-          };
-        }
-        return comment;
-      }));
-      
+      await addReply(postId, commentId, replyText);
+      await loadComments();
       setReplyingTo(null);
       setReplyText('');
     } catch (error) {
@@ -80,11 +70,7 @@ const Comments = ({ postId }) => {
     try {
       setLoading(true);
       await updateComment(editingCommentId, editCommentText);
-      setComments(prev => prev.map(comment => 
-        comment.id === editingCommentId ? 
-        { ...comment, content: editCommentText } : 
-        comment
-      ));
+      await loadComments();
       setEditingCommentId(null);
       setEditCommentText('');
     } catch (error) {
@@ -98,7 +84,7 @@ const Comments = ({ postId }) => {
     try {
       setLoading(true);
       await deleteComment(commentId);
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      await loadComments();
     } catch (error) {
       console.error('Error deleting comment:', error);
     } finally {
@@ -110,15 +96,7 @@ const Comments = ({ postId }) => {
     try {
       setLoading(true);
       await deleteComment(replyId);
-      setComments(prev => prev.map(comment => {
-        if (comment.id === commentId) {
-          return {
-            ...comment,
-            replies: comment.replies.filter(reply => reply.id !== replyId)
-          };
-        }
-        return comment;
-      }));
+      await loadComments();
     } catch (error) {
       console.error('Error deleting reply:', error);
     } finally {
@@ -129,22 +107,9 @@ const Comments = ({ postId }) => {
   const handleUpdateReply = async (commentId, replyId, newContent) => {
     try {
       await updateComment(replyId, newContent);
-      setComments(prev => prev.map(comment => {
-        if (comment.id === commentId) {
-          return {
-            ...comment,
-            replies: comment.replies.map(reply => 
-              reply.id === replyId ? 
-              { ...reply, content: newContent } : 
-              reply
-            )
-          };
-        }
-        return comment;
-      }));
+      await loadComments();
     } catch (error) {
       console.error('Error updating reply:', error);
-      throw error;
     }
   };
 
@@ -249,17 +214,16 @@ const Comments = ({ postId }) => {
                       </button>
                     </div>
                   )}
-                  
+
                   {/* Replies List */}
                   {comment.replies.map((reply) => (
-  <Reply
-    key={reply.id} // ✅ أضف الـ key هنا
-    reply={reply}
-    onUpdate={handleUpdateReply}
-    onDelete={handleDeleteReply}
-  />
-))}
-
+                    <Reply
+                      key={reply.id}
+                      reply={reply}
+                      onUpdate={(newContent) => handleUpdateReply(comment.id, reply.id, newContent)}
+                      onDelete={() => handleDeleteReply(comment.id, reply.id)}
+                    />
+                  ))}
                 </>
               )}
             </div>
