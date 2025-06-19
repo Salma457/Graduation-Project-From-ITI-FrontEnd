@@ -8,7 +8,7 @@ const Approvals = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [imageModal, setImageModal] = useState({ open: false, src: '' });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 1;
+  const itemsPerPage = 15;
 
   const fetchRequests = useCallback(async () => {
     try {
