@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
 import "../css/JobDetails.css";
-
+import { Sparkles } from 'lucide-react'; // أو أي مكتبة الأيقونات التي تستخدمها
 Modal.setAppElement('#root');
 
 const JobDetails = () => {
@@ -20,33 +20,37 @@ const JobDetails = () => {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [applicationId, setApplicationId] = useState(null);
 
- useEffect(() => {
-  const fetchJob = async () => {
-    try {
-      const res = await axios.get(`http://localhost:8000/api/jobs/${id}`);
-      setJob(res.data.data);
+  useEffect(() => {
+    const fetchJob = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8000/api/jobs/${id}`);
+        setJob(res.data.data);
 
-      const token = localStorage.getItem('access-token');
-      if (token) {
-        const applicationRes = await axios.get(`http://localhost:8000/api/check-application/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        setHasApplied(applicationRes.data.hasApplied);
+        const token = localStorage.getItem('access-token');
+        if (token) {
+          const applicationRes = await axios.get(
+            `http://localhost:8000/api/check-application/${id}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          setHasApplied(applicationRes.data.hasApplied);
+          setApplicationId(applicationRes.data.applicationId || null);
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching job:", error);
+        setLoading(false);
       }
+    };
 
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching job:", error);
-      setLoading(false);
-    }
-  };
-
-  fetchJob();
-}, [id, submitSuccess]);
-
+    fetchJob();
+  }, [id, submitSuccess]);
 
   const handleApply = () => {
     setModalIsOpen(true);
@@ -99,7 +103,7 @@ const JobDetails = () => {
       }
       formDataToSend.append('cv', formData.cv);
 
-      await axios.post(
+      const response = await axios.post(
         'http://localhost:8000/api/job-application',
         formDataToSend,
         {
@@ -113,6 +117,7 @@ const JobDetails = () => {
 
       setSubmitSuccess(true);
       setHasApplied(true);
+      setApplicationId(response.data.data.id); 
     } catch (error) {
       console.error('Error submitting application:', error);
       
@@ -144,14 +149,24 @@ const JobDetails = () => {
   };
 
   const viewProposal = () => {
-    navigate(`/my-applications/${id}`);
+    if (applicationId) {
+      navigate(`/my-applications/${applicationId}`);
+    } else {
+      console.error("Application ID not found");
+      setSubmitError('Unable to view application. Please try again later.');
+    }
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-800"></div>
+ if (loading) return (
+  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+    <div className="relative">
+      <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+      <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
+      <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
     </div>
-  );
+    <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading Jobs Details...</p>
+  </div>
+);
   
   if (!job) return <p className="text-center py-10 text-lg">Job not found</p>;
 
@@ -214,29 +229,33 @@ const JobDetails = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        className="bg-white w-full max-w-2xl mx-auto mt-24 rounded-xl shadow-xl p-8 z-50 relative"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start overflow-y-auto"
+        className="application-modal"
+        overlayClassName="application-modal-overlay"
       >
-        <div className="flex justify-between items-center border-b pb-4 mb-6">
-          <h2 className="text-2xl font-bold text-red-900">Apply for {job.job_title}</h2>
-          <button onClick={closeModal} className="text-3xl font-bold text-gray-600 hover:text-red-600">&times;</button>
+        <div className="application-modal-header">
+          <h2 className="application-modal-title">Apply for {job.job_title}</h2>
+          <button onClick={closeModal} className="application-modal-close">
+            &times;
+          </button>
         </div>
 
         {submitSuccess ? (
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-green-600">Application Submitted!</h3>
-            <p className="mt-2 text-gray-700">The employer will contact you if you're shortlisted.</p>
+          <div className="application-success-message">
+            <h3 className="application-success-title">Application Submitted!</h3>
+            <p className="application-success-text">
+              The employer will contact you if you're shortlisted.
+            </p>
             <button 
               onClick={closeModal} 
-              className="mt-4 px-6 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900"
+              className="application-modal-close-btn"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="cover_letter" className="block font-semibold text-red-900 mb-1">
+          <form onSubmit={handleSubmit} className="application-form">
+            <div className="application-form-group">
+              <label htmlFor="cover_letter" className="application-form-label">
                 Cover Letter
               </label>
               <textarea
@@ -247,12 +266,12 @@ const JobDetails = () => {
                 onChange={handleInputChange}
                 required
                 placeholder="Write your cover letter here..."
-                className="w-full border border-red-300 rounded-lg p-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                className="application-form-textarea"
               />
             </div>
 
-            <div>
-              <label htmlFor="cv" className="block font-semibold text-red-900 mb-1">
+            <div className="application-form-group">
+              <label htmlFor="cv" className="application-form-label">
                 Upload CV
               </label>
               <input
@@ -262,26 +281,26 @@ const JobDetails = () => {
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileChange}
                 required
-                className="w-full border border-red-300 rounded-lg p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-red-100 file:text-red-800 hover:file:bg-red-200"
+                className="application-form-file"
               />
             </div>
 
-            {submitError && <p className="text-red-600 font-medium">{submitError}</p>}
+            {submitError && <p className="application-form-error">{submitError}</p>}
 
-            <div className="flex justify-end gap-4">
+            <div className="application-form-actions">
               <button
                 type="button"
                 onClick={closeModal}
-                className="px-6 py-2 border border-red-800 text-red-800 rounded-lg hover:bg-red-100"
+                className="application-cancel-btn"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900"
+                className="application-submit-btn"
               >
-                {submitting ? 'Submitting...' : 'Submit'}
+                {submitting ? 'Submitting...' : 'Submit Application'}
               </button>
             </div>
           </form>

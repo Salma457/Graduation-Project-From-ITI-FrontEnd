@@ -8,7 +8,7 @@ import JobsPage from "./pages/JobsPage.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
 import ApplyForm from "./pages/ApplyForm.jsx";
 import MyApplications from "./pages/MyApplications.jsx";
-import ApplicationDetail from "./pages/ApplicationDetail.jsx";
+import ProposalDetails from "./pages/ProposalDetails.jsx";
 function App() {
 
   return (
@@ -22,7 +22,7 @@ function App() {
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/apply/:id" element={<ApplyForm />} />
         <Route path="/my-applications" element={<MyApplications />} />
-        <Route path="/my-applications/:id" element={<ApplicationDetail />} />
+        <Route path="/my-applications/:id" element={<ProposalDetails />} />
 
       </Routes>
     </Router>

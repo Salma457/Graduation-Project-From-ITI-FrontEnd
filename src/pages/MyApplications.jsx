@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
 import "../css/MyApplications.css";
-
+import { Sparkles } from 'lucide-react';
 Modal.setAppElement('#root');
 
 const MyApplications = () => {
@@ -20,7 +20,7 @@ const MyApplications = () => {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
-const [applicationToDelete, setApplicationToDelete] = useState(null);
+  const [applicationToDelete, setApplicationToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +49,24 @@ const [applicationToDelete, setApplicationToDelete] = useState(null);
 
     fetchApplications();
   }, [navigate, submitSuccess]);
+
+   const getStatusColor = (status) => {
+    const lowerCaseStatus = status.toLowerCase();
+    
+    if (lowerCaseStatus.includes('accepted') || lowerCaseStatus.includes('approved')) {
+      return 'bg-green-100 text-green-800 border-green-200';
+    } else if (lowerCaseStatus.includes('rejected') || lowerCaseStatus.includes('declined')) {
+      return 'bg-red-100 text-red-800 border-red-200';
+    } else if (lowerCaseStatus.includes('pending')) {
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    } else if (lowerCaseStatus.includes('review')) {
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    } else if (lowerCaseStatus.includes('shortlisted')) {
+      return 'bg-purple-100 text-purple-800 border-purple-200';
+    } else {
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   const handleEdit = (application) => {
     setSelectedApplication(application);
@@ -161,37 +179,42 @@ const [applicationToDelete, setApplicationToDelete] = useState(null);
   };
 
   const handleDelete = async (id) => {
-  setApplicationToDelete(id);
-  setDeleteModalIsOpen(true);
-};
+    setApplicationToDelete(id);
+    setDeleteModalIsOpen(true);
+  };
 
-const confirmDelete = async () => {
-  try {
-    const token = localStorage.getItem('access-token');
-    if (!token) {
-      setError('Please login to delete your application');
-      return;
-    }
-
-    await axios.delete(`http://localhost:8000/api/job-application/${applicationToDelete}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+  const confirmDelete = async () => {
+    try {
+      const token = localStorage.getItem('access-token');
+      if (!token) {
+        setError('Please login to delete your application');
+        return;
       }
-    });
 
-    setApplications(applications.filter(app => app.id !== applicationToDelete));
-    setDeleteModalIsOpen(false);
-    setApplicationToDelete(null);
-  } catch (error) {
-    console.error('Error deleting application:', error);
-    setError('Failed to delete application. Please try again.');
-    setDeleteModalIsOpen(false);
-  }
-};
+      await axios.delete(`http://localhost:8000/api/job-application/${applicationToDelete}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setApplications(applications.filter(app => app.id !== applicationToDelete));
+      setDeleteModalIsOpen(false);
+      setApplicationToDelete(null);
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      setError('Failed to delete application. Please try again.');
+      setDeleteModalIsOpen(false);
+    }
+  };
 
   if (loading) return (
-    <div className="application-loading-spinner">
-      <div className="application-spinner"></div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="relative">
+        <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
+        <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+      </div>
+      <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading your applications...</p>
     </div>
   );
 
@@ -232,7 +255,7 @@ const confirmDelete = async () => {
                 <h2 className="application-job-title">
                   <Link to={`/jobs/${application.job.id}`}>{application.job.job_title}</Link>
                 </h2>
-                <span className={`application-status application-status-${application.status}`}>
+                <span className={`application-status px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(application.status)}`}>
                   {application.status}
                 </span>
               </div>
@@ -257,21 +280,26 @@ const confirmDelete = async () => {
               </div>
               
               <div className="application-actions">
-                <button 
-                  onClick={() => handleEdit(application)}
-                  className="application-edit-btn"
-                >
-                  Edit
-                </button>
-                <button 
-  onClick={() => {
-    setApplicationToDelete(application.id);
-    setDeleteModalIsOpen(true);
-  }}
-  className="application-delete-btn"
->
-  Withdraw
-</button>
+                {application.status.toLowerCase() === 'pending' ? (
+                  <>
+                    <button 
+                      onClick={() => handleEdit(application)}
+                      className="application-edit-btn"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(application.id)}
+                      className="application-delete-btn"
+                    >
+                      Withdraw
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-gray-500 text-sm">
+                    Actions unavailable for this application status
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -369,42 +397,42 @@ const confirmDelete = async () => {
           </form>
         )}
       </Modal>
-      {/* Delete Confirmation Modal */}
-<Modal
-  isOpen={deleteModalIsOpen}
-  onRequestClose={() => setDeleteModalIsOpen(false)}
-  className="application-modal"
-  overlayClassName="application-modal-overlay"
->
-  <div className="application-modal-header">
-    <h2 className="application-modal-title">Confirm Withdrawal</h2>
-    <button 
-      onClick={() => setDeleteModalIsOpen(false)} 
-      className="application-modal-close"
-    >
-      &times;
-    </button>
-  </div>
 
-  <div className="p-4">
-    <p className="text-gray-700 mb-6">Are you sure you want to withdraw this application?</p>
-    
-    <div className="flex justify-end gap-4">
-      <button
-        onClick={() => setDeleteModalIsOpen(false)}
-        className="application-cancel-btn"
+      <Modal
+        isOpen={deleteModalIsOpen}
+        onRequestClose={() => setDeleteModalIsOpen(false)}
+        className="application-modal"
+        overlayClassName="application-modal-overlay"
       >
-        Cancel
-      </button>
-      <button
-        onClick={confirmDelete}
-        className="application-delete-btn"
-      >
-        Confirm Withdraw
-      </button>
-    </div>
-  </div>
-</Modal>
+        <div className="application-modal-header">
+          <h2 className="application-modal-title">Confirm Withdrawal</h2>
+          <button 
+            onClick={() => setDeleteModalIsOpen(false)} 
+            className="application-modal-close"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="p-4">
+          <p className="text-gray-700 mb-6">Are you sure you want to withdraw this application?</p>
+          
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={() => setDeleteModalIsOpen(false)}
+              className="application-cancel-btn"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="application-delete-btn"
+            >
+              Confirm Withdraw
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
