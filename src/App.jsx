@@ -7,6 +7,8 @@ import viteLogo from '../public/vite.svg';
 import JobsPage from "./pages/JobsPage.jsx";
 import JobDetails from "./pages/JobDetails.jsx";
 import ApplyForm from "./pages/ApplyForm.jsx";
+import MyApplications from "./pages/MyApplications.jsx";
+import ApplicationDetail from "./pages/ApplicationDetail.jsx";
 function App() {
 
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/apply/:id" element={<ApplyForm />} />
+        <Route path="/my-applications" element={<MyApplications />} />
+        <Route path="/my-applications/:id" element={<ApplicationDetail />} />
 
       </Routes>
     </Router>
