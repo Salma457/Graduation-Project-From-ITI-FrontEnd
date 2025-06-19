@@ -6,6 +6,9 @@ const Approvals = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [imageModal, setImageModal] = useState({ open: false, src: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 1;
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -87,6 +90,15 @@ const Approvals = () => {
     }
   };
 
+  // Calculate paginated requests
+  const totalPages = Math.ceil(requests.length / itemsPerPage);
+  const paginatedRequests = requests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Handle page change
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-2">Approvals</h1>
@@ -106,20 +118,29 @@ const Approvals = () => {
               </tr>
             </thead>
             <tbody>
-              {requests.map((req) => (
+              {paginatedRequests.map((req) => (
                 <tr key={req.id} className="border-b hover:bg-gray-50">
                   <td className="py-2 px-4">{req.user?.name}</td>
                   <td className="py-2 px-4">{req.user?.email}</td>
                   <td className="py-2 px-4">{req.status}</td>
                   <td className="py-2 px-4">
-                    <a
-                      href={`http://127.0.0.1:8000/storage/${req.certificate}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      View Certificate
-                    </a>
+                    {req.certificate && (req.certificate.toLowerCase().endsWith('.pdf') ? (
+                      <a
+                        href={`http://127.0.0.1:8000/storage/${req.certificate}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        View Certificate 
+                      </a>
+                    ) : (
+                      <button
+                        className="text-blue-600 underline cursor-pointer bg-transparent border-none p-0"
+                        onClick={() => setImageModal({ open: true, src: `http://127.0.0.1:8000/storage/${req.certificate}` })}
+                      >
+                        View Certificate
+                      </button>
+                    ))}
                   </td>
                   <td className="py-2 px-4 flex gap-2">
                     <button
@@ -139,7 +160,7 @@ const Approvals = () => {
                   </td>
                 </tr>
               ))}
-              {requests.length === 0 && (
+              {paginatedRequests.length === 0 && (
                 <tr>
                   <td colSpan={5} className="text-center py-4 text-gray-500">
                     No requests found.
@@ -150,6 +171,72 @@ const Approvals = () => {
           </table>
         </div>
       )}
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 gap-2">
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          {/* Show first page if not on first */}
+          {currentPage > 2 && (
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+              onClick={() => goToPage(1)}
+            >
+              1
+            </button>
+          )}
+          {/* Ellipsis if needed */}
+          {currentPage > 3 && <span className="px-2">...</span>}
+          {/* Show previous page if not on first */}
+          {currentPage > 1 && (
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+              onClick={() => goToPage(currentPage - 1)}
+            >
+              {currentPage - 1}
+            </button>
+          )}
+          {/* Current page */}
+          <button
+            className="px-3 py-1 rounded bg-red-600 text-white"
+            disabled
+          >
+            {currentPage}
+          </button>
+          {/* Show next page if not on last */}
+          {currentPage < totalPages && (
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+              onClick={() => goToPage(currentPage + 1)}
+            >
+              {currentPage + 1}
+            </button>
+          )}
+          {/* Ellipsis if needed */}
+          {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+          {/* Show last page if not near end */}
+          {currentPage < totalPages - 1 && (
+            <button
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+              onClick={() => goToPage(totalPages)}
+            >
+              {totalPages}
+            </button>
+          )}
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
       {actionLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
@@ -158,6 +245,26 @@ const Approvals = () => {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
             </svg>
             <span className="text-red-600 font-semibold">Processing...</span>
+          </div>
+        </div>
+      )}
+      {imageModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80" onClick={() => setImageModal({ open: false, src: '' })}>
+          <div className="relative max-w-3xl w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <button
+              className="absolute top-2 right-2 text-white bg-black bg-opacity-60 rounded-full p-2 hover:bg-opacity-90 focus:outline-none"
+              onClick={() => setImageModal({ open: false, src: '' })}
+              aria-label="Close image modal"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img
+              src={imageModal.src}
+              alt="Certificate"
+              className="max-h-[80vh] max-w-full rounded shadow-lg border-4 border-white"
+            />
           </div>
         </div>
       )}
