@@ -19,6 +19,8 @@ const MyApplications = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
+const [applicationToDelete, setApplicationToDelete] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -83,101 +85,122 @@ const MyApplications = () => {
     });
   };
 
-const handleUpdate = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  setSubmitError(null);
-
-  try {
-    const token = localStorage.getItem('access-token');
-    if (!token) {
-      setSubmitError('Please login to update your application');
-      return;
-    }
-
-    const formDataToSend = new FormData();
-    formDataToSend.append('cover_letter', formData.cover_letter);
-    formDataToSend.append('_method', 'PUT'); // Laravel method spoofing
-
-    if (formData.cv) {
-      formDataToSend.append('cv', formData.cv);
-    }
-
-    const response = await axios.post(
-      `http://localhost:8000/api/job-application/${selectedApplication.id}`,
-      formDataToSend,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      }
-    );
-
-    setSubmitSuccess(true);
-    setTimeout(() => {
-      closeModal();
-      setApplications(applications.map(app =>
-        app.id === selectedApplication.id ? response.data.data : app
-      ));
-    }, 1500);
-  } catch (error) {
-    console.error('Error updating application:', error);
-    console.error('Validation Errors:', error.response?.data?.errors); // ✅ هنا مكانه الصح
-
-    if (error.response?.data?.errors) {
-      setSubmitError(
-        Object.values(error.response.data.errors).flat().join('\n') ||
-        'Please fix the form errors'
-      );
-    } else {
-      setSubmitError(error.response?.data?.message ||
-        'Failed to update application. Please try again.');
-    }
-  } finally {
-    setSubmitting(false);
-  }
-};
-
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to withdraw this application?")) {
-      return;
-    }
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitError(null);
 
     try {
       const token = localStorage.getItem('access-token');
       if (!token) {
-        setError('Please login to delete your application');
+        setSubmitError('Please login to update your application');
+        setSubmitting(false);
         return;
       }
 
-      await axios.delete(`http://localhost:8000/api/job-application/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      if (!formData.cover_letter || formData.cover_letter.length < 100) {
+        setSubmitError('Cover letter must be at least 100 characters');
+        setSubmitting(false);
+        return;
+      }
 
-      setApplications(applications.filter(app => app.id !== id));
+      const formDataToSend = new FormData();
+      formDataToSend.append('cover_letter', formData.cover_letter);
+      formDataToSend.append('_method', 'PUT');
+
+      if (formData.cv) {
+        formDataToSend.append('cv', formData.cv);
+      }
+
+      const response = await axios.post(
+        `http://localhost:8000/api/job-application/${selectedApplication.id}`,
+        formDataToSend,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      setSubmitSuccess(true);
+      setTimeout(async () => {
+        closeModal();
+        const token = localStorage.getItem('access-token');
+        try {
+          const updated = await axios.get('http://localhost:8000/api/itian/job-application', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setApplications(updated.data.data);
+        } catch (fetchError) {
+          console.error("Error fetching updated applications:", fetchError);
+        }
+      }, 1500);
+
     } catch (error) {
-      console.error('Error deleting application:', error);
-      setError('Failed to delete application. Please try again.');
+      console.error('Error updating application:', error);
+
+      const validationErrors = error?.response?.data?.errors;
+
+      if (validationErrors) {
+        setSubmitError(
+          Object.values(validationErrors).flat().join('\n') ||
+          'Please fix the form errors'
+        );
+      } else {
+        setSubmitError(
+          error?.response?.data?.message ||
+          error.message ||
+          'Failed to update application. Please try again.'
+        );
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const handleDelete = async (id) => {
+  setApplicationToDelete(id);
+  setDeleteModalIsOpen(true);
+};
+
+const confirmDelete = async () => {
+  try {
+    const token = localStorage.getItem('access-token');
+    if (!token) {
+      setError('Please login to delete your application');
+      return;
+    }
+
+    await axios.delete(`http://localhost:8000/api/job-application/${applicationToDelete}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    setApplications(applications.filter(app => app.id !== applicationToDelete));
+    setDeleteModalIsOpen(false);
+    setApplicationToDelete(null);
+  } catch (error) {
+    console.error('Error deleting application:', error);
+    setError('Failed to delete application. Please try again.');
+    setDeleteModalIsOpen(false);
+  }
+};
+
   if (loading) return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-800"></div>
+    <div className="application-loading-spinner">
+      <div className="application-spinner"></div>
     </div>
   );
 
   if (error) return (
-    <div className="text-center py-10">
-      <p className="text-red-600 text-lg">{error}</p>
+    <div className="application-error-container">
+      <p className="application-error-message">{error}</p>
       <button 
         onClick={() => window.location.reload()} 
-        className="mt-4 px-4 py-2 bg-red-800 text-white rounded hover:bg-red-900"
+        className="application-retry-btn"
       >
         Try Again
       </button>
@@ -185,49 +208,49 @@ const handleUpdate = async (e) => {
   );
 
   return (
-    <div className="my-applications-container">
-      <div className="applications-header">
-        <h1 className="text-3xl font-bold text-red-900">My Job Applications</h1>
-        <p className="text-gray-600 mt-2">View and manage your job applications</p>
+    <div className="application-container">
+      <div className="application-header">
+        <h1 className="application-title">My Job Applications</h1>
+        <p className="application-subtitle">View and manage your job applications</p>
       </div>
 
       {applications.length === 0 ? (
-        <div className="no-applications text-center py-10">
-          <p className="text-lg text-gray-700">You haven't applied to any jobs yet.</p>
+        <div className="application-empty-state">
+          <p className="application-empty-message">You haven't applied to any jobs yet.</p>
           <Link 
             to="/jobs" 
-            className="mt-4 inline-block px-6 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900"
+            className="application-browse-btn"
           >
             Browse Jobs
           </Link>
         </div>
       ) : (
-        <div className="applications-list">
+        <div className="application-list">
           {applications.map(application => (
-            <div key={application.id} className="application-card">
-              <div className="application-header">
-                <h2 className="text-xl font-semibold text-red-900">
+            <div key={application.id} className="application-item">
+              <div className="application-item-header">
+                <h2 className="application-job-title">
                   <Link to={`/jobs/${application.job.id}`}>{application.job.job_title}</Link>
                 </h2>
-                <span className={`status-badge ${application.status}`}>
+                <span className={`application-status application-status-${application.status}`}>
                   {application.status}
                 </span>
               </div>
               
               <div className="application-details">
-                <div className="detail-item">
-                  <span className="detail-label">Company:</span>
-                  <span className="detail-value">{application.job.employer?.name || 'Unknown'}</span>
+                <div className="application-detail">
+                  <span className="application-detail-label">Company:</span>
+                  <span className="application-detail-value">{application.job.employer?.name || 'Unknown'}</span>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">Applied On:</span>
-                  <span className="detail-value">
+                <div className="application-detail">
+                  <span className="application-detail-label">Applied On:</span>
+                  <span className="application-detail-value">
                     {new Date(application.application_date).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">Cover Letter:</span>
-                  <p className="detail-value cover-letter-preview">
+                <div className="application-detail">
+                  <span className="application-detail-label">Cover Letter:</span>
+                  <p className="application-cover-letter-preview">
                     {application.cover_letter.substring(0, 100)}...
                   </p>
                 </div>
@@ -236,53 +259,55 @@ const handleUpdate = async (e) => {
               <div className="application-actions">
                 <button 
                   onClick={() => handleEdit(application)}
-                  className="edit-btn"
+                  className="application-edit-btn"
                 >
                   Edit
                 </button>
                 <button 
-                  onClick={() => handleDelete(application.id)}
-                  className="delete-btn"
-                >
-                  Withdraw
-                </button>
+  onClick={() => {
+    setApplicationToDelete(application.id);
+    setDeleteModalIsOpen(true);
+  }}
+  className="application-delete-btn"
+>
+  Withdraw
+</button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Edit Application Modal */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        className="bg-white w-full max-w-2xl mx-auto mt-24 rounded-xl shadow-xl p-8 z-50 relative"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start overflow-y-auto"
+        className="application-modal"
+        overlayClassName="application-modal-overlay"
       >
-        <div className="flex justify-between items-center border-b pb-4 mb-6">
-          <h2 className="text-2xl font-bold text-red-900">
+        <div className="application-modal-header">
+          <h2 className="application-modal-title">
             Edit Application for {selectedApplication?.job.job_title}
           </h2>
-          <button onClick={closeModal} className="text-3xl font-bold text-gray-600 hover:text-red-600">
+          <button onClick={closeModal} className="application-modal-close">
             &times;
           </button>
         </div>
 
         {submitSuccess ? (
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-green-600">Application Updated!</h3>
-            <p className="mt-2 text-gray-700">Your changes have been saved.</p>
+          <div className="application-success-message">
+            <h3 className="application-success-title">Application Updated!</h3>
+            <p className="application-success-text">Your changes have been saved.</p>
             <button 
               onClick={closeModal} 
-              className="mt-4 px-6 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900"
+              className="application-modal-close-btn"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleUpdate} className="space-y-6">
-            <div>
-              <label htmlFor="cover_letter" className="block font-semibold text-red-900 mb-1">
+          <form onSubmit={handleUpdate} className="application-form">
+            <div className="application-form-group">
+              <label htmlFor="cover_letter" className="application-form-label">
                 Cover Letter
               </label>
               <textarea
@@ -293,12 +318,12 @@ const handleUpdate = async (e) => {
                 onChange={handleInputChange}
                 required
                 placeholder="Write your cover letter here..."
-                className="w-full border border-red-300 rounded-lg p-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+                className="application-form-textarea"
               />
             </div>
 
-            <div>
-              <label htmlFor="cv" className="block font-semibold text-red-900 mb-1">
+            <div className="application-form-group">
+              <label htmlFor="cv" className="application-form-label">
                 Update CV (Optional)
               </label>
               <input
@@ -307,15 +332,15 @@ const handleUpdate = async (e) => {
                 name="cv"
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileChange}
-                className="w-full border border-red-300 rounded-lg p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-red-100 file:text-red-800 hover:file:bg-red-200"
+                className="application-form-file"
               />
               {selectedApplication?.cv && (
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="application-current-cv">
                   Current CV: <a 
                     href={`http://localhost:8000/storage/${selectedApplication.cv}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-red-700 hover:underline"
+                    className="application-cv-link"
                   >
                     View CV
                   </a>
@@ -323,20 +348,20 @@ const handleUpdate = async (e) => {
               )}
             </div>
 
-            {submitError && <p className="text-red-600 font-medium">{submitError}</p>}
+            {submitError && <p className="application-form-error">{submitError}</p>}
 
-            <div className="flex justify-end gap-4">
+            <div className="application-form-actions">
               <button
                 type="button"
                 onClick={closeModal}
-                className="px-6 py-2 border border-red-800 text-red-800 rounded-lg hover:bg-red-100"
+                className="application-cancel-btn"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900"
+                className="application-submit-btn"
               >
                 {submitting ? 'Updating...' : 'Update Application'}
               </button>
@@ -344,6 +369,42 @@ const handleUpdate = async (e) => {
           </form>
         )}
       </Modal>
+      {/* Delete Confirmation Modal */}
+<Modal
+  isOpen={deleteModalIsOpen}
+  onRequestClose={() => setDeleteModalIsOpen(false)}
+  className="application-modal"
+  overlayClassName="application-modal-overlay"
+>
+  <div className="application-modal-header">
+    <h2 className="application-modal-title">Confirm Withdrawal</h2>
+    <button 
+      onClick={() => setDeleteModalIsOpen(false)} 
+      className="application-modal-close"
+    >
+      &times;
+    </button>
+  </div>
+
+  <div className="p-4">
+    <p className="text-gray-700 mb-6">Are you sure you want to withdraw this application?</p>
+    
+    <div className="flex justify-end gap-4">
+      <button
+        onClick={() => setDeleteModalIsOpen(false)}
+        className="application-cancel-btn"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={confirmDelete}
+        className="application-delete-btn"
+      >
+        Confirm Withdraw
+      </button>
+    </div>
+  </div>
+</Modal>
     </div>
   );
 };
