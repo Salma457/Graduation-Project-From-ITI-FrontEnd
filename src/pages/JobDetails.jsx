@@ -69,39 +69,66 @@ const handleSubmit = async (e) => {
   setSubmitError(null);
 
   try {
+    // التحقق من وجود token
+    const token = localStorage.getItem('access-token');
+    if (!token) {
+      setSubmitError('Please login to apply for this job');
+      return;
+    }
+
+    // إعداد FormData
     const formDataToSend = new FormData();
     formDataToSend.append('job_id', id);
     formDataToSend.append('cover_letter', formData.cover_letter);
-    if (formData.cv) {
-      formDataToSend.append('cv', formData.cv);
+    
+    if (!formData.cv) {
+      setSubmitError('CV file is required');
+      return;
     }
+    formDataToSend.append('cv', formData.cv);
 
-    // Get the token from where you stored it (likely localStorage)
-    const token = localStorage.getItem('access-token');
-
-
+    // إرسال الطلب
     const response = await axios.post(
-  'http://localhost:8000/api/job-application',
-  formDataToSend,
-  {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json'
-    }
-  }
-);
-
+      'http://localhost:8000/api/job-application',
+      formDataToSend,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      }
+    );
 
     setSubmitSuccess(true);
   } catch (error) {
     console.error('Error submitting application:', error);
-    if (error.response?.status === 401) {
-      setSubmitError('Authentication failed. Please login again.');
-    } else if (error.response?.status === 403) {
-      setSubmitError('You need an ITIAN profile to apply for jobs.');
+    
+    if (error.response) {
+      // خطأ من الخادم
+      if (error.response.status === 401) {
+        setSubmitError('Session expired. Please login again.');
+      } else if (error.response.status === 403) {
+        setSubmitError('You need an ITIAN profile to apply for jobs.');
+      } else if (error.response.status === 422) {
+        // أخطاء التحقق من الصحة
+        const errors = error.response.data.errors;
+        if (errors.cv) {
+          setSubmitError(errors.cv[0]);
+        } else if (errors.cover_letter) {
+          setSubmitError(errors.cover_letter[0]);
+        } else {
+          setSubmitError('Please fill all required fields correctly.');
+        }
+      } else {
+        setSubmitError(error.response.data.message || 'Failed to submit application.');
+      }
+    } else if (error.request) {
+      // لم يتم استلام رد من الخادم
+      setSubmitError('Network error. Please check your connection.');
     } else {
-      setSubmitError(error.response?.data?.message || 'Failed to submit application. Please try again.');
+      // خطأ في إعداد الطلب
+      setSubmitError('Application submission failed. Please try again.');
     }
   } finally {
     setSubmitting(false);
