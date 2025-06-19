@@ -13,7 +13,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -49,6 +49,11 @@ const Login = () => {
       // set user role in global state
       dispatch(setRole(response.data.user.role));
 
+      if (response.data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/'); // fallback
+      }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
         setErrors(error.response.data.errors);

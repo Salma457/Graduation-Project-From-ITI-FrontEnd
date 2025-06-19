@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "./Register.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -101,79 +100,76 @@ const Register = () => {
   };
 
   return (
-    <div className="register-root">
-      <div className="register-left">
-        <div className="register-container">
-          <div className="register-header">
-            <h2 className="register-title">Register</h2>
+    <div className="min-h-screen flex bg-white">
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg border-2 border-black p-8">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-bold text-black mb-2">Register</h2>
           </div>
-          <form onSubmit={handleSubmit} method="post" encType="multipart/form-data">
-            <div className="register-field">
-              <label htmlFor="name" className="register-label">Name</label>
-              <input type="text" id="name" name="name" className="register-input" placeholder="Name" onChange={handleInputChange} />
-              {errors.name && <div className="input-error">{errors.name}</div>}
+          <form onSubmit={handleSubmit} method="post" encType="multipart/form-data" className="space-y-5">
+            <div>
+              <label htmlFor="name" className="block mb-1 font-semibold text-black">Name</label>
+              <input type="text" id="name" name="name" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" placeholder="Name" onChange={handleInputChange} />
+              {errors.name && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.name}</div>}
             </div>
-            <div className="register-field">
-              <label htmlFor="email" className="register-label">Email</label>
-              <input type="text" id="email" name="email" className="register-input" placeholder="Email" onChange={handleInputChange} />
-              {errors.email && <div className="input-error">{errors.email}</div>}
+            <div>
+              <label htmlFor="email" className="block mb-1 font-semibold text-black">Email</label>
+              <input type="text" id="email" name="email" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" placeholder="Email" onChange={handleInputChange} />
+              {errors.email && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.email}</div>}
             </div>
-            <div className="register-field">
-              <label htmlFor="password" className="register-label">Password</label>
-              <input type="password" id="password" name="password" className="register-input" placeholder="Password" onChange={handleInputChange} />
-              {errors.password && <div className="input-error">{errors.password}</div>}
+            <div>
+              <label htmlFor="password" className="block mb-1 font-semibold text-black">Password</label>
+              <input type="password" id="password" name="password" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" placeholder="Password" onChange={handleInputChange} />
+              {errors.password && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.password}</div>}
             </div>
-            <div className="register-field">
-              <label htmlFor="password_confirmation" className="register-label">Confirm Password</label>
-              <input type="password" id="password_confirmation" name="password_confirmation" className="register-input" placeholder="Confirm Password" onChange={handleInputChange} />
-              {errors.password_confirmation && <div className="input-error">{errors.password_confirmation}</div>}
+            <div>
+              <label htmlFor="password_confirmation" className="block mb-1 font-semibold text-black">Confirm Password</label>
+              <input type="password" id="password_confirmation" name="password_confirmation" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" placeholder="Confirm Password" onChange={handleInputChange} />
+              {errors.password_confirmation && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.password_confirmation}</div>}
             </div>
-            <div className="register-field">
-              <label htmlFor="role" className="register-label">Role</label>
-              <select id="role" name="role" className="register-input" value={formData.role} onChange={handleInputChange}>
+            <div>
+              <label htmlFor="role" className="block mb-1 font-semibold text-black">Role</label>
+              <select id="role" name="role" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" value={formData.role} onChange={handleInputChange}>
                 <option value="" disabled>Select Role</option>
                 <option value="itian">ITIAN</option>
                 <option value="employer">Employer</option>
               </select>
-              {errors.role && <div className="input-error">{errors.role}</div>}
+              {errors.role && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.role}</div>}
             </div>
-            {/* Show certificate field only for ITIAN */}
             {formData.role === 'itian' && (
-              <div className="register-field">
-                <label htmlFor="certificate" className="register-label">Certificate</label>
-                <input type="file" id="certificate" name="certificate" className="register-input" accept="image/jpeg,image/png,application/pdf" onChange={handleFileChange} />
-                {errors.certificate && <div className="input-error">{errors.certificate}</div>}
+              <div>
+                <label htmlFor="certificate" className="block mb-1 font-semibold text-black">Certificate</label>
+                <input type="file" id="certificate" name="certificate" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" accept="image/jpeg,image/png,application/pdf" onChange={handleFileChange} />
+                {errors.certificate && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.certificate}</div>}
               </div>
             )}
-            <button type="submit" className="register-button">Register</button>
+            <button type="submit" className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition">Register</button>
           </form>
-          <div style={{textAlign: 'center', marginTop: '1rem'}}>
-            <Link to="/login" style={{color: '#e35d5b', fontWeight: 600}}>Already have an account? Login</Link>
+          <div className="text-center mt-4">
+            <Link to="/login" className="text-red-600 font-semibold hover:underline">Already have an account? Login</Link>
           </div>
         </div>
       </div>
-      <div className="register-hero">
-        <div className="register-hero-bg1" />
-        <div className="register-hero-bg2" />
-        <div className="register-hero-content">
+      <div className="flex-1 flex flex-col justify-center items-center bg-gradient-to-br from-white to-red-100 p-8">
+        <div className="max-w-lg text-center">
           {formData.role === 'employer' ? (
             <>
-              <h1 className="register-hero-title">Find the Best ITIANs for Your Company</h1>
-              <p className="register-hero-desc">Register as an employer to connect with top IT talents and grow your business with the right people.</p>
-              <div className="register-hero-people">
-                <div className="register-hero-person">🏢</div>
-                <div className="register-hero-person">🤝</div>
-                <div className="register-hero-person">💼</div>
+              <h1 className="text-3xl font-bold text-red-700 mb-4">Find the Best ITIANs for Your Company</h1>
+              <p className="text-lg text-red-800 mb-8">Register as an employer to connect with top IT talents and grow your business with the right people.</p>
+              <div className="flex justify-center gap-6 mt-8">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-200 text-3xl border-2 border-red-400">🏢</div>
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-200 text-3xl border-2 border-red-400">🤝</div>
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-200 text-3xl border-2 border-red-400">💼</div>
               </div>
             </>
           ) : (
             <>
-              <h1 className="register-hero-title">Become a part of our ever-growing community.</h1>
-              <p className="register-hero-desc">Join now to connect with both companies and students through our powerful platform.</p>
-              <div className="register-hero-people">
-                <div className="register-hero-person">👨‍💼</div>
-                <div className="register-hero-person">👩‍💻</div>
-                <div className="register-hero-person">👨‍🎓</div>
+              <h1 className="text-3xl font-bold text-red-700 mb-4">Become a part of our ever-growing community.</h1>
+              <p className="text-lg text-red-800 mb-8">Join now to connect with both companies and students through our powerful platform.</p>
+              <div className="flex justify-center gap-6 mt-8">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-200 text-3xl border-2 border-red-400">👨‍💼</div>
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-200 text-3xl border-2 border-red-400">👩‍💻</div>
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-red-200 text-3xl border-2 border-red-400">👨‍🎓</div>
               </div>
             </>
           )}
