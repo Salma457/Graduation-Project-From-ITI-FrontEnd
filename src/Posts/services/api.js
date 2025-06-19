@@ -10,7 +10,7 @@ const getAuthHeaders = () => {
   };
 };
 
-// Posts
+/// Posts
 export const fetchPosts = async () => {
   const response = await axios.get(`${API_BASE_URL}/posts`, {
     headers: getAuthHeaders()
@@ -18,12 +18,56 @@ export const fetchPosts = async () => {
   return response.data;
 };
 
-export const createPost = async (postData) => {
-  const response = await axios.post(`${API_BASE_URL}/posts`, postData, {
+export const fetchMyPosts = async () => {
+  const response = await axios.get(`${API_BASE_URL}/myposts`, {
     headers: getAuthHeaders()
   });
   return response.data;
 };
+// ... الدوال الأخرى ...
+
+export const updatePost = async (postId, postData) => {
+  const formData = new FormData();
+  formData.append('title', postData.title);
+  formData.append('content', postData.content);
+  if (postData.image) {
+    formData.append('image', postData.image);
+  }
+
+  const response = await axios.put(`${API_BASE_URL}/posts/${postId}`, formData, {
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
+export const deletePost = async (postId) => {
+  const response = await axios.delete(`${API_BASE_URL}/posts/${postId}`, {
+    headers: getAuthHeaders()
+  });
+  return response.data;
+};
+
+export const createPost = async (postData) => {
+  const formData = new FormData();
+  formData.append('title', postData.title);
+  formData.append('content', postData.content);
+  if (postData.image) {
+    formData.append('image', postData.image);
+  }
+
+  const response = await axios.post('http://localhost:8000/api/posts', formData, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('access-token')}`,
+      // لا تحدد Content-Type، axios سيحددها تلقائياً لـ multipart/form-data
+    },
+  });
+
+  return response.data.data; // أو .data حسب استجابة الـ API
+};
+
 
 // Reactions
 export const reactToPost = async (postId, reactionType) => {
@@ -65,10 +109,12 @@ export const addComment = async (postId, content) => {
   const response = await axios.post(
     `${API_BASE_URL}/posts/${postId}/comments`,
     { content },
-    { headers: getAuthHeaders() }
+    { headers: getAuthHeaders() } // ✅ مهم جداً لإرسال التوكن
   );
-  return response.data;
+  return response.data.comment;
 };
+
+
 
 
 export const updateComment = async (commentId, commentText) => {
@@ -88,17 +134,18 @@ export const deleteComment = async (commentId) => {
   return response.data;
 };
 // Replies
-export const addReply = async (postId, commentId, replyText) => {
+export const addReply = async (postId, parentCommentId, content) => {
   const response = await axios.post(
     `${API_BASE_URL}/posts/${postId}/comments`,
     {
-      content: replyText,
-      parent_comment_id: commentId
+      content,
+      parent_comment_id: parentCommentId,
     },
-    { headers: getAuthHeaders() }
+    { headers: getAuthHeaders() } // ✅ كمان هنا
   );
-  return response.data.comment; // تأكد إنك بترجع التعليق نفسه
+  return response.data.comment;
 };
+
 
 
 

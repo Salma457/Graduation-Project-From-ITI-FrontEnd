@@ -4,7 +4,7 @@ import Register from './pages/Register.jsx';
 import Login from './pages/Login.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import viteLogo from '../public/vite.svg';
-import PostsList from './Posts/components/PostsList.jsx';
+import PostsList from './Posts/components/posts/PostList.jsx';
 
 function App() {
 
