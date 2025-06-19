@@ -6,6 +6,7 @@ export const fetchItianRequests = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/api/itian-registration-requests');
+      console.log('Fetched ITIAN requests:', response);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

@@ -7,11 +7,6 @@ html, body, #root {
   padding: 0;
 }
 
-body, #root {
-  min-height: 100vh;
-  min-width: 100vw;
-}
-
 
 /* #root {
   max-width: 1280px;
