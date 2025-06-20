@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Confetti from 'react-confetti';
-import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const JobApplications = () => {
@@ -17,7 +16,7 @@ const JobApplications = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
 
-  const ApplicationCard = ({ app, index, onViewMore, onViewProfile, onMessage, showScores = false }) => {
+  const ApplicationCard = ({ app, index, onViewMore, onViewProfile, onMessage = false }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden h-full flex flex-col">
         {/* Card Header */}
@@ -66,23 +65,8 @@ const JobApplications = () => {
             {app.location || 'Location'}
           </div>
 
-          {/* Scores - Only shown when showScores is true */}
-          {showScores && (
-            <div className="flex justify-between items-center mb-4 px-2">
-              <div className="text-center">
-                <span className="text-xs text-gray-500">Magic Score:</span>
-                <div className="font-bold text-gray-900">
-                  {app.magic_score || 90}/100
-                </div>
-              </div>
-              <div className="text-center">
-                <span className="text-xs text-gray-500">CGPA:</span>
-                <div className="font-bold text-gray-900">
-                  {app.cgpa || 9.0}
-                </div>
-              </div>
-            </div>
-          )}
+          
+        
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-auto">
