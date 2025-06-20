@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ const Register = () => {
     password: "",
     password_confirmation: "",
     role: "",
-    certificate: null
+    certificate: null,
+    company_info: ""
   });
   const [errors, setErrors] = useState({});
 
@@ -33,7 +35,7 @@ const Register = () => {
     }
     if (!userData.email || typeof userData.email !== 'string' || userData.email.trim() === '') {
       errors.email = 'Email is required.';
-    } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(userData.email)) {
+    } else if (/.+@.+\..+/.test(userData.email) === false) {
       errors.email = 'Email must be a valid email address.';
     }
     if (!userData.password || typeof userData.password !== 'string') {
@@ -69,6 +71,11 @@ const Register = () => {
         errors.certificate = 'Certificate must not exceed 2MB.';
       }
     }
+    if (userData.role === 'employer') {
+      if (!userData.company_info || userData.company_info.trim().length < 10) {
+        errors.company_info = 'Company info is required and should be at least 10 characters.';
+      }
+    }
     return errors;
   }
 
@@ -82,13 +89,19 @@ const Register = () => {
     // Prepare form data for API
     const apiData = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null) apiData.append(key, value);
+      if (value !== null && value !== "") apiData.append(key, value);
     });
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/register', apiData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       console.log('Registration successful!', response);
+      await Swal.fire({
+        icon: 'success',
+        title: 'Registration Successful',
+        text: 'Your registration was submitted. Please wait for admin approval before logging in.',
+        confirmButtonColor: '#e35d5b',
+      });
       navigate('/login');
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
@@ -141,6 +154,21 @@ const Register = () => {
                 <label htmlFor="certificate" className="block mb-1 font-semibold text-black">Certificate</label>
                 <input type="file" id="certificate" name="certificate" className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black" accept="image/jpeg,image/png,application/pdf" onChange={handleFileChange} />
                 {errors.certificate && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.certificate}</div>}
+              </div>
+            )}
+            {formData.role === 'employer' && (
+              <div>
+                <label htmlFor="company_info" className="block mb-1 font-semibold text-black">Company Info / Brief</label>
+                <textarea
+                  id="company_info"
+                  name="company_info"
+                  className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black"
+                  placeholder="Tell us about your company, what you do, and your mission..."
+                  value={formData.company_info}
+                  onChange={handleInputChange}
+                  rows={4}
+                />
+                {errors.company_info && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.company_info}</div>}
               </div>
             )}
             <button type="submit" className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition">Register</button>
