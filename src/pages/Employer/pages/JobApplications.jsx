@@ -1,17 +1,128 @@
 import { Sparkles, ChevronLeft, Star, Award, MapPin, Download, Eye, X, AlertCircle, Calendar, Mail, Phone, User, Bookmark, Info, MessageCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Confetti from 'react-confetti';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const JobApplications = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [jobTitle, setJobTitle] = useState("");
   const [openCoverLetter, setOpenCoverLetter] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  const ApplicationCard = ({ app, index, onViewMore, onViewProfile, onMessage, showScores = false }) => {
+    return (
+      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden h-full flex flex-col">
+        {/* Card Header */}
+        <div className="flex justify-between items-start p-4 pb-2">
+          <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-bold">{index + 1}</span>
+          </div>
+          <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+            <Bookmark className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Profile Section */}
+        <div className="px-4 pb-4 text-center flex-grow">
+          <div className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden bg-gray-200 flex items-center justify-center">
+            {app.itian && app.itian.profile_picture ? (
+              <img
+                src={`http://localhost:8000/storage/${app.itian.profile_picture}`}
+                alt={`${app.itian.first_name} ${app.itian.last_name}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-8 h-8 text-red-600" />
+            )}
+          </div>
+
+          <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center justify-center gap-2">
+            {app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${app.iti_id || app.id}`)}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold
+              ${app.status === 'approved' ? 'bg-green-100 text-green-700' :
+                app.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                'bg-yellow-100 text-yellow-700'}`}
+            >
+              {app.status === 'approved' ? 'Approved' :
+                app.status === 'rejected' ? 'Rejected' :
+                'Pending'}
+            </span>
+          </h3>
+
+          <p className="text-gray-600 text-sm mb-1">
+            {app.itian?.iti_track || app.university || 'Centurion University'}
+          </p>
+
+          <div className="flex items-center justify-center text-gray-500 text-xs mb-4">
+            <MapPin className="w-3 h-3 mr-1" />
+            {app.location || 'Location'}
+          </div>
+
+          {/* Scores - Only shown when showScores is true */}
+          {showScores && (
+            <div className="flex justify-between items-center mb-4 px-2">
+              <div className="text-center">
+                <span className="text-xs text-gray-500">Magic Score:</span>
+                <div className="font-bold text-gray-900">
+                  {app.magic_score || 90}/100
+                </div>
+              </div>
+              <div className="text-center">
+                <span className="text-xs text-gray-500">CGPA:</span>
+                <div className="font-bold text-gray-900">
+                  {app.cgpa || 9.0}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-auto">
+            {app.status !== 'approved' && (
+              <button
+                className="flex-1 flex items-center justify-center bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
+                onClick={onViewMore}
+              >
+                <Info className="w-4 h-4 mr-1" />
+                Details
+              </button>
+            )}
+            <button
+              className="flex-1 flex items-center justify-center bg-gray-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-700 transition-colors"
+              onClick={onViewProfile}
+            >
+              <User className="w-4 h-4 mr-1" />
+              Profile
+            </button>
+            <button
+              className="flex-1 flex items-center justify-center bg-blue-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
+              onClick={onMessage}
+            >
+              <MessageCircle className="w-4 h-4 mr-1" />
+              Chat
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -20,14 +131,12 @@ const JobApplications = () => {
         const token = localStorage.getItem("access-token");
 
         // Fetch job title
-        const jobRes = await axios.get(`http://localhost:8000/api/jobs/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json"
-            }
+        const jobRes = await axios.get(`http://localhost:8000/api/jobs/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json"
           }
-        );
+        });
         if (jobRes.status === 200) {
           const jobData = jobRes.data;
           setJobTitle(jobData.data?.job_title || "");
@@ -60,19 +169,15 @@ const JobApplications = () => {
     fetchApplications();
   }, [id]);
 
-
-  // Map frontend status to backend expected values
   const STATUS_MAP = {
-    accepted: 'approved', // Backend expects 'approved'
+    accepted: 'approved',
     rejected: 'rejected',
     pending: 'pending',
   };
 
-  // Filter and search state
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Move status normalization to a helper for reuse
   const normalizeStatus = (status) => {
     if (!status) return 'pending';
     status = status.toLowerCase();
@@ -81,19 +186,19 @@ const JobApplications = () => {
     return 'pending';
   };
 
-  // Filtered and searched applications
   const filteredApplications = applications.filter(app => {
     const status = normalizeStatus(app.status);
     const matchesStatus = statusFilter === 'all' || status === statusFilter;
     const matchesSearch =
-      (app.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (app.itian?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.itian?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.applicant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.university?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.itian_id?.toString().includes(searchTerm));
+      app.iti_id?.toString().includes(searchTerm));
     return matchesStatus && matchesSearch;
   });
 
-  // Group applications by status for separate display
   const groupedApplications = {
     approved: [],
     rejected: [],
@@ -103,32 +208,42 @@ const JobApplications = () => {
     groupedApplications[normalizeStatus(app.status)].push(app);
   });
 
-  const handleStatusChange = async (appId, status) => {
-    try {
-      const backendStatus = STATUS_MAP[status] || status;
-      const token = localStorage.getItem("access-token");
-      await axios.put(
-        `http://localhost:8000/api/job-application/${appId}`,
-        { status: backendStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          }
-        }
-      );
-      // Update the application status in-place without refresh
-      setApplications(apps => apps.map(app => app.id === appId ? { ...app, status: backendStatus } : app));
-      setOpenCoverLetter(null);
-      if (status === 'accepted') {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3500);
+ const handleStatusChange = async (appId, status) => {
+  try {
+    const backendStatus = STATUS_MAP[status] || status;
+    const token = localStorage.getItem("access-token");
+
+    // Send status update (Laravel handles sending the email if approved)
+    await axios.put(
+      `http://localhost:8000/api/job-application/${appId}/status`,
+      { status: backendStatus },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       }
-    } catch (err) {
-      setError(err.message || "Something went wrong");
+    );
+
+    // Update state
+    setApplications(apps =>
+      apps.map(app =>
+        app.id === appId ? { ...app, status: backendStatus } : app
+      )
+    );
+    setOpenCoverLetter(null);
+
+    // Show confetti if accepted
+    if (status === 'accepted') {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3500);
     }
-  };
+
+  } catch (err) {
+    setError(err.message || "Something went wrong");
+  }
+};
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -218,274 +333,83 @@ const JobApplications = () => {
             {groupedApplications.approved.length > 0 && (
               <div className="mb-10">
                 <h2 className="text-2xl font-bold text-green-700 mb-4">Approved Applications</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {groupedApplications.approved.map((app, index) => (
-                    <div key={app.id || index} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden">
-                      {/* Card Header with Number and Bookmark */}
-                      <div className="flex justify-between items-start p-4 pb-2">
-                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">{index + 1}</span>
-                        </div>
-                        <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                          <Bookmark className="w-5 h-5 text-gray-400" />
-                        </button>
-                      </div>
-
-                      {/* Profile Section */}
-                      <div className="px-4 pb-4 text-center">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
-                          <User className="w-8 h-8 text-red-600" />
-                        </div>
-                        
-                        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                          {app.applicant_name || app.user?.name || `Applicant #${app.iti_id || app.id}`}
-                          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold
-                            ${app.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                              'bg-yellow-100 text-yellow-700'}`}
-                          >
-                            {app.status === 'approved' ? 'Approved' :
-                              app.status === 'rejected' ? 'Rejected' :
-                              'Pending'}
-                          </span>
-                        </h3>
-                        
-                        <p className="text-gray-600 text-sm mb-1">
-                          {app.university || 'Centurion University'}
-                        </p>
-                        
-                        <div className="flex items-center justify-center text-gray-500 text-xs mb-4">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {app.location || 'Location'}
-                        </div>
-
-                        {/* Scores */}
-                        <div className="flex justify-between items-center mb-4 px-2">
-                          <div className="text-center">
-                            <span className="text-xs text-gray-500">Magic Score:</span>
-                            <div className="font-bold text-gray-900">
-                              {app.magic_score || 90}/100
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <span className="text-xs text-gray-500">CGPA:</span>
-                            <div className="font-bold text-gray-900">
-                              {app.cgpa || 9.0}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                          <button
-                            className="flex-1 flex items-center justify-center bg-red-700 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
-                            onClick={() => setOpenCoverLetter(index)}
-                          >
-                            <Info className="w-4 h-4 mr-1" />
-                            More Info
-                          </button>
-                          <button
-                            className="flex-1 flex items-center justify-center bg-red-900 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
-                            onClick={() => {
-                              const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                              if (userId) {
-                                window.open(`/itian-profile/${userId}`, '_blank');
-                              }
-                            }}
-                          >
-                            <User className="w-4 h-4 mr-1" />
-                            Profile
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <ApplicationCard
+                      key={app.id || index}
+                      app={app}
+                      index={index}
+                      onViewMore={() => setOpenCoverLetter(index)}
+                      onViewProfile={() => {
+                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                        if (userId) window.open(`/itian-profile/${userId}`, '_blank');
+                      }}
+                      onMessage={() => {
+                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                        const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
+                        if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
+                      }}
+                    />
                   ))}
                 </div>
               </div>
             )}
+
             {/* Show Pending Applications */}
             {groupedApplications.pending.length > 0 && (
               <div className="mb-10">
-                <h2 className="text-2xl font-bold text-yellow-700 mb-4">Pending Applications</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <h2 className="text-2xl font-bold text-yellow-600 mb-4">Pending Applications</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {groupedApplications.pending.map((app, index) => (
-                    <div key={app.id || index} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden">
-                      {/* Card Header with Number and Bookmark */}
-                      <div className="flex justify-between items-start p-4 pb-2">
-                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">{index + 1}</span>
-                        </div>
-                        <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                          <Bookmark className="w-5 h-5 text-gray-400" />
-                        </button>
-                      </div>
-
-                      {/* Profile Section */}
-                      <div className="px-4 pb-4 text-center">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
-                          <User className="w-8 h-8 text-red-600" />
-                        </div>
-                        
-                        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                          {app.applicant_name || app.user?.name || `Applicant #${app.iti_id || app.id}`}
-                          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold
-                            ${app.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                              'bg-yellow-100 text-yellow-700'}`}
-                          >
-                            {app.status === 'approved' ? 'Approved' :
-                              app.status === 'rejected' ? 'Rejected' :
-                              'Pending'}
-                          </span>
-                        </h3>
-                        
-                        <p className="text-gray-600 text-sm mb-1">
-                          {app.university || 'Centurion University'}
-                        </p>
-                        
-                        <div className="flex items-center justify-center text-gray-500 text-xs mb-4">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {app.location || 'Location'}
-                        </div>
-
-                        {/* Scores */}
-                        <div className="flex justify-between items-center mb-4 px-2">
-                          <div className="text-center">
-                            <span className="text-xs text-gray-500">Magic Score:</span>
-                            <div className="font-bold text-gray-900">
-                              {app.magic_score || 90}/100
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <span className="text-xs text-gray-500">CGPA:</span>
-                            <div className="font-bold text-gray-900">
-                              {app.cgpa || 9.0}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                          <button
-                            className="flex-1 flex items-center justify-center bg-red-700 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-800 transition-colors"
-                            onClick={() => setOpenCoverLetter(index)}
-                          >
-                            <Info className="w-4 h-4 mr-1" />
-                            More Info
-                          </button>
-                          <button
-                            className="flex-1 flex items-center justify-center bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
-                            onClick={() => {
-                              const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                              if (userId) {
-                                window.open(`/itian-profile/${userId}`, '_blank');
-                              }
-                            }}
-                          >
-                            <User className="w-4 h-4 mr-1" />
-                            Profile
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <ApplicationCard
+                      key={app.id || index}
+                      app={app}
+                      index={index}
+                      onViewMore={() => setOpenCoverLetter(index)}
+                      onViewProfile={() => {
+                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                        if (userId) window.open(`/itian-profile/${userId}`, '_blank');
+                      }}
+                      onMessage={() => {
+                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                        const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
+                        if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
+                      }}
+                      showScores={true}
+                    />
                   ))}
                 </div>
               </div>
             )}
+
             {/* Show Rejected Applications */}
             {groupedApplications.rejected.length > 0 && (
               <div className="mb-10">
-                <h2 className="text-2xl font-bold text-red-700 mb-4">Rejected Applications</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <h2 className="text-2xl font-bold text-red-600 mb-4">Rejected Applications</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {groupedApplications.rejected.map((app, index) => (
-                    <div key={app.id || index} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden">
-                      {/* Card Header with Number and Bookmark */}
-                      <div className="flex justify-between items-start p-4 pb-2">
-                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">{index + 1}</span>
-                        </div>
-                        <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                          <Bookmark className="w-5 h-5 text-gray-400" />
-                        </button>
-                      </div>
-
-                      {/* Profile Section */}
-                      <div className="px-4 pb-4 text-center">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
-                          <User className="w-8 h-8 text-red-600" />
-                        </div>
-                        
-                        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                          {app.applicant_name || app.user?.name || `Applicant #${app.iti_id || app.id}`}
-                          <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold
-                            ${app.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                              'bg-yellow-100 text-yellow-700'}`}
-                          >
-                            {app.status === 'approved' ? 'Approved' :
-                              app.status === 'rejected' ? 'Rejected' :
-                              'Pending'}
-                          </span>
-                        </h3>
-                        
-                        <p className="text-gray-600 text-sm mb-1">
-                          {app.university || 'Centurion University'}
-                        </p>
-                        
-                        <div className="flex items-center justify-center text-gray-500 text-xs mb-4">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {app.location || 'Location'}
-                        </div>
-
-                        {/* Scores */}
-                        <div className="flex justify-between items-center mb-4 px-2">
-                          <div className="text-center">
-                            <span className="text-xs text-gray-500">Magic Score:</span>
-                            <div className="font-bold text-gray-900">
-                              {app.magic_score || 90}/100
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <span className="text-xs text-gray-500">CGPA:</span>
-                            <div className="font-bold text-gray-900">
-                              {app.cgpa || 9.0}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                          <button
-                            className="flex-1 flex items-center justify-center bg-red-700 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-800 transition-colors"
-                            onClick={() => setOpenCoverLetter(index)}
-                          >
-                            <Info className="w-4 h-4 mr-1" />
-                            More Info
-                          </button>
-                          <button
-                            className="flex-1 flex items-center justify-center bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
-                            onClick={() => {
-                              const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                              if (userId) {
-                                window.open(`/itian-profile/${userId}`, '_blank');
-                              }
-                            }}
-                          >
-                            <User className="w-4 h-4 mr-1" />
-                            Profile
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <ApplicationCard
+                      key={app.id || index}
+                      app={app}
+                      index={index}
+                      onViewMore={() => setOpenCoverLetter(index)}
+                      onViewProfile={() => {
+                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                        if (userId) window.open(`/itian-profile/${userId}`, '_blank');
+                      }}
+                      onMessage={() => {
+                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                        const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
+                        if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
+                      }}
+                    />
                   ))}
                 </div>
               </div>
             )}
-          </>
-        )}
 
-        {/* Enhanced Cover Letter Modal */}
-        {openCoverLetter !== null && (
+            {/* Cover Letter Modal */}
+                   {openCoverLetter !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
               {/* Modal Header */}
@@ -577,8 +501,11 @@ const JobApplications = () => {
             </div>
           </div>
         )}
-        {showConfetti && (
-          <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={350} recycle={false} />
+            {/* Confetti */}
+            {showConfetti && (
+              <Confetti width={dimensions.width} height={dimensions.height} />
+            )}
+          </>
         )}
       </div>
     </div>

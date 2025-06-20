@@ -10,6 +10,7 @@ import  JobList from './pages/Employer/pages/DisplayJob'; // Add this import
 import TrashPage from './pages/Employer/pages/TrashPage'; // Add this import
 import JobDetails from './pages/Employer/pages/JobDetails';
 import JobApplications from './pages/Employer/pages/JobApplications';
+import ChatApp from './pages/Employer/pages/ChatApp';
 import viteLogo from '../public/vite.svg';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/employer/trash" element={<TrashPage />} /> {/* Add this route */}
           <Route path="/employer/job/:id" element={<JobDetails />} />
           <Route path="/employer/job/:id/applications" element={<JobApplications />} />
+          <Route path="/mychat" element={<ChatApp />} />
         </Routes>
       </Router>
     </Provider>

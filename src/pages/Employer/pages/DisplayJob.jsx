@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchEmployerJobs, editJob, deleteJob } from '../jobPostSlice';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
+import { Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../style/jobList.css';
 
