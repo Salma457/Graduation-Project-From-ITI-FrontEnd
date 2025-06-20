@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchEmployerJobs, editJob, deleteJob } from '../jobPostSlice';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../style/jobList.css';
 
@@ -16,6 +16,10 @@ const JobList = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const jobsPerPage = 5;
 
   useEffect(() => {
     dispatch(fetchEmployerJobs());
@@ -45,6 +49,22 @@ const JobList = () => {
         return 0;
     }
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  const startIndex = (currentPage - 1) * jobsPerPage;
+  const endIndex = startIndex + jobsPerPage;
+  const currentJobs = filteredJobs.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm, sortBy]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleEdit = (job) => {
     setEditData({
@@ -102,6 +122,127 @@ const JobList = () => {
     return title ? title.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'JB';
   };
 
+  // Pagination component
+  const PaginationComponent = () => {
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+      const pages = [];
+      const maxVisiblePages = 5;
+      
+      if (totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          for (let i = 1; i <= 4; i++) {
+            pages.push(i);
+          }
+          pages.push('...');
+          pages.push(totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1);
+          pages.push('...');
+          for (let i = totalPages - 3; i <= totalPages; i++) {
+            pages.push(i);
+          }
+        } else {
+          pages.push(1);
+          pages.push('...');
+          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+            pages.push(i);
+          }
+          pages.push('...');
+          pages.push(totalPages);
+        }
+      }
+      
+      return pages;
+    };
+
+    return (
+      <div className="pagination-container" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '8px',
+        marginTop: '32px',
+        marginBottom: '32px'
+      }}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '8px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            background: currentPage === 1 ? '#f9fafb' : '#ffffff',
+            color: currentPage === 1 ? '#9ca3af' : '#374151',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s'
+          }}
+        >
+          <ChevronLeft size={16} />
+          Previous
+        </button>
+        
+        {getPageNumbers().map((page, index) => (
+          page === '...' ? (
+            <span key={index} style={{ padding: '8px 4px', color: '#9ca3af' }}>...</span>
+          ) : (
+            <button
+              key={index}
+              onClick={() => handlePageChange(page)}
+              className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '6px',
+                background: currentPage === page ? '#dc2626' : '#ffffff',
+                color: currentPage === page ? '#ffffff' : '#374151',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: currentPage === page ? '600' : '400',
+                transition: 'all 0.2s',
+                minWidth: '40px'
+              }}
+            >
+              {page}
+            </button>
+          )
+        ))}
+        
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '8px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            background: currentPage === totalPages ? '#f9fafb' : '#ffffff',
+            color: currentPage === totalPages ? '#9ca3af' : '#374151',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            transition: 'all 0.2s'
+          }}
+        >
+          Next
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    );
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="relative">
@@ -128,7 +269,14 @@ const JobList = () => {
     <div className="job-list-container">
       <div className="job-list-header">
         <h1 className="job-list-title">Job Listings</h1>
-        <div className="job-count">{filteredJobs.length} jobs found</div>
+        <div className="job-count">
+          {filteredJobs.length} jobs found
+          {totalPages > 1 && (
+            <span style={{ marginLeft: '8px', color: '#6b7280' }}>
+              (Page {currentPage} of {totalPages})
+            </span>
+          )}
+        </div>
         <button
           className="go-to-trash-btn"
           style={{ marginLeft: '16px', background: '#991b1b', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
@@ -310,7 +458,7 @@ const JobList = () => {
           </Modal>
           
           <div className="job-list-grid">
-            {filteredJobs.map(job => (
+            {currentJobs.map(job => (
               <div className="job-card" key={job.id}>
                 <div className="job-card-header">
                   <div className="job-avatar">
@@ -375,6 +523,8 @@ const JobList = () => {
               </div>
             ))}
           </div>
+
+          <PaginationComponent />
         </>
       )}
     </div>
