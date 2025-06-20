@@ -11,37 +11,49 @@ const getAuthHeaders = () => {
 };
 
 /// Posts
-export const fetchPosts = async () => {
+export const fetchPosts = async (params = {}) => {
   const response = await axios.get(`${API_BASE_URL}/posts`, {
-    headers: getAuthHeaders()
+    headers: getAuthHeaders(),
+    params
   });
-  return response.data;
+  return response.data; // هنرجع full object مش بس .data
 };
 
-export const fetchMyPosts = async () => {
+
+export const fetchMyPosts = async (params = {}) => {
   const response = await axios.get(`${API_BASE_URL}/myposts`, {
-    headers: getAuthHeaders()
+    headers: getAuthHeaders(),
+    params
   });
   return response.data;
 };
-// ... الدوال الأخرى ...
 
-export const updatePost = async (postId, postData) => {
+
+export const updatePost = async (postId, data) => {
+  const token = localStorage.getItem('access-token');
   const formData = new FormData();
-  formData.append('title', postData.title);
-  formData.append('content', postData.content);
-  if (postData.image) {
-    formData.append('image', postData.image);
+
+  formData.append('title', data.title);
+  formData.append('content', data.content);
+
+  if (data.image) {
+    formData.append('image', data.image);
   }
 
-  const response = await axios.put(`${API_BASE_URL}/posts/${postId}`, formData, {
-    headers: {
-      ...getAuthHeaders(),
-      'Content-Type': 'multipart/form-data'
+  const response = await axios.post(
+    `http://localhost:8000/api/posts/${postId}?_method=PUT`,
+    formData,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
     }
-  });
+  );
+
   return response.data;
 };
+
 
 export const deletePost = async (postId) => {
   const response = await axios.delete(`${API_BASE_URL}/posts/${postId}`, {
