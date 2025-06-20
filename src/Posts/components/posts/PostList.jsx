@@ -4,7 +4,8 @@ import PostCard from './PostCard';
 import CreatePostModal from './CreatePostModal';
 import FilterPosts from './FilterPosts';
 import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const PostList = () => {
   const { user } = useAuth();
@@ -84,7 +85,7 @@ const PostList = () => {
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
     setIsModalOpen(false);
-    toast.success('Post created successfully!');
+    toast.success('✅ Post created successfully!');
   };
 
   const handleDeletePost = (postId) => {
@@ -95,7 +96,7 @@ const PostList = () => {
     setPosts(posts.map(post =>
       post.id === updatedPost.id ? updatedPost : post
     ));
-    toast.success('Post updated successfully!');
+    toast.success('✅ Post updated successfully!');
   };
 
   const handleFilterChange = (newFilters) => {
@@ -103,8 +104,8 @@ const PostList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 relative">
+      <div className={`max-w-3xl mx-auto transition-all duration-300 ${isModalOpen ? 'blur-md pointer-events-none scale-[0.98] opacity-80' : ''}`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex space-x-2">
             <button
@@ -183,13 +184,17 @@ const PostList = () => {
             )}
           </div>
         )}
-
-        <CreatePostModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onPostCreated={handlePostCreated}
-        />
       </div>
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onPostCreated={handlePostCreated}
+      />
+
+      {/* ✅ Toast messages container */}
+      <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
 };

@@ -12,7 +12,6 @@ const Comment = ({ comment, postId }) => {
       await addReply(postId, comment.id, replyContent);
       setReplyContent('');
       setShowReplyForm(false);
-      // TODO: يمكنك هنا تحديث التعليقات بإعادة تحميلها
     } catch (error) {
       console.error('Error adding reply:', error);
     }
