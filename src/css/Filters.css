@@ -1,106 +1,78 @@
 .filters-container {
-  width: 280px;
+  width: 250px;
   background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(227, 93, 91, 0.08);
-  border: 1px solid #e8e8e8;
-  position: sticky;
-  top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.filters-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+.filters-grid {
+  display: grid;
+  gap: 12px;
 }
 
 .filter-group {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .filter-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #555;
 }
 
 .filter-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 6px 10px;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: border-color 0.2s;
 }
 
 .filter-input:focus {
   outline: none;
-  border-color: #e35d5b;
-  box-shadow: 0 0 0 2px rgba(227, 93, 91, 0.2);
+  border-color: #4a90e2;
 }
 
-.checkbox-group {
+.filter-actions {
   display: flex;
-  flex-direction: column;
   gap: 8px;
+  margin-top: 12px;
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #555;
+.apply-btn, .clear-btn {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 13px;
+  border-radius: 4px;
   cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
 }
 
-.checkbox-label input {
-  width: 16px;
-  height: 16px;
-  accent-color: #e35d5b;
+.apply-btn {
+  background-color: #4a90e2;
+  color: white;
 }
 
-.stipend-slider {
-  margin-top: 10px;
+.apply-btn:hover {
+  background-color: #3a7bc8;
 }
 
-.stipend-slider input[type="range"] {
-  width: 100%;
-  height: 6px;
-  -webkit-appearance: none;
-  background: #f0f0f0;
-  border-radius: 3px;
-  outline: none;
-}
-
-.stipend-slider input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  background: #e35d5b;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.stipend-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  font-size: 12px;
+.clear-btn {
+  background-color: #f5f5f5;
   color: #666;
 }
 
-.apply-filters-btn {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(to right, #9d312e, #e35d5b);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.apply-filters-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+.clear-btn:hover {
+  background-color: #e0e0e0;
 }
