@@ -12,7 +12,7 @@ const Register = () => {
     password_confirmation: "",
     role: "",
     certificate: null,
-    company_info: ""
+    company_brief: ""
   });
   const [errors, setErrors] = useState({});
 
@@ -72,8 +72,8 @@ const Register = () => {
       }
     }
     if (userData.role === 'employer') {
-      if (!userData.company_info || userData.company_info.trim().length < 10) {
-        errors.company_info = 'Company info is required and should be at least 10 characters.';
+      if (!userData.company_brief || userData.company_brief.trim().length < 10) {
+        errors.company_brief = 'Company info is required and should be at least 10 characters.';
       }
     }
     return errors;
@@ -158,17 +158,17 @@ const Register = () => {
             )}
             {formData.role === 'employer' && (
               <div>
-                <label htmlFor="company_info" className="block mb-1 font-semibold text-black">Company Info / Brief</label>
+                <label htmlFor="company_brief" className="block mb-1 font-semibold text-black">Company Info / Brief</label>
                 <textarea
-                  id="company_info"
-                  name="company_info"
+                  id="company_brief"
+                  name="company_brief"
                   className="w-full px-4 py-2 border-2 border-black rounded-lg focus:border-red-500 bg-white text-black"
                   placeholder="Tell us about your company, what you do, and your mission..."
-                  value={formData.company_info}
+                  value={formData.company_brief}
                   onChange={handleInputChange}
                   rows={4}
                 />
-                {errors.company_info && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.company_info}</div>}
+                {errors.company_brief && <div className="text-red-600 bg-red-50 border border-red-400 rounded mt-1 px-2 py-1 text-sm">{errors.company_brief}</div>}
               </div>
             )}
             <button type="submit" className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition">Register</button>

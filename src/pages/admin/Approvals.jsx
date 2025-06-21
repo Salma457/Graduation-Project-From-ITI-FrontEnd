@@ -299,7 +299,8 @@ const Approvals = () => {
                               setActionLoading(true);
                               try {
                                 const token = localStorage.getItem('access-token');
-                                await axios.put(`http://localhost:8000/api/users/${emp.id}/activate`, {}, {
+                                console.log(`Approving employer with ID: ${emp.id}`);
+                                await axios.post(`http://127.0.0.1:8000/api/users/${emp.id}/approve-employer`, {}, {
                                   headers: { Authorization: `Bearer ${token}` },
                                 });
                                 Swal.fire('Approved!', 'The employer has been approved.', 'success');
@@ -314,6 +315,28 @@ const Approvals = () => {
                             disabled={emp.is_active}
                           >
                             Approve
+                          </button>
+                          <button
+                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+                            onClick={async () => {
+                              setActionLoading(true);
+                              try {
+                                const token = localStorage.getItem('access-token');
+                                await axios.post(`http://127.0.0.1:8000/api/users/${emp.id}/reject-employer`, {}, {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                });
+                                Swal.fire('Rejected!', 'The employer has been rejected.', 'success');
+                                fetchEmployers();
+                              } catch (error) {
+                                console.error('Failed to reject employer:', error);
+                                Swal.fire('Error!', 'Failed to reject the employer. Please try again.', 'error');
+                              } finally {
+                                setActionLoading(false);
+                              }
+                            }}
+                            disabled={emp.is_active}
+                          >
+                            Reject
                           </button>
                         </td>
                       </tr>

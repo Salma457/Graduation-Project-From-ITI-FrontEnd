@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUsers } from '../../store/usersSlice';
+import { fetchUsers, deleteUser } from '../../store/usersSlice';
 import Pagination from '../../components/Pagination';
 import LoaderOverlay from '../../components/LoaderOverlay';
+import Swal from 'sweetalert2';
 
 const Users = () => {
   const dispatch = useDispatch();
@@ -45,14 +46,48 @@ const Users = () => {
   // Count admins for delete logic
   const adminCount = Array.isArray(users) ? users.filter(u => u.role === 'admin').length : 0;
 
-  // Delete handler (UI only, no API call yet)
+  // Delete handler (with SweetAlert2 confirmation)
   const handleDelete = (user) => {
     if (user.role === 'admin' && adminCount === 1) {
-      alert('You cannot delete the last admin user.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Cannot Delete Last Admin',
+        text: 'You cannot delete the last admin user.',
+        confirmButtonColor: '#dc2626',
+      });
       return;
     }
-    // TODO: Add delete API call and confirmation
-    alert(`Delete user: ${user.name}`);
+    Swal.fire({
+      title: `Delete user: ${user.name}?`,
+      text: 'This action cannot be undone. Are you sure you want to delete this user?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deleteUser(user.id))
+          .unwrap()
+          .then(() => {
+            Swal.fire({
+              icon: 'success',
+              title: 'User Deleted',
+              text: `${user.name} has been deleted.`,
+              timer: 1800,
+              showConfirmButton: false,
+            });
+          })
+          .catch((err) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed to delete user',
+              text: err?.message || String(err),
+            });
+          });
+      }
+    });
   };
 
   // Paginate filtered users
