@@ -172,13 +172,12 @@ useEffect(() => {
 
   const checkColumnExists = async () => {
     try {
-      // Try a query that would fail if column doesn't exist
       const { error } = await supabase
         .from('ch_messages')
         .select('read_at')
-        .limit(0); // Empty query just to test column existence
+        .limit(0); 
       
-      return !error; // If no error, column exists
+      return !error;
     } catch (err) {
       return false;
     }
