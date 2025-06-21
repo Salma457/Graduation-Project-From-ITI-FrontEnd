@@ -3,7 +3,7 @@ import "./Register.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
-import { setRole } from '../store/userSlice';
+import { setUser } from '../store/userSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -46,8 +46,8 @@ const Login = () => {
 
       // store access-token in localstorage
       localStorage.setItem('access-token', response.data.access_token);
-      // set user role in global state
-      dispatch(setRole(response.data.user.role));
+      // set user object in global state
+      dispatch(setUser(response.data.user));
 
       if (response.data.user.role === 'admin') {
         navigate('/admin');
