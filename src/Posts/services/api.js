@@ -108,31 +108,31 @@ export const getPostReactions = async (postId) => {
   return response.data;
 };
 
-// Comments
-export const fetchComments = async (postId) => {
-  const response = await axios.get(
-    `${API_BASE_URL}/posts/${postId}/comments`,
-    { headers: getAuthHeaders() }
-  );
+// Comments API
+export const fetchComments = async (postId, params = {}) => {
+  const response = await axios.get(`${API_BASE_URL}/posts/${postId}/comments`, {
+    headers: getAuthHeaders(),
+    params,
+  });
   return response.data;
 };
 
-export const addComment = async (postId, content) => {
+export const addComment = async (postId, content, parentCommentId = null) => {
+  const payload = { content };
+  if (parentCommentId) payload.parent_comment_id = parentCommentId;
+
   const response = await axios.post(
     `${API_BASE_URL}/posts/${postId}/comments`,
-    { content },
-    { headers: getAuthHeaders() } // ✅ مهم جداً لإرسال التوكن
+    payload,
+    { headers: getAuthHeaders() }
   );
   return response.data.comment;
 };
 
-
-
-
-export const updateComment = async (commentId, commentText) => {
+export const updateComment = async (commentId, content) => {
   const response = await axios.put(
     `${API_BASE_URL}/comments/${commentId}`,
-    { content: commentText },
+    { content },
     { headers: getAuthHeaders() }
   );
   return response.data;
@@ -145,26 +145,89 @@ export const deleteComment = async (commentId) => {
   );
   return response.data;
 };
-// Replies
-export const addReply = async (postId, parentCommentId, content) => {
-  const response = await axios.post(
-    `${API_BASE_URL}/posts/${postId}/comments`,
-    {
-      content,
-      parent_comment_id: parentCommentId,
-    },
-    { headers: getAuthHeaders() } // ✅ كمان هنا
-  );
-  return response.data.comment;
-};
 
-
-
-
-export const fetchReplies = async (commentId) => {
-  const response = await axios.get(
-    `${API_BASE_URL}/comments/${commentId}/replies`,
+// Replies API (if using separate endpoints)
+export const updateReply = async (replyId, content) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/replies/${replyId}`,
+    { content },
     { headers: getAuthHeaders() }
   );
   return response.data;
 };
+
+export const deleteReply = async (replyId) => {
+  const response = await axios.delete(
+    `${API_BASE_URL}/replies/${replyId}`,
+    { headers: getAuthHeaders() }
+  );
+  return response.data;
+};
+
+// // ==============================
+// // Comments
+// // ==============================
+
+// // ✅ Fetch comments with pagination
+// export const fetchComments = async (postId, params = {}) => {
+//   const response = await axios.get(`${API_BASE_URL}/posts/${postId}/comments`, {
+//     headers: getAuthHeaders(),
+//     params,
+//   });
+//   return response.data;
+// };
+
+// // ✅ Add a comment or reply
+// export const addComment = async (postId, content, parentCommentId = null) => {
+//   const payload = { content };
+//   if (parentCommentId) payload.parent_comment_id = parentCommentId;
+
+//   const response = await axios.post(
+//     `${API_BASE_URL}/posts/${postId}/comments`,
+//     payload,
+//     { headers: getAuthHeaders() }
+//   );
+//   return response.data.comment;
+// };
+
+// // ✅ Update a comment
+// export const updateComment = async (commentId, content) => {
+//   const response = await axios.put(
+//     `${API_BASE_URL}/comments/${commentId}`,
+//     { content },
+//     { headers: getAuthHeaders() }
+//   );
+//   return response.data;
+// };
+
+// // ✅ Delete a comment
+// export const deleteComment = async (commentId) => {
+//   const response = await axios.delete(
+//     `${API_BASE_URL}/comments/${commentId}`,
+//     { headers: getAuthHeaders() }
+//   );
+//   return response.data;
+// };
+
+// // ==============================
+// // Replies (Optional Routes)
+// // ==============================
+
+// // ✅ Update a reply separately
+// export const updateReply = async (replyId, content) => {
+//   const response = await axios.put(
+//     `${API_BASE_URL}/replies/${replyId}`,
+//     { content },
+//     { headers: getAuthHeaders() }
+//   );
+//   return response.data;
+// };
+
+// // ✅ Delete a reply separately
+// export const deleteReply = async (replyId) => {
+//   const response = await axios.delete(
+//     `${API_BASE_URL}/replies/${replyId}`,
+//     { headers: getAuthHeaders() }
+//   );
+//   return response.data;
+// };
