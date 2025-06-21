@@ -5,6 +5,8 @@ import { fetchComments, addComment, updateComment, deleteComment } from '../../s
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiEdit2, FiTrash2, FiCornerUpLeft, FiMoreVertical } from 'react-icons/fi';
 
+
+
 const CommentSection = ({ postId }) => {
   const { user } = useAuth();
   const [comments, setComments] = useState([]);
@@ -171,8 +173,8 @@ const CommentSection = ({ postId }) => {
 
   // Check if current user owns the content
   const isOwner = (commentUserId) => {
-    return user?.id === commentUserId;
-  };
+  return String(user?.user_id) === String(commentUserId);
+};
 
   return (
     <div className="space-y-4">
