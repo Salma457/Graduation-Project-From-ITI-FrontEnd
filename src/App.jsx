@@ -19,6 +19,7 @@ import Users from './pages/admin/Users.jsx';
 import Jobs from './pages/admin/Jobs.jsx';
 import Reports from './pages/admin/Reports.jsx';
 import adminRoutes from './pages/admin/adminRoutes.jsx';
+import PostsList from './Posts/components/posts/PostList.jsx';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="/employer/job/:id" element={<JobDetails />} />
           <Route path="/employer/job/:id/applications" element={<JobApplications />} />
           <Route path="/mychat" element={<ChatApp />} />
+          <Route path="/posts" element={<PostsList/>} />
         </Routes>
       </Router>
     </Provider>
