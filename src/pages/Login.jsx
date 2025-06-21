@@ -43,6 +43,7 @@ const Login = () => {
 
       // store access-token in localstorage
       localStorage.setItem('access-token', response.data.access_token);
+localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
 
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
