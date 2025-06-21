@@ -1,4 +1,4 @@
-import { Sparkles, ChevronLeft, Star, Award, MapPin, Download, Eye, X, AlertCircle, Calendar, Mail, Phone, User, Bookmark, Info, MessageCircle } from 'lucide-react';
+import { Sparkles, ChevronLeft, Star, Award, MapPin, Download, Eye, X, AlertCircle, Calendar, Mail, Phone, User, Bookmark, Info, MessageCircle, ChevronRight, CheckCircle, XCircle, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -15,18 +15,62 @@ const JobApplications = () => {
   const [openCoverLetter, setOpenCoverLetter] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(8); // 8 cards per page (3x4 grid)
 
   const ApplicationCard = ({ app, index, onViewMore, onViewProfile, onMessage = false }) => {
+    const getStatusInfo = (status) => {
+      switch (status) {
+        case 'approved':
+          return {
+            bgColor: 'bg-green-50',
+            borderColor: 'border-green-200',
+            shadowColor: 'hover:shadow-green-100',
+            badgeColor: 'bg-green-100 text-green-700',
+            icon: <CheckCircle className="w-5 h-5 text-green-600" />,
+            headerBg: 'bg-green-600',
+            actionBg: 'bg-green-600 hover:bg-green-700'
+          };
+        case 'rejected':
+          return {
+            bgColor: 'bg-red-50',
+            borderColor: 'border-red-200',
+            shadowColor: 'hover:shadow-red-100',
+            badgeColor: 'bg-red-100 text-red-700',
+            icon: <XCircle className="w-5 h-5 text-red-600" />,
+            headerBg: 'bg-red-600',
+            actionBg: 'bg-red-600 hover:bg-red-700'
+          };
+        default:
+          return {
+            bgColor: 'bg-white',
+            borderColor: 'border-gray-200',
+            shadowColor: 'hover:shadow-md',
+            badgeColor: 'bg-yellow-100 text-yellow-700',
+            icon: <Clock className="w-5 h-5 text-yellow-600" />,
+            headerBg: 'bg-red-600',
+            actionBg: 'bg-red-600 hover:bg-red-700'
+          };
+      }
+    };
+
+    const statusInfo = getStatusInfo(app.status);
+
     return (
-      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden h-full flex flex-col">
+      <div className={`${statusInfo.bgColor} rounded-xl shadow-sm ${statusInfo.shadowColor} transition-all duration-200 border ${statusInfo.borderColor} overflow-hidden h-full flex flex-col`}>
         {/* Card Header */}
         <div className="flex justify-between items-start p-4 pb-2">
-          <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+          <div className={`w-8 h-8 ${statusInfo.headerBg} rounded-full flex items-center justify-center`}>
             <span className="text-white text-sm font-bold">{index + 1}</span>
           </div>
-          <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <Bookmark className="w-5 h-5 text-gray-400" />
-          </button>
+          <div className="flex items-center gap-2">
+            {statusInfo.icon}
+            <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+              <Bookmark className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
         </div>
 
         {/* Profile Section */}
@@ -45,11 +89,7 @@ const JobApplications = () => {
 
           <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center justify-center gap-2">
             {app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${app.iti_id || app.id}`)}
-            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold
-              ${app.status === 'approved' ? 'bg-green-100 text-green-700' :
-                app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                'bg-yellow-100 text-yellow-700'}`}
-            >
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusInfo.badgeColor}`}>
               {app.status === 'approved' ? 'Approved' :
                 app.status === 'rejected' ? 'Rejected' :
                 'Pending'}
@@ -65,14 +105,11 @@ const JobApplications = () => {
             {app.location || 'Location'}
           </div>
 
-          
-        
-
           {/* Action Buttons */}
           <div className="flex gap-2 mt-auto">
-            {app.status !== 'approved' && (
+            {(app.status === 'rejected' && app.status === 'approved') && (
               <button
-                className="flex-1 flex items-center justify-center bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
+                className={`flex-1 flex items-center justify-center ${statusInfo.actionBg} text-white rounded-lg px-3 py-2 text-sm font-medium transition-colors`}
                 onClick={onViewMore}
               >
                 <Info className="w-4 h-4 mr-1" />
@@ -95,6 +132,71 @@ const JobApplications = () => {
             </button>
           </div>
         </div>
+      </div>
+    );
+  };
+
+  // Pagination Component
+  const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+
+    const getVisiblePages = () => {
+      const pages = [];
+      const maxVisible = 5;
+      
+      if (totalPages <= maxVisible) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          pages.push(1, 2, 3, 4, '...', totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+        } else {
+          pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+        }
+      }
+      
+      return pages;
+    };
+
+    return (
+      <div className="flex items-center justify-center space-x-2 mt-8">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="w-4 h-4 mr-1" />
+          Previous
+        </button>
+        
+        {getVisiblePages().map((page, index) => (
+          <button
+            key={index}
+            onClick={() => typeof page === 'number' && onPageChange(page)}
+            className={`px-3 py-2 text-sm font-medium rounded-lg ${
+              page === currentPage
+                ? 'bg-red-600 text-white'
+                : typeof page === 'number'
+                ? 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                : 'text-gray-400 cursor-default'
+            }`}
+            disabled={typeof page !== 'number'}
+          >
+            {page}
+          </button>
+        ))}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+          <ChevronRight className="w-4 h-4 ml-1" />
+        </button>
       </div>
     );
   };
@@ -183,51 +285,58 @@ const JobApplications = () => {
     return matchesStatus && matchesSearch;
   });
 
-  const groupedApplications = {
-    approved: [],
-    rejected: [],
-    pending: []
+  // Pagination logic
+  const getPaginatedData = (data, page = 1) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
   };
-  applications.forEach(app => {
-    groupedApplications[normalizeStatus(app.status)].push(app);
-  });
 
- const handleStatusChange = async (appId, status) => {
-  try {
-    const backendStatus = STATUS_MAP[status] || status;
-    const token = localStorage.getItem("access-token");
+  const getTotalPages = (dataLength) => {
+    return Math.ceil(dataLength / itemsPerPage);
+  };
 
-    // Send status update (Laravel handles sending the email if approved)
-    await axios.put(
-      `http://localhost:8000/api/job-application/${appId}/status`,
-      { status: backendStatus },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchTerm]);
+
+  const handleStatusChange = async (appId, status) => {
+    try {
+      const backendStatus = STATUS_MAP[status] || status;
+      const token = localStorage.getItem("access-token");
+
+      // Send status update (Laravel handles sending the email if approved)
+      await axios.put(
+        `http://localhost:8000/api/job-application/${appId}/status`,
+        { status: backendStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Update state
+      setApplications(apps =>
+        apps.map(app =>
+          app.id === appId ? { ...app, status: backendStatus } : app
+        )
+      );
+      setOpenCoverLetter(null);
+
+      // Show confetti if accepted
+      if (status === 'accepted') {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3500);
       }
-    );
 
-    // Update state
-    setApplications(apps =>
-      apps.map(app =>
-        app.id === appId ? { ...app, status: backendStatus } : app
-      )
-    );
-    setOpenCoverLetter(null);
-
-    // Show confetti if accepted
-    if (status === 'accepted') {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3500);
+    } catch (err) {
+      setError(err.message || "Something went wrong");
     }
-
-  } catch (err) {
-    setError(err.message || "Something went wrong");
-  }
-};
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -313,178 +422,122 @@ const JobApplications = () => {
           </div>
         ) : (
           <>
-            {/* Show Approved Applications */}
-            {groupedApplications.approved.length > 0 && (
-              <div className="mb-10">
-                <h2 className="text-2xl font-bold text-green-700 mb-4">Approved Applications</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {groupedApplications.approved.map((app, index) => (
-                    <ApplicationCard
-                      key={app.id || index}
-                      app={app}
-                      index={index}
-                      onViewMore={() => setOpenCoverLetter(index)}
-                      onViewProfile={() => {
-                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                        if (userId) window.open(`/itian-profile/${userId}`, '_blank');
-                      }}
-                      onMessage={() => {
-                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                        const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
-                        if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
-                      }}
-                    />
-                  ))}
+            {/* Applications Grid - Single View for All Cases */}
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {statusFilter === 'approved' ? 'Approved Applications' :
+                   statusFilter === 'rejected' ? 'Rejected Applications' :
+                   statusFilter === 'pending' ? 'Pending Applications' :
+                   searchTerm ? 'Search Results' : 'All Applications'}
+                </h2>
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {getTotalPages(filteredApplications.length)}
                 </div>
               </div>
-            )}
-
-            {/* Show Pending Applications */}
-            {groupedApplications.pending.length > 0 && (
-              <div className="mb-10">
-                <h2 className="text-2xl font-bold text-yellow-600 mb-4">Pending Applications</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {groupedApplications.pending.map((app, index) => (
-                    <ApplicationCard
-                      key={app.id || index}
-                      app={app}
-                      index={index}
-                      onViewMore={() => setOpenCoverLetter(index)}
-                      onViewProfile={() => {
-                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                        if (userId) window.open(`/itian-profile/${userId}`, '_blank');
-                      }}
-                      onMessage={() => {
-                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                        const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
-                        if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
-                      }}
-                      showScores={true}
-                    />
-                  ))}
-                </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {getPaginatedData(filteredApplications, currentPage).map((app, index) => (
+                  <ApplicationCard
+                    key={app.id || index}
+                    app={app}
+                    index={(currentPage - 1) * itemsPerPage + index}
+                    onViewMore={() => setOpenCoverLetter(applications.findIndex(a => a.id === app.id))}
+                    onViewProfile={() => {
+                      const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                      if (userId) window.open(`/itian-profile/${userId}`, '_blank');
+                    }}
+                    onMessage={() => {
+                      const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                      const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
+                      if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
+                    }}
+                  />
+                ))}
               </div>
-            )}
-
-            {/* Show Rejected Applications */}
-            {groupedApplications.rejected.length > 0 && (
-              <div className="mb-10">
-                <h2 className="text-2xl font-bold text-red-600 mb-4">Rejected Applications</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {groupedApplications.rejected.map((app, index) => (
-                    <ApplicationCard
-                      key={app.id || index}
-                      app={app}
-                      index={index}
-                      onViewMore={() => setOpenCoverLetter(index)}
-                      onViewProfile={() => {
-                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                        if (userId) window.open(`/itian-profile/${userId}`, '_blank');
-                      }}
-                      onMessage={() => {
-                        const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                        const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
-                        if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+              
+              <Pagination
+                currentPage={currentPage}
+                totalPages={getTotalPages(filteredApplications.length)}
+                onPageChange={setCurrentPage}
+              />
+            </div>
 
             {/* Cover Letter Modal */}
-                   {openCoverLetter !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-              {/* Modal Header */}
-              <div className="bg-red-500 p-6 text-white relative">
-                <button
-                  className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
-                  onClick={() => setOpenCoverLetter(null)}
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">
-                      {applications[openCoverLetter]?.applicant_name || 'Applicant'}
-                    </h2>
-                    <p className="text-red-100 text-sm">
-                      {applications[openCoverLetter]?.university || 'Centurion University'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto max-h-96 bg-white">
-                {/* Scores Section */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-red-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-black">
-                      {applications[openCoverLetter]?.magic_score || 90}/100
+            {openCoverLetter !== null && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                  {/* Modal Header */}
+                  <div className="bg-red-500 p-6 text-white relative">
+                    <button
+                      className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+                      onClick={() => setOpenCoverLetter(null)}
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold">
+                          {applications[openCoverLetter]?.applicant_name || 'Applicant'}
+                        </h2>
+                        <p className="text-red-100 text-sm">
+                          {applications[openCoverLetter]?.university || 'Centurion University'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">Magic Score</div>
                   </div>
-                  <div className="bg-red-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-black">
-                      {applications[openCoverLetter]?.cgpa || 9.0}
+                  {/* Modal Content */}
+                  <div className="p-6 overflow-y-auto max-h-96 bg-white">
+                    {/* Cover Letter */}
+                     <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-black mb-3">Cover Letter</h3>
+                      <div className="bg-red-50 rounded-lg p-4 border border-red-100">
+                        <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                          {applications[openCoverLetter]?.cover_letter || 'No cover letter provided.'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">CGPA</div>
+                    {/* Additional Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className="flex items-center text-gray-600">
+                        <Calendar className="w-4 h-4 mr-2 text-black" />
+                        Applied: {applications[openCoverLetter]?.created_at ? new Date(applications[openCoverLetter].created_at).toLocaleDateString() : 'Recently'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                {/* Cover Letter */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-black mb-3">Cover Letter</h3>
-                  <div className="bg-red-50 rounded-lg p-4 border border-red-100">
-                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-                      {applications[openCoverLetter]?.cover_letter || 'No cover letter provided.'}
-                    </p>
-                  </div>
-                </div>
-                {/* Additional Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2 text-black" />
-                    {applications[openCoverLetter]?.location || 'Location not provided'}
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Calendar className="w-4 h-4 mr-2 text-black" />
-                    Applied: {applications[openCoverLetter]?.created_at ? new Date(applications[openCoverLetter].created_at).toLocaleDateString() : 'Recently'}
+                  {/* Modal Footer */}
+                  <div className="p-6 bg-red-50 border-t border-red-100 flex gap-3 justify-between">
+                    <a
+                      href={applications[openCoverLetter]?.cv || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download CV
+                    </a>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                        onClick={() => handleStatusChange(applications[openCoverLetter].id, 'accepted')}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                        onClick={() => handleStatusChange(applications[openCoverLetter].id, 'rejected')}
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-              {/* Modal Footer */}
-              <div className="p-6 bg-red-50 border-t border-red-100 flex gap-3 justify-between">
-                <a
-                  href={applications[openCoverLetter]?.cv || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download CV
-                </a>
-                <div className="flex gap-2">
-                  <button
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
-                    onClick={() => handleStatusChange(applications[openCoverLetter].id, 'accepted')}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
-                    onClick={() => handleStatusChange(applications[openCoverLetter].id, 'rejected')}
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            )}
+
             {/* Confetti */}
             {showConfetti && (
               <Confetti width={dimensions.width} height={dimensions.height} />
@@ -495,5 +548,4 @@ const JobApplications = () => {
     </div>
   );
 };
-
 export default JobApplications;

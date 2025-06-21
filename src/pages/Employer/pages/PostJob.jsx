@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { postJob, resetJobState } from "../jobPostSlice";
 import { useNavigate } from "react-router-dom";
-import "../style/JobPostingForm.css"; // Import the CSS file
+import "../style/JobPostingForm.css";
 
 const PostJob = () => {
   const dispatch = useDispatch();
@@ -24,6 +24,7 @@ const PostJob = () => {
   });
 
   const [formErrors, setFormErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   useEffect(() => {
     return () => {
@@ -33,39 +34,66 @@ const PostJob = () => {
 
   useEffect(() => {
     if (success) {
-      navigate('/employer/jobs'); // Change this path to your jobs list route
+      navigate('/employer/jobs');
     }
   }, [success, navigate]);
 
-  // Enhanced form validation
+  const validateField = (name, value) => {
+    const errors = {};
+    
+    switch (name) {
+      case 'job_title':
+        if (!value.trim()) {
+          errors.job_title = 'Job title is required';
+        }
+        break;
+        
+      case 'description':
+        if (!value.trim()) {
+          errors.description = 'Job description is required';
+        } else if (value.length < 50) {
+          errors.description = 'Description should be at least 50 characters';
+        }
+        break;
+        
+      case 'salary_range_min':
+        if (value && formData.salary_range_max && parseInt(value) >= parseInt(formData.salary_range_max)) {
+          errors.salary_range_min = 'Minimum salary must be less than maximum salary';
+        }
+        break;
+        
+      case 'salary_range_max':
+        if (value && formData.salary_range_min && parseInt(formData.salary_range_min) >= parseInt(value)) {
+          errors.salary_range_max = 'Maximum salary must be greater than minimum salary';
+        }
+        break;
+        
+      case 'application_deadline':
+        if (value) {
+          const deadlineDate = new Date(value);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          if (deadlineDate <= today) {
+            errors.application_deadline = 'Application deadline must be in the future';
+          }
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    return errors;
+  };
+
   const validateForm = () => {
     const errors = {};
     
-    if (!formData.job_title.trim()) {
-      errors.job_title = 'Job title is required';
-    }
-    
-    if (!formData.description.trim()) {
-      errors.description = 'Job description is required';
-    } else if (formData.description.length < 50) {
-      errors.description = 'Description should be at least 50 characters';
-    }
-    
-    if (formData.salary_range_min && formData.salary_range_max) {
-      if (parseInt(formData.salary_range_min) >= parseInt(formData.salary_range_max)) {
-        errors.salary_range_max = 'Maximum salary must be greater than minimum salary';
-      }
-    }
-    
-    if (formData.application_deadline) {
-      const deadlineDate = new Date(formData.application_deadline);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      if (deadlineDate <= today) {
-        errors.application_deadline = 'Application deadline must be in the future';
-      }
-    }
+    Object.keys(formData).forEach(key => {
+      const fieldErrors = validateField(key, formData[key]);
+      Object.assign(errors, fieldErrors);
+    });
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -75,18 +103,72 @@ const PostJob = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear specific field error when user starts typing
-    if (formErrors[name]) {
+    setTouched(prev => ({ ...prev, [name]: true }));
+    
+    if (touched[name] || formErrors[name]) {
+      const fieldErrors = validateField(name, value);
+      
       setFormErrors(prev => {
         const newErrors = { ...prev };
+        
         delete newErrors[name];
+        
+        if (fieldErrors[name]) {
+          newErrors[name] = fieldErrors[name];
+        }
+        
+        if (name === 'salary_range_min' && formData.salary_range_max) {
+          const maxErrors = validateField('salary_range_max', formData.salary_range_max);
+          if (maxErrors.salary_range_max) {
+            newErrors.salary_range_max = maxErrors.salary_range_max;
+          } else {
+            delete newErrors.salary_range_max;
+          }
+        }
+        
+        if (name === 'salary_range_max' && formData.salary_range_min) {
+          const minErrors = validateField('salary_range_min', formData.salary_range_min);
+          if (minErrors.salary_range_min) {
+            newErrors.salary_range_min = minErrors.salary_range_min;
+          } else {
+            delete newErrors.salary_range_min;
+          }
+        }
+        
         return newErrors;
       });
     }
   };
 
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    
+    setTouched(prev => ({ ...prev, [name]: true }));
+    
+    const fieldErrors = validateField(name, value);
+    
+    setFormErrors(prev => {
+      const newErrors = { ...prev };
+      
+      delete newErrors[name];
+      
+      if (fieldErrors[name]) {
+        newErrors[name] = fieldErrors[name];
+      }
+      
+      return newErrors;  
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    const allFields = Object.keys(formData);
+    const touchedAll = {};
+    allFields.forEach(field => {
+      touchedAll[field] = true;
+    });
+    setTouched(touchedAll);
     
     if (!validateForm()) {
       return;
@@ -95,7 +177,7 @@ const PostJob = () => {
     // Convert data to proper format
     const jobData = {
       ...formData,
-      posted_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      posted_date: new Date().toISOString().split('T')[0],
       salary_range_min: formData.salary_range_min ? parseInt(formData.salary_range_min) : null,
       salary_range_max: formData.salary_range_max ? parseInt(formData.salary_range_max) : null,
     };
@@ -118,6 +200,7 @@ const PostJob = () => {
       application_deadline: '',
     });
     setFormErrors({});
+    setTouched({});
   };
 
   return (
@@ -125,7 +208,7 @@ const PostJob = () => {
       <div className="postjob-wrapper">
         <div className="postjob-card">
           <div className="postjob-header">
-            <h2 className="postjob-title">Post a New Job</h2>
+            <h1 className="postjob-title">Post a New Job</h1>
             <p className="postjob-subtitle">
               Fill in the details below to create a comprehensive job posting
             </p>
@@ -161,7 +244,7 @@ const PostJob = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="postjob-form">
+          <form className="postjob-form" onSubmit={handleSubmit}>
             {/* Job Title */}
             <div className="postjob-field-group">
               <label className="postjob-label">
@@ -172,12 +255,12 @@ const PostJob = () => {
                 name="job_title"
                 value={formData.job_title}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 className={`postjob-input ${formErrors.job_title ? 'error' : ''}`}
                 placeholder="e.g. Senior Frontend Developer"
-                required
               />
               {formErrors.job_title && (
-                <span className="postjob-error-text">{formErrors.job_title}</span>
+                <p className="postjob-error-text">{formErrors.job_title}</p>
               )}
             </div>
 
@@ -190,16 +273,15 @@ const PostJob = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows="5"
+                onBlur={handleBlur}
                 className={`postjob-textarea ${formErrors.description ? 'error' : ''}`}
                 placeholder="Provide a detailed description of the job role, responsibilities, and what makes this position exciting..."
-                required
               />
-              <div className="postjob-char-count">
+              <div className="postjob-subtitle">
                 {formData.description.length} characters
               </div>
               {formErrors.description && (
-                <span className="postjob-error-text">{formErrors.description}</span>
+                <p className="postjob-error-text">{formErrors.description}</p>
               )}
             </div>
 
@@ -210,7 +292,6 @@ const PostJob = () => {
                 name="requirements"
                 value={formData.requirements}
                 onChange={handleChange}
-                rows="4"
                 className="postjob-textarea"
                 placeholder="List the essential technical skills, experience level, and must-have qualifications..."
               />
@@ -223,7 +304,6 @@ const PostJob = () => {
                 name="qualifications"
                 value={formData.qualifications}
                 onChange={handleChange}
-                rows="3"
                 className="postjob-textarea"
                 placeholder="Specify preferred qualifications, certifications, or nice-to-have skills..."
               />
@@ -292,10 +372,13 @@ const PostJob = () => {
                   name="salary_range_min"
                   value={formData.salary_range_min}
                   onChange={handleChange}
-                  className="postjob-input"
+                  onBlur={handleBlur}
+                  className={`postjob-input ${formErrors.salary_range_min ? 'error' : ''}`}
                   placeholder="10000"
-                  min="0"
                 />
+                {formErrors.salary_range_min && (
+                  <p className="postjob-error-text">{formErrors.salary_range_min}</p>
+                )}
               </div>
               <div className="postjob-field-group">
                 <label className="postjob-label">Maximum Salary</label>
@@ -304,12 +387,12 @@ const PostJob = () => {
                   name="salary_range_max"
                   value={formData.salary_range_max}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   className={`postjob-input ${formErrors.salary_range_max ? 'error' : ''}`}
                   placeholder="20000"
-                  min="0"
                 />
                 {formErrors.salary_range_max && (
-                  <span className="postjob-error-text">{formErrors.salary_range_max}</span>
+                  <p className="postjob-error-text">{formErrors.salary_range_max}</p>
                 )}
               </div>
             </div>
@@ -322,11 +405,11 @@ const PostJob = () => {
                 name="application_deadline"
                 value={formData.application_deadline}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 className={`postjob-input ${formErrors.application_deadline ? 'error' : ''}`}
-                min={new Date().toISOString().split('T')[0]}
               />
               {formErrors.application_deadline && (
-                <span className="postjob-error-text">{formErrors.application_deadline}</span>
+                <p className="postjob-error-text">{formErrors.application_deadline}</p>
               )}
             </div>
 
@@ -336,8 +419,8 @@ const PostJob = () => {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="postjob-reset-button"
                   disabled={loading}
+                  className="postjob-reset-button"
                 >
                   Reset Form
                 </button>
@@ -345,9 +428,7 @@ const PostJob = () => {
                   type="submit"
                   disabled={loading}
                   className={`postjob-submit-button ${
-                    loading
-                      ? 'postjob-submit-button-disabled'
-                      : 'postjob-submit-button-active'
+                    loading ? 'postjob-submit-button-disabled' : 'postjob-submit-button-active'
                   }`}
                 >
                   {loading ? (
