@@ -3,13 +3,10 @@ import "./Register.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
-import { setRole } from '../store/userSlice';
+import { setUser } from '../store/userSlice';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const dispatch = useDispatch();
@@ -38,19 +35,12 @@ const Login = () => {
     setGeneralError("");
     const validationErrors = validateUserData(formData);
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(validationErrors).length > 0) return;
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login', formData);
-      console.log('Login successful!', response.data.user.role);
-
-      // store access-token in localstorage
       localStorage.setItem('access-token', response.data.access_token);
-      // set user role in global state
-      dispatch(setRole(response.data.user.role));
-
-      // تحقق من البروفايل بناءً على الـ role
+      dispatch(setUser(response.data.user));
+      localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
       const userRole = response.data.user.role;
       if (userRole === 'employer') {
         try {
@@ -58,15 +48,15 @@ const Login = () => {
             headers: { Authorization: `Bearer ${response.data.access_token}` },
           });
           if (profileCheck.status === 200) {
-            navigate("/employer-profile"); // لو فيه بروفايل
+            navigate("/employer-profile");
           } else {
-            navigate("/create-employer-profile"); // لو مش فيه بروفايل
+            navigate("/create-employer-profile");
           }
         } catch (err) {
           if (err.response?.status === 404) {
-            navigate("/create-employer-profile"); // لو مش فيه بروفايل
+            navigate("/create-employer-profile");
           } else {
-            throw err; // لو فيه خطأ تاني
+            throw err;
           }
         }
       } else if (userRole === 'itian') {
@@ -75,19 +65,19 @@ const Login = () => {
             headers: { Authorization: `Bearer ${response.data.access_token}` },
           });
           if (profileCheck.status === 200) {
-            navigate("/itian-profile"); // لو فيه بروفايل
+            navigate("/itian-profile");
           } else {
-            navigate("/create-itian-profile"); // لو مش فيه بروفايل
+            navigate("/create-itian-profile");
           }
         } catch (err) {
           if (err.response?.status === 404) {
-            navigate("/create-itian-profile"); // لو مش فيه بروفايل
+            navigate("/create-itian-profile");
           } else {
-            throw err; // لو فيه خطأ تاني
+            throw err;
           }
         }
-      } else {
-        navigate("/dashboard"); // لو الـ role تاني (admin أو غيره)
+      } else if (userRole === 'admin') {
+        navigate('/admin');
       }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
@@ -133,11 +123,9 @@ const Login = () => {
                   return;
                 }
                 try {
-                  const response = await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
-                  console.log(response);
+                  await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
                   setGeneralError('Password reset link sent to your email.');
-                } catch (error) {
-                  console.log(error);
+                } catch {
                   setGeneralError('Failed to send reset link. Please try again.');
                 }
               }}
