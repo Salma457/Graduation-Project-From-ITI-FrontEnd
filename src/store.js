@@ -6,6 +6,8 @@ import jobsReducer from './store/jobsSlice';
 import usersReducer from './store/usersSlice';
 import chatReducer from './pages/Employer/chatSlice';
 import { chatApi } from './api/chatApi';
+import itianProfileReducer from './store/itianProfileSlice';
+import employerProfileReducer from './store/employerProfileSlice';
 
 const store = configureStore({
   reducer: {
@@ -15,6 +17,8 @@ const store = configureStore({
     jobs: jobsReducer,
     users: usersReducer,
     chat: chatReducer,
+    itianProfile: itianProfileReducer,
+    employerProfile: employerProfileReducer,
     [chatApi.reducerPath]: chatApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

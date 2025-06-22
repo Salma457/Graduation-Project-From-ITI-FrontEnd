@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
 import store from './store.js';
 import './App.css';
 import viteLogo from '../public/vite.svg';
@@ -31,8 +32,23 @@ import CreateItianProfile from './pages/CreateItianProfile';
 import ItianProfile from './pages/ItianProfile.jsx';
 import ViewItianProfile from './pages/ViewItianProfile';
 import ViewEmployerProfile from './pages/ViewEmployerProfile.jsx';
+import { fetchItianProfile } from './store/itianProfileSlice';
+import { fetchEmployerProfile } from './store/employerProfileSlice';
 
 function App() {
+  const user = useSelector(state => state.user.user);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'ITIAN') {
+        dispatch(fetchItianProfile(user.id));
+      } else if (user.role === 'EMPLOYER') {
+        dispatch(fetchEmployerProfile(user.id));
+      }
+    }
+  }, [user, dispatch]);
+
   return (
     <Provider store={store}>
       <Router>
