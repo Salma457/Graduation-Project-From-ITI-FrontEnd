@@ -10,7 +10,6 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload;
-      state.role = action.payload?.role || null;
     },
 
     // clear user if the user logs out

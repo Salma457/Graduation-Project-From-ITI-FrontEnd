@@ -1,25 +1,24 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import store from "./store.js";// Make sure this path matches your store location
+import store from './store.js';
 import './App.css';
 import Register from './pages/Register.jsx';
 import Login from './pages/Login.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import PostJob from './pages/Employer/pages/PostJob.jsx';
-import  JobList from './pages/Employer/pages/DisplayJob'; // Add this import
-import TrashPage from './pages/Employer/pages/TrashPage'; // Add this import
+import JobList from './pages/Employer/pages/DisplayJob';
+import TrashPage from './pages/Employer/pages/TrashPage';
 import JobDetails from './pages/Employer/pages/JobDetails';
 import JobApplications from './pages/Employer/pages/JobApplications';
 import ChatApp from './pages/Employer/pages/ChatApp';
 import viteLogo from '../public/vite.svg';
-import AdminLayout from './pages/admin/AdminLayout.jsx';
-import Approvals from './pages/admin/Approvals.jsx';
-import Posts from './pages/admin/Posts.jsx';
-import Users from './pages/admin/Users.jsx';
-import Jobs from './pages/admin/Jobs.jsx';
-import Reports from './pages/admin/Reports.jsx';
 import adminRoutes from './pages/admin/adminRoutes.jsx';
 import PostsList from './Posts/components/posts/PostList.jsx';
+import JobsPage from './pages/JobsPage.jsx';
+import JobDetailsPublic from './pages/JobDetails.jsx';
+import ApplyForm from './pages/ApplyForm.jsx';
+import MyApplications from './pages/MyApplications.jsx';
+import ProposalDetails from './pages/ProposalDetails.jsx';
 
 function App() {
   return (
@@ -27,21 +26,27 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<div className=""><img src={viteLogo} alt="Vite Logo" style={{height: 80, margin: '2rem auto', display: 'block'}} /><h1>Home Page</h1></div>} />
-          <Route path="/register" element={<Register/>} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/reset-password" element={<ResetPassword/>} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {adminRoutes}
           <Route path="/employer/post-job" element={<PostJob />} />
-          <Route path="/employer/jobs" element={< JobList />} />
-          <Route path="/employer/trash" element={<TrashPage />} /> {/* Add this route */}
+          <Route path="/employer/jobs" element={<JobList />} />
+          <Route path="/employer/trash" element={<TrashPage />} />
           <Route path="/employer/job/:id" element={<JobDetails />} />
           <Route path="/employer/job/:id/applications" element={<JobApplications />} />
           <Route path="/mychat" element={<ChatApp />} />
-          <Route path="/posts" element={<PostsList/>} />
+          <Route path="/posts" element={<PostsList />} />
+          {/* Public job seeker routes */}
+          <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/jobs/:id" element={<JobDetailsPublic />} />
+          <Route path="/apply/:id" element={<ApplyForm />} />
+          <Route path="/my-applications" element={<MyApplications />} />
+          <Route path="/my-applications/:id" element={<ProposalDetails />} />
         </Routes>
       </Router>
     </Provider>
-  )
+  );
 }
 
 export default App;

@@ -5,8 +5,16 @@ html, body, #root {
   width: 100%;
   margin: 0;
   padding: 0;
+<<<<<<< HEAD
   background-color: #faf1f1;
 
+=======
+}
+
+body, #root {
+  min-height: 100vh;
+  min-width: 100vw;
+>>>>>>> 47e7ce1a7ab91060f7dd0ee1066b24cf0fa13d8d
 }
 
 
