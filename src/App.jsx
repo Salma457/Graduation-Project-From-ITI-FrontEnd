@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import store from './store.js';
+import applicationStore from './applicationStore';
 import './App.css';
 import Register from './pages/Register.jsx';
 import Login from './pages/Login.jsx';
@@ -14,16 +14,19 @@ import ChatApp from './pages/Employer/pages/ChatApp';
 import viteLogo from '../public/vite.svg';
 import adminRoutes from './pages/admin/adminRoutes.jsx';
 import PostsList from './Posts/components/posts/PostList.jsx';
-import JobsPage from './pages/JobsPage.jsx';
-import JobDetailsPublic from './pages/JobDetails.jsx';
-import ApplyForm from './pages/ApplyForm.jsx';
-import MyApplications from './pages/MyApplications.jsx';
-import ProposalDetails from './pages/ProposalDetails.jsx';
-
+import JobsPage from './pages/Itian/JobsPage.jsx';
+import JobDetailsPublic from './pages/Itian/JobDetails.jsx';
+import ApplyForm from './pages/Itian/ApplyForm.jsx';
+import MyApplications from './pages/Itian/MyApplications.jsx';
+import ProposalDetails from './pages/Itian/ProposalDetails.jsx';
+import StripeProvider from './components/StripeProvider.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
+import PaymentSuccess from './pages/PaymentSuccess.jsx';
 function App() {
   return (
-    <Provider store={store}>
+    <Provider store={applicationStore}>
       <Router>
+        <StripeProvider>
         <Routes>
           <Route path="/" element={<div className=""><img src={viteLogo} alt="Vite Logo" style={{height: 80, margin: '2rem auto', display: 'block'}} /><h1>Home Page</h1></div>} />
           <Route path="/register" element={<Register />} />
@@ -41,12 +44,21 @@ function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:id" element={<JobDetailsPublic />} />
           <Route path="/apply/:id" element={<ApplyForm />} />
-          <Route path="/my-applications" element={<MyApplications />} />
-          <Route path="/my-applications/:id" element={<ProposalDetails />} />
+          
+          
+         
+        <Route path="/my-applications" element={<MyApplications />} />
+        <Route path="/my-applications/:id" element={<ProposalDetails />} />
+        <Route path="/payment" element={<PaymentPage />} />
+       <Route path="/success" element={<PaymentSuccess />} />
         </Routes>
+        </StripeProvider>
+        
       </Router>
     </Provider>
   );
+   
+ 
 }
 
 export default App;

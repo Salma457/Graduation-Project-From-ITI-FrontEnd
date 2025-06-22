@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import "../css/apply.css";
+import "../../css/apply.css";
 
 const ApplyForm = () => {
   const { id } = useParams();

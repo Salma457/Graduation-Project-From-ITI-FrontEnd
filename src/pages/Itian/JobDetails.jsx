@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
-import "../css/JobDetails.css";
-import { Sparkles } from 'lucide-react'; // أو أي مكتبة الأيقونات التي تستخدمها
+import "../../css/JobDetails.css";
+import { Sparkles } from 'lucide-react'; 
 Modal.setAppElement('#root');
 
-const JobDetails = () => {
+const JobDetailsPublic = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
@@ -184,13 +184,11 @@ const JobDetails = () => {
           <div className="job-tags">
             <span className="job-type">{job.job_type}</span>
             <span className="work-type">
-              <span className="wfh-icon">🏢</span>
+              
               {job.status}
             </span>
           </div>
-          <p className="posted-time">
-            Posted on {new Date(job.posted_date).toLocaleDateString()}
-          </p>
+          
         </div>
 
         <div className="job-content">
@@ -215,14 +213,14 @@ const JobDetails = () => {
             ← Back to jobs
           </Link>
           {hasApplied ? (
-            <button onClick={viewProposal} className="view-proposal-btn">
-              View My Proposal
-            </button>
-          ) : (
-            <button onClick={handleApply} className="apply-btn">
-              Apply Now
-            </button>
-          )}
+  <button onClick={viewProposal} className="view-proposal-btn">
+    View My Proposal
+  </button>
+) : (
+  <button onClick={handleApply} className="apply-btn">
+    Apply Now
+  </button>
+)}
         </div>
       </div>
 
@@ -310,4 +308,4 @@ const JobDetails = () => {
   );
 };
 
-export default JobDetails;
+export default JobDetailsPublic;
