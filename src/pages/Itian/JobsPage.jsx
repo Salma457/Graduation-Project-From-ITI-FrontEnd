@@ -141,7 +141,7 @@ const JobsPage = () => {
                 <p>No jobs found</p>
                 <button
                   onClick={handleClearAll}
-                  className="clear-all-btn"
+                   className="clear-all-btn"
                 >
                   
                 </button>
