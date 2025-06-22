@@ -9,16 +9,17 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const PostList = () => {
- const dispatch = useDispatch();
- const user = useSelector((state) => state.itian.user);
-//  const isLoadingUser = useSelector((state) => state.itian.loading);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.itian.user);
 
- useEffect(() => {
-   if (!user) {
-     dispatch(fetchItianProfile());
-  }
- }, [user, dispatch]);  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!user) {
+      dispatch(fetchItianProfile());
+    }
+  }, [user, dispatch]);
+
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,13 +33,11 @@ const PostList = () => {
 
   const observer = useRef();
 
-  const loadPosts = useCallback(async (reset = false) => {
+  const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
     try {
       setLoading(true);
-      const currentPage = reset ? 1 : page;
-
       const params = {
-        page: currentPage,
+        page: pageNumber,
         sort: filters.sort,
         search: filters.search,
         reactions: filters.reactions.join(',')
@@ -52,7 +51,6 @@ const PostList = () => {
 
       if (reset) {
         setPosts(postsArray);
-        setPage(1);
       } else {
         setPosts(prev => [...prev, ...postsArray]);
       }
@@ -65,30 +63,32 @@ const PostList = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, filters]);
+  }, [activeTab, filters]);
 
+  // تحميل أول مرة أو بعد تغيير الفلاتر أو التاب
   useEffect(() => {
-  loadPosts(true);
-}, [loadPosts])
+    setPage(1);
+    loadPosts(true, 1);
+  }, [filters, activeTab, loadPosts]);
+
+  // تحميل الصفحات التالية
+  useEffect(() => {
+    if (page === 1) return;
+    loadPosts(false, page);
+  }, [page, loadPosts]);
 
   const lastPostRef = useCallback(node => {
-    if (loading) return;
+    if (loading || !hasMore) return;
     if (observer.current) observer.current.disconnect();
 
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting) {
         setPage(prev => prev + 1);
       }
     });
 
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
-
- useEffect(() => {
-  if (page > 1) {
-    loadPosts();
-  }
-}, [page, loadPosts]);
 
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
@@ -158,11 +158,18 @@ const PostList = () => {
           <div className="bg-white p-6 rounded-lg shadow text-center">
             <p className="text-red-500 mb-4">{error}</p>
             <button
-              onClick={() => loadPosts(true)}
+              onClick={() => {
+                setPage(1);
+                loadPosts(true, 1);
+              }}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
             >
               Try Again
             </button>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="text-center text-gray-500 py-12">
+            No posts found.
           </div>
         ) : (
           <div className="space-y-6">
@@ -194,14 +201,12 @@ const PostList = () => {
         )}
       </div>
 
-      {/* Create Post Modal */}
       <CreatePostModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onPostCreated={handlePostCreated}
       />
 
-      {/* ✅ Toast messages container */}
       <ToastContainer position="top-center" autoClose={2000} />
     </div>
   );
