@@ -717,7 +717,6 @@ const CreateItianProfile = () => {
             </button>
           </div>
 
-          /* Projects */
           <div>
             <h4
               style={{
