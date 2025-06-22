@@ -556,7 +556,6 @@ const fetchContacts = useCallback(async () => {
                       <h3 className="font-semibold text-white drop-shadow-md">
                         {selectedContact ? selectedContact.contact_name : "Select a chat"}
                       </h3>
-                      {/* Online status indicator */}
                       {selectedContact && (
                         <div className="text-xs font-medium flex items-center gap-1">
                           <div className={`w-2 h-2 rounded-full ${
