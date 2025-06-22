@@ -399,12 +399,6 @@ const EmployerProfile = () => {
                         <span>Website</span>
                       </a>
                     )}
-                    {profile.is_verified && (
-                      <div className="flex items-center bg-green-50 px-4 py-2 rounded-lg">
-                        <Sparkles className="text-green-600 mr-2" size={16} />
-                        <span className="text-green-700">Verified</span>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

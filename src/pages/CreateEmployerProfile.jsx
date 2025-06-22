@@ -4,18 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import {
-  Building, // Changed icon for company
-  Mail,
-  Globe,
-  MapPin,
-  Upload,
-  X,
-  Sparkles,
-  User as UserIcon, // Renamed to avoid conflict with `User` component if used
-} from "lucide-react";
+import { Building, Mail, Globe, MapPin, Upload, X, Sparkles, User as UserIcon } from "lucide-react";
 
-// Yup validation schema for Employer Profile
 const schema = Yup.object().shape({
   company_name: Yup.string()
     .required("Company name is required")
@@ -23,8 +13,8 @@ const schema = Yup.object().shape({
   company_logo: Yup.mixed()
     .nullable()
     .test("fileSize", "Company logo is too large (max 2MB)", (value) => {
-      if (!value || !value[0]) return true; // allow null or no file
-      return value[0].size <= 2048 * 1024; // 2MB
+      if (!value || !value[0]) return true;
+      return value[0].size <= 2048 * 1024;
     })
     .test("fileType", "Invalid company logo type (jpeg, png, jpg, gif)", (value) => {
       if (!value || !value[0]) return true;
@@ -46,7 +36,6 @@ const schema = Yup.object().shape({
     .email("Contact email must be a valid email address")
     .max(255, "Contact email must be at most 255 characters"),
   phone_number: Yup.string().nullable().max(20, "Phone number must be at most 20 characters"),
-  // is_verified: Yup.boolean().nullable(), // ليس هناك حاجة للتحقق من النوع هنا بالضبط، سنرسلها كـ '1' أو '0'
 });
 
 const CreateEmployerProfile = () => {
@@ -54,7 +43,6 @@ const CreateEmployerProfile = () => {
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
     watch,
   } = useForm({
@@ -69,14 +57,13 @@ const CreateEmployerProfile = () => {
       contact_person_name: "",
       contact_email: "",
       phone_number: "",
-      is_verified: false, // القيمة الافتراضية هنا مهمة
     },
   });
+  
   const [previewLogo, setPreviewLogo] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Check for token on mount
   useEffect(() => {
     const token = localStorage.getItem("access-token");
     if (!token) {
@@ -87,7 +74,6 @@ const CreateEmployerProfile = () => {
     }
   }, []);
 
-  // Preview company logo
   const companyLogoFile = watch("company_logo");
   useEffect(() => {
     if (companyLogoFile && companyLogoFile[0]) {
@@ -114,10 +100,7 @@ const CreateEmployerProfile = () => {
         if (data[key] && data[key][0]) {
           formData.append(key, data[key][0]);
         }
-      } else if (key === "is_verified") { // <--- التعديل الرئيسي هنا
-        formData.append(key, data[key] ? '1' : '0'); // إرسال '1' إذا كانت true، و '0' إذا كانت false
-      }
-      else {
+      } else {
         formData.append(key, data[key]);
       }
     });
@@ -130,25 +113,20 @@ const CreateEmployerProfile = () => {
         },
       });
       setLoading(false);
-      // You might want to store a flag in local storage for employer profile creation too
       localStorage.setItem("employerProfileCreated", "true");
-      navigate("/employer-profile"); // Navigate to the employer profile view
+      navigate("/employer-profile");
     } catch (err) {
       let errorMsg = "Failed to create employer profile. Please try again.";
       if (err.response) {
         if (err.response.status === 409) {
           errorMsg = "Employer profile already exists.";
           localStorage.setItem("employerProfileCreated", "true");
-          navigate("/employer-profile"); // Navigate if profile already exists
+          navigate("/employer-profile");
         } else if (err.response.data?.message) {
           errorMsg = err.response.data.message;
-        } else if (err.response.data?.errors) { // معالجة الأخطاء التفصيلية من Laravel
-            const backendErrors = err.response.data.errors;
-            if (backendErrors.is_verified) {
-                errorMsg = backendErrors.is_verified[0]; // عرض أول خطأ لحقل is_verified
-            } else {
-                errorMsg = Object.values(backendErrors).flat().join(", "); // جمع كل الأخطاء الأخرى
-            }
+        } else if (err.response.data?.errors) {
+          const backendErrors = err.response.data.errors;
+          errorMsg = Object.values(backendErrors).flat().join(", ");
         }
       }
       setError(errorMsg);
@@ -158,69 +136,31 @@ const CreateEmployerProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
-          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
+            <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+          </div>
+          <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">
+            Loading employer profile...
+          </p>
         </div>
-        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">
-          Loading employer profile...
-        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#FFFFFF",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            background: "#FFF5F5",
-            borderLeft: "8px solid #E63946",
-            padding: "2rem",
-            borderRadius: "1rem",
-            boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "#E63946",
-              borderRadius: "50%",
-              padding: "0.5rem",
-              marginRight: "1rem",
-            }}
-          >
-            <X style={{ width: "1.5rem", height: "1.5rem", color: "#FFFFFF" }} />
+      <div className="min-h-screen bg-white flex justify-center items-center">
+        <div className="bg-red-50 border-l-8 border-red-600 p-8 rounded-xl shadow-lg flex items-center">
+          <div className="bg-red-600 rounded-full p-2 mr-4">
+            <X className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3
-              style={{
-                color: "#E63946",
-                fontWeight: "bold",
-                fontSize: "1.125rem",
-              }}
-            >
-              Error
-            </h3>
-            <p
-              style={{
-                color: "#E63946",
-                marginTop: "0.25rem",
-              }}
-            >
-              {error}
-            </p>
+            <h3 className="text-red-600 font-bold text-lg">Error</h3>
+            <p className="text-red-600 mt-1">{error}</p>
           </div>
         </div>
       </div>
@@ -228,394 +168,265 @@ const CreateEmployerProfile = () => {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#FFFFFF",
-        padding: "3rem 1rem",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "48rem",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #4285F4, #2A68C6)", // Blue gradient for employer
-            borderRadius: "1.5rem",
-            boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)",
-            marginBottom: "2.5rem",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "2rem",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Building // Changed icon
-              style={{
-                width: "2rem",
-                height: "2rem",
-                color: "#FFFFFF",
-                marginRight: "1rem",
-              }}
-            />
-            <h1
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: "800",
-                color: "#FFFFFF",
-                letterSpacing: "0.5px",
-              }}
-            >
+    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#d0443c] to-[#a83232] rounded-2xl shadow-lg mb-10 overflow-hidden">
+          <div className="p-8 flex items-center">
+            <Building className="w-8 h-8 text-white mr-4" />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-wide">
               Create Employer Profile
             </h1>
           </div>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          style={{
-            background: "#FFFFFF",
-            borderRadius: "1.5rem",
-            boxShadow: "0 10px 20px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #A8A8A8",
-            padding: "2.5rem",
-            gap: "2rem",
-            display: "flex",
-            flexDirection: "column",
-          }}
+          className="bg-white rounded-2xl shadow-lg border border-gray-300 p-8 space-y-8"
         >
-          {/* Company Information */}
+          {/* Company Information Section */}
           <div>
-            <h4
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: "bold",
-                color: "#4285F4", // Blue color
-                marginBottom: "1.5rem",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <Building // Changed icon
-                style={{
-                  width: "1.5rem",
-                  height: "1.5rem",
-                  color: "#4285F4",
-                  marginRight: "0.75rem",
-                }}
-              />
+            <h4 className="text-2xl font-bold text-[#d0443c] mb-6 flex items-center">
+              <Building className="w-6 h-6 text-[#d0443c] mr-3" />
               Company Information
             </h4>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gap: "1.5rem",
-              }}
-            >
-              {[
-                { label: "Company Name", name: "company_name", type: "text" },
-                { label: "Company Description", name: "company_description", type: "textarea" },
-                { label: "Website URL", name: "website_url", type: "text" },
-                { label: "Industry", name: "industry", type: "text" },
-                { label: "Company Size", name: "company_size", type: "text" },
-                { label: "Location", name: "location", type: "text" },
-              ].map(({ label, name, type }) => (
-                <div key={name}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "bold",
-                      color: "#A8A8A8",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {label}
-                  </label>
-                  {type === "textarea" ? (
-                    <textarea
-                      {...register(name)}
-                      style={{
-                        width: "100%",
-                        padding: "0.75rem",
-                        border: "2px solid #A8A8A8",
-                        borderRadius: "0.75rem",
-                        fontSize: "1rem",
-                        transition: "all 0.3s ease",
-                        height: "6rem",
-                      }}
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      {...register(name)}
-                      style={{
-                        width: "100%",
-                        padding: "0.75rem",
-                        border: "2px solid #A8A8A8",
-                        borderRadius: "0.75rem",
-                        fontSize: "1rem",
-                        transition: "all 0.3s ease",
-                      }}
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                    />
-                  )}
-                  {errors[name] && (
-                    <p
-                      style={{
-                        color: "#E63946",
-                        fontSize: "0.875rem",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {errors[name].message}
-                    </p>
-                  )}
-                </div>
-              ))}
-              <div
-                style={{
-                  gridColumn: "1 / -1",
-                }}
-              >
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: "bold",
-                    color: "#A8A8A8",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Company Logo
-                </label>
-                {previewLogo && (
-                  <div
-                    style={{
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <img
-                      src={previewLogo}
-                      alt="Logo preview"
-                      style={{
-                        width: "8rem",
-                        height: "8rem",
-                        objectFit: "contain", // Use contain for logos
-                        borderRadius: "0.75rem",
-                        border: "4px solid #A8A8A8",
-                      }}
-                    />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  {...register("company_logo")}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    border: "2px solid #A8A8A8",
-                    borderRadius: "0.75rem",
-                    fontSize: "1rem",
-                    transition: "all 0.3s ease",
-                  }}
-                />
-                 {errors.company_logo && (
-                    <p
-                      style={{
-                        color: "#E63946",
-                        fontSize: "0.875rem",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {errors.company_logo.message}
-                    </p>
-                  )}
-              </div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {/* Company Name */}
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: "bold",
-                    color: "#A8A8A8",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Is Verified
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="checkbox"
-                  {...register("is_verified")}
-                  style={{
-                    width: "1.25rem",
-                    height: "1.25rem",
-                    accentColor: "#4285F4", // Blue color
-                    border: "2px solid #A8A8A8",
-                    borderRadius: "0.25rem",
-                  }}
+                  type="text"
+                  {...register("company_name")}
+                  className={`w-full px-4 py-3 border-2 ${errors.company_name ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                  placeholder="Enter company name"
                 />
-                {errors.is_verified && (
-                  <p
-                    style={{
-                      color: "#E63946",
-                      fontSize: "0.875rem",
-                      marginTop: "0.25rem",
-                    }}
-                  >
-                    {errors.is_verified.message}
-                  </p>
+                {errors.company_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.company_name.message}</p>
                 )}
               </div>
-            </div>
-          </div>
 
-          {/* Contact Person Information */}
-          <div>
-            <h4
-              style={{
-                fontSize: "1.75rem",
-                fontWeight: "bold",
-                color: "#4285F4", // Blue color
-                marginBottom: "1.5rem",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <UserIcon // Changed icon
-                style={{
-                  width: "1.5rem",
-                  height: "1.5rem",
-                  color: "#4285F4",
-                  marginRight: "0.75rem",
-                }}
-              />
-              Contact Person Information
-            </h4>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gap: "1.5rem",
-              }}
-            >
-              {[
-                { label: "Contact Person Name", name: "contact_person_name", type: "text" },
-                { label: "Contact Email", name: "contact_email", type: "text" },
-                { label: "Phone Number", name: "phone_number", type: "text" },
-              ].map(({ label, name, type }) => (
-                <div key={name}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: "0.875rem",
-                      fontWeight: "bold",
-                      color: "#A8A8A8",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {label}
+              {/* Company Description */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Company Description
+                </label>
+                <textarea
+                  {...register("company_description")}
+                  rows={4}
+                  className={`w-full px-4 py-3 border-2 ${errors.company_description ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                  placeholder="Enter company description"
+                />
+                {errors.company_description && (
+                  <p className="mt-1 text-sm text-red-600">{errors.company_description.message}</p>
+                )}
+              </div>
+
+              {/* Website URL */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Website URL
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Globe className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    {...register("website_url")}
+                    className={`w-full pl-10 px-4 py-3 border-2 ${errors.website_url ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                    placeholder="Enter website URL"
+                  />
+                </div>
+                {errors.website_url && (
+                  <p className="mt-1 text-sm text-red-600">{errors.website_url.message}</p>
+                )}
+              </div>
+
+              {/* Industry and Company Size */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-2">
+                    Industry
                   </label>
                   <input
                     type="text"
-                    {...register(name)}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      border: "2px solid #A8A8A8",
-                      borderRadius: "0.75rem",
-                      fontSize: "1rem",
-                      transition: "all 0.3s ease",
-                    }}
-                    placeholder={`Enter ${label.toLowerCase()}`}
+                    {...register("industry")}
+                    className={`w-full px-4 py-3 border-2 ${errors.industry ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                    placeholder="Enter industry"
                   />
-                  {errors[name] && (
-                    <p
-                      style={{
-                        color: "#E63946",
-                        fontSize: "0.875rem",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {errors[name].message}
-                    </p>
+                  {errors.industry && (
+                    <p className="mt-1 text-sm text-red-600">{errors.industry.message}</p>
                   )}
                 </div>
-              ))}
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-2">
+                    Company Size
+                  </label>
+                  <input
+                    type="text"
+                    {...register("company_size")}
+                    className={`w-full px-4 py-3 border-2 ${errors.company_size ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                    placeholder="Enter company size"
+                  />
+                  {errors.company_size && (
+                    <p className="mt-1 text-sm text-red-600">{errors.company_size.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Location
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MapPin className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    {...register("location")}
+                    className={`w-full pl-10 px-4 py-3 border-2 ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                    placeholder="Enter location"
+                  />
+                </div>
+                {errors.location && (
+                  <p className="mt-1 text-sm text-red-600">{errors.location.message}</p>
+                )}
+              </div>
+
+              {/* Company Logo */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Company Logo
+                </label>
+                {previewLogo && (
+                  <div className="mb-4">
+                    <img
+                      src={previewLogo}
+                      alt="Logo preview"
+                      className="w-32 h-32 object-contain rounded-lg border-4 border-gray-300"
+                    />
+                  </div>
+                )}
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col w-full border-2 border-dashed border-gray-300 hover:border-[#d0443c] rounded-lg cursor-pointer transition-all">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                    </div>
+                    <input
+                      type="file"
+                      {...register("company_logo")}
+                      className="hidden"
+                      accept="image/jpeg,image/png,image/jpg,image/gif"
+                    />
+                  </label>
+                </div>
+                {errors.company_logo && (
+                  <p className="mt-1 text-sm text-red-600">{errors.company_logo.message}</p>
+                )}
+              </div>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "2rem",
-            }}
-          >
+          {/* Contact Person Information Section */}
+          <div>
+            <h4 className="text-2xl font-bold text-[#d0443c] mb-6 flex items-center">
+              <UserIcon className="w-6 h-6 text-[#d0443c] mr-3" />
+              Contact Person Information
+            </h4>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {/* Contact Person Name */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Contact Person Name
+                </label>
+                <input
+                  type="text"
+                  {...register("contact_person_name")}
+                  className={`w-full px-4 py-3 border-2 ${errors.contact_person_name ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                  placeholder="Enter contact person name"
+                />
+                {errors.contact_person_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.contact_person_name.message}</p>
+                )}
+              </div>
+
+              {/* Contact Email */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Contact Email
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="email"
+                    {...register("contact_email")}
+                    className={`w-full pl-10 px-4 py-3 border-2 ${errors.contact_email ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                    placeholder="Enter contact email"
+                  />
+                </div>
+                {errors.contact_email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.contact_email.message}</p>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="block text-sm font-bold text-gray-600 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  {...register("phone_number")}
+                  className={`w-full px-4 py-3 border-2 ${errors.phone_number ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
+                  placeholder="Enter phone number"
+                />
+                {errors.phone_number && (
+                  <p className="mt-1 text-sm text-red-600">{errors.phone_number.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-center pt-6">
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: "0.75rem 2rem",
-                background: loading ? "#A8A8A8" : "#4285F4", // Blue color for button
-                color: "#FFFFFF",
-                borderRadius: "0.75rem",
-                fontWeight: "bold",
-                transition: "all 0.3s ease",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-              onMouseOver={(e) => !loading && (e.target.style.background = "#2A68C6")} // Darker blue on hover
-              onMouseOut={(e) => !loading && (e.target.style.background = "#4285F4")}
+              className={`px-8 py-3 rounded-lg font-bold text-white flex items-center space-x-2 transition-all ${
+                loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-[#d0443c] hover:bg-[#a83232] transform hover:scale-105'
+              }`}
             >
               {loading ? (
-                <span
-                  style={{
-                    width: "1.25rem",
-                    height: "1.25rem",
-                    border: "2px solid #FFFFFF",
-                    borderTopColor: "transparent",
-                    borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
-                  }}
-                />
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Creating...</span>
+                </>
               ) : (
-                <Building style={{ width: "1.25rem", height: "1.25rem" }} /> // Changed icon
+                <>
+                  <Building className="w-5 h-5" />
+                  <span>Create Profile</span>
+                </>
               )}
-              <span>{loading ? "Creating..." : "Create Profile"}</span>
             </button>
           </div>
         </form>
       </div>
-      <style>
-        {`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-          }
-          input:focus, textarea:focus {
-            border-color: #4285F4; /* Blue focus color */
-            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
-          }
-          button:hover:not(:disabled) {
-            transform: scale(1.05);
-          }
-        `}
-      </style>
     </div>
   );
 };
