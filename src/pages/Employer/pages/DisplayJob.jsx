@@ -89,13 +89,9 @@ const JobList = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    try {
       await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
       setModalIsOpen(false);
       dispatch(fetchEmployerData()); // Changed to refetch both jobs and employer data
-    } catch (error) {
-      Swal.fire('Error!', 'Failed to update job.', 'error');
-    }
   };
 
   const handleDelete = (jobId) => {

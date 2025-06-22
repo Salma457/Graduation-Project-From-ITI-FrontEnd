@@ -19,13 +19,28 @@ import JobDetailsPublic from './pages/JobDetails.jsx';
 import ApplyForm from './pages/ApplyForm.jsx';
 import MyApplications from './pages/MyApplications.jsx';
 import ProposalDetails from './pages/ProposalDetails.jsx';
-
+import NotificationComponent from './components/NotificationComponent.jsx'; 
 function App() {
   return (
     <Provider store={store}>
       <Router>
         <Routes>
-          <Route path="/" element={<div className=""><img src={viteLogo} alt="Vite Logo" style={{height: 80, margin: '2rem auto', display: 'block'}} /><h1>Home Page</h1></div>} />
+<Route
+  path="/"
+  element={
+    <div className="relative">
+      <img
+        src={viteLogo}
+        alt="Vite Logo"
+        style={{ height: 80, margin: '2rem auto', display: 'block' }}
+      />
+      <h1 className="text-center text-2xl">Home Page</h1>
+      <div className="absolute top-4 right-4 z-50">
+  <NotificationComponent />
+</div>
+    </div>
+  }
+/>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />

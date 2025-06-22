@@ -11,11 +11,7 @@ const handleApiResponse = async (response) => {
   
   let data;
   if (contentType && contentType.includes('application/json')) {
-    try {
       data = JSON.parse(text);
-    } catch (error) {
-      throw new Error('Invalid JSON response');
-    }
   } else {
     data = text;
   }
