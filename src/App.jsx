@@ -61,9 +61,10 @@ function App() {
           <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
           <Route path="/employer-profile" element={<EmployerProfile />} />
           <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           <Route path="/create-itian-profile" element={<CreateItianProfile />} />
           <Route path="/itian-profile" element={<ItianProfile />} />
-          <Route path="/profile/:username" element={<ViewItianProfile />} />
+          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
         </Routes>
       </Router>
