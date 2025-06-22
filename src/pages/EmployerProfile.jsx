@@ -18,6 +18,7 @@ import {
   ChevronUp,
   User,
   XCircle,
+  Briefcase,
 } from "lucide-react";
 
 // Yup validation schema for EmployerProfile
@@ -235,6 +236,13 @@ const EmployerProfile = () => {
     }));
   };
 
+  const handlePostJob = () => {
+    // Navigate to job posting page
+    console.log("Navigating to job posting page");
+    // You can replace this with your actual navigation logic
+    // navigate('/post-job');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -342,13 +350,22 @@ const EmployerProfile = () => {
                     )}
                   </div>
                   {!editProfile && profile && Object.keys(profile).length > 0 && (
-                    <button
-                      onClick={() => setEditProfile(true)}
-                      className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
-                    >
-                      <Edit size={18} />
-                      <span>Edit Profile</span>
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditProfile(true)}
+                        className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
+                      >
+                        <Edit size={18} />
+                        <span>Edit Profile</span>
+                      </button>
+                      <button
+                        onClick={handlePostJob}
+                        className="flex items-center gap-2 bg-[#d0443c] text-white px-4 py-2 rounded-lg hover:bg-[#b53c35] transition shadow-md"
+                      >
+                        <Briefcase size={18} />
+                        <span>Post Job</span>
+                      </button>
+                    </div>
                   )}
                 </div>
                 {!editProfile && profile && Object.keys(profile).length > 0 && (
