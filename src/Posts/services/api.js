@@ -91,6 +91,12 @@ export const reactToPost = async (postId, reactionType) => {
   return response.data;
 };
 
+export const fetchReactionDetails = async (postId) => {
+  const res = await axios.get(`${API_BASE_URL}/posts/${postId}/reactions/details`, {
+    headers: getAuthHeaders(),
+  });
+  return res.data;
+};
 
 export const removeReaction = async (postId) => {
   const response = await axios.delete(
