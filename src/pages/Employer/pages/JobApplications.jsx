@@ -447,11 +447,22 @@ const JobApplications = () => {
                       const userId = app.user_id || app.user?.id || app.iti_id || app.id;
                       if (userId) window.open(`/itian-profile/${userId}`, '_blank');
                     }}
-                    onMessage={() => {
-                      const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                      const userName = app.itian ? `${app.itian.first_name} ${app.itian.last_name}` : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
-                      if (userId) navigate(`/mychat`, { state: { user: userId, name: userName } });
-                    }}
+                   onMessage={() => {
+                    const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                    const userName = app.itian 
+                      ? `${app.itian.first_name} ${app.itian.last_name}` 
+                      : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
+                    
+                    if (userId) {
+                      navigate(`/mychat`, { 
+                        state: { 
+                          user: userId,  // This will be used as contactId
+                          name: userName // This will be the displayed name
+                        } 
+                      });
+                    }
+                  }}
+
                   />
                 ))}
               </div>

@@ -48,6 +48,7 @@ const Login = () => {
       localStorage.setItem('access-token', response.data.access_token);
       // set user object in global state
       dispatch(setUser(response.data.user));
+      localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
 
       if (response.data.user.role === 'admin') {
         navigate('/admin');

@@ -13,6 +13,7 @@
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
     "@reduxjs/toolkit": "^2.8.2",
+    "@supabase/supabase-js": "^2.50.0",
     "@tailwindcss/vite": "^4.1.10",
     "axios": "^1.10.0",
     "laravel-echo": "^2.1.6",
