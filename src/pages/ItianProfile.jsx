@@ -287,11 +287,11 @@ const ItianProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="relative">
           <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
-          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-[#d0443c] rounded-full animate-spin animation-delay-150"></div>
+          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#d0443c] w-8 h-8 animate-pulse" />
         </div>
         <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading profile...</p>
       </div>
@@ -300,9 +300,9 @@ const ItianProfile = () => {
 
   if (error && !profile) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex justify-center items-center h-screen bg-white">
         <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
-          <p className="text-red-500 text-lg mb-4">{error}</p>
+          <p className="text-[#d0443c] text-lg mb-4">{error}</p>
           <button
             onClick={() => {
               if (error.includes("create your profile")) {
@@ -311,7 +311,7 @@ const ItianProfile = () => {
                 fetchProfileData();
               }
             }}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300 shadow-md"
+            className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition duration-300 shadow-md"
           >
             {error.includes("create your profile") ? "Create Profile" : "Try Again"}
           </button>
@@ -321,7 +321,7 @@ const ItianProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {profile ? (
@@ -330,7 +330,7 @@ const ItianProfile = () => {
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               <div className="relative">
                 {/* Cover Photo */}
-                <div className="h-48 bg-gradient-to-r from-red-500 to-red-700"></div>
+                <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#b53c35]"></div>
                 
                 {/* Profile Picture */}
                 <div className="absolute -bottom-16 left-6">
@@ -345,7 +345,7 @@ const ItianProfile = () => {
                       )}
                     </div>
                     {editProfile && (
-                      <label className="absolute bottom-0 right-0 bg-red-600 p-2 rounded-full cursor-pointer shadow-md hover:bg-red-700 transition">
+                      <label className="absolute bottom-0 right-0 bg-[#d0443c] p-2 rounded-full cursor-pointer shadow-md hover:bg-[#b53c35] transition">
                         <Upload size={16} className="text-white" />
                         <input
                           type="file"
@@ -369,18 +369,18 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("first_name")}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                             placeholder="First Name"
                           />
                           <input
                             type="text"
                             {...register("last_name")}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                             placeholder="Last Name"
                           />
                         </div>
-                        {errors.first_name && <p className="text-red-500 text-sm">{errors.first_name.message}</p>}
-                        {errors.last_name && <p className="text-red-500 text-sm">{errors.last_name.message}</p>}
+                        {errors.first_name && <p className="text-[#d0443c] text-sm">{errors.first_name.message}</p>}
+                        {errors.last_name && <p className="text-[#d0443c] text-sm">{errors.last_name.message}</p>}
                       </div>
                     ) : (
                       <div>
@@ -396,7 +396,7 @@ const ItianProfile = () => {
                     {editProfile ? (
                       <textarea
                         {...register("bio")}
-                        className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         placeholder="Tell us about yourself..."
                       />
                     ) : (
@@ -408,7 +408,7 @@ const ItianProfile = () => {
                   {!editProfile && (
                     <button
                       onClick={() => setEditProfile(true)}
-                      className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition"
+                      className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
                     >
                       <Edit size={18} />
                       <span>Edit Profile</span>
@@ -419,16 +419,16 @@ const ItianProfile = () => {
                 {/* ITI Info */}
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
-                    <Briefcase className="text-red-600 mr-2" size={16} />
+                    <Briefcase className="text-[#d0443c] mr-2" size={16} />
                     <span className="text-gray-700">{profile.iti_track || "ITI Track"}</span>
                   </div>
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
-                    <Calendar className="text-red-600 mr-2" size={16} />
+                    <Calendar className="text-[#d0443c] mr-2" size={16} />
                     <span className="text-gray-700">Graduated {profile.graduation_year || "Year"}</span>
                   </div>
                   {profile.experience_years !== null && (
                     <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
-                      <Star className="text-red-600 mr-2" size={16} />
+                      <Star className="text-[#d0443c] mr-2" size={16} />
                       <span className="text-gray-700">{profile.experience_years} years experience</span>
                     </div>
                   )}
@@ -458,18 +458,18 @@ const ItianProfile = () => {
                         <input
                           type="text"
                           {...register("email")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+                        {errors.email && <p className="text-[#d0443c] text-sm mt-1">{errors.email.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Phone</label>
                         <input
                           type="text"
                           {...register("number")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.number && <p className="text-red-500 text-sm mt-1">{errors.number.message}</p>}
+                        {errors.number && <p className="text-[#d0443c] text-sm mt-1">{errors.number.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Portfolio URL</label>
@@ -480,10 +480,10 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("portfolio_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
-                        {errors.portfolio_url && <p className="text-red-500 text-sm mt-1">{errors.portfolio_url.message}</p>}
+                        {errors.portfolio_url && <p className="text-[#d0443c] text-sm mt-1">{errors.portfolio_url.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-600 font-medium mb-2">LinkedIn Profile</label>
@@ -494,10 +494,10 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("linkedin_profile_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-blue-500"
+                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-blue-500"
                           />
                         </div>
-                        {errors.linkedin_profile_url && <p className="text-red-500 text-sm mt-1">{errors.linkedin_profile_url.message}</p>}
+                        {errors.linkedin_profile_url && <p className="text-[#d0443c] text-sm mt-1">{errors.linkedin_profile_url.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-600 font-medium mb-2">GitHub Profile</label>
@@ -508,10 +508,10 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("github_profile_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-blue-500"
+                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-blue-500"
                           />
                         </div>
-                        {errors.github_profile_url && <p className="text-red-500 text-sm">{errors.github_profile_url.message}</p>}
+                        {errors.github_profile_url && <p className="text-[#d0443c] text-sm">{errors.github_profile_url.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-600 font-medium mb-2">CV Upload</label>
@@ -521,7 +521,7 @@ const ItianProfile = () => {
                               href={previewCv}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-sm text-red-600 hover:text-red-700 hover:underline flex items-center"
+                              className="text-sm text-[#d0443c] hover:text-[#b53c35] hover:underline flex items-center"
                             >
                               <FileText className="mr-1" size={16} />
                               View Current CV
@@ -536,12 +536,12 @@ const ItianProfile = () => {
                                 type="file"
                                 {...register("cv")}
                                 onChange={handleCvChange}
-                                className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 file:hidden"
+                                className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] file:hidden"
                               />
                             </div>
                           </label>
                         </div>
-                        {errors.cv && <p className="text-red-500 text-sm mt-1">{errors.cv.message}</p>}
+                        {errors.cv && <p className="text-[#d0443c] text-sm mt-1">{errors.cv.message}</p>}
                       </div>
                     </div>
                   )}
@@ -566,66 +566,66 @@ const ItianProfile = () => {
                         <input
                           type="text"
                           {...register("iti_track")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.iti_track && <p className="text-red-500 text-sm mt-1">{errors.iti_track.message}</p>}
+                        {errors.iti_track && <p className="text-[#d0443c] text-sm mt-1">{errors.iti_track.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Graduation Year</label>
                         <input
                           type="text"
                           {...register("graduation_year")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.graduation_year && <p className="text-red-500 text-sm mt-1">{errors.graduation_year.message}</p>}
+                        {errors.graduation_year && <p className="text-[#d0443c] text-sm mt-1">{errors.graduation_year.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Experience (Years)</label>
                         <input
                           type="text"
                           {...register("experience_years")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.experience_years && <p className="text-red-500 text-sm mt-1">{errors.experience_years.message}</p>}
+                        {errors.experience_years && <p className="text-[#d0443c] text-sm mt-1">{errors.experience_years.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Current Job Title</label>
                         <input
                           type="text"
                           {...register("current_job_title")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.current_job_title && <p className="text-red-500 text-sm mt-1">{errors.current_job_title.message}</p>}
+                        {errors.current_job_title && <p className="text-[#d0443c] text-sm mt-1">{errors.current_job_title.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Current Company</label>
                         <input
                           type="text"
                           {...register("current_company")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.current_company && <p className="text-red-500 text-sm mt-1">{errors.current_company.message}</p>}
+                        {errors.current_company && <p className="text-[#d0443c] text-sm mt-1">{errors.current_company.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Preferred Locations</label>
                         <input
                           type="text"
                           {...register("preferred_job_locations")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           placeholder="e.g., Cairo, Remote, Alexandria"
                         />
-                        {errors.preferred_job_locations && <p className="text-red-500 text-sm mt-1">{errors.preferred_job_locations.message}</p>}
+                        {errors.preferred_job_locations && <p className="text-[#d0443c] text-sm mt-1">{errors.preferred_job_locations.message}</p>}
                       </div>
                       <div>
                         <label className="block text-gray-700 font-medium mb-2">Open to Work</label>
                         <select
                           {...register("is_open_to_work")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         >
                           <option value="true">Yes, I'm open to work</option>
                           <option value="false">No, I'm not currently looking</option>
                         </select>
-                        {errors.is_open_to_work && <p className="text-red-500 text-sm mt-1">{errors.is_open_to_work.message}</p>}
+                        {errors.is_open_to_work && <p className="text-[#d0443c] text-sm mt-1">{errors.is_open_to_work.message}</p>}
                       </div>
                     </div>
                   )}
@@ -651,13 +651,13 @@ const ItianProfile = () => {
                             <input
                               type="text"
                               {...register(`skills.${index}.skill_name`)}
-                              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                               placeholder="Skill name"
                             />
                             <button
                               type="button"
                               onClick={() => removeSkill(index)}
-                              className="p-2 text-red-600 hover:text-red-800 transition"
+                              className="p-2 text-[#d0443c] hover:text-[#b53c35] transition"
                             >
                               <X size={20} />
                             </button>
@@ -697,7 +697,7 @@ const ItianProfile = () => {
                               <button
                                 type="button"
                                 onClick={() => removeProject(index)}
-                                className="p-2 text-red-600 hover:text-red-800 transition"
+                                className="p-2 text-[#d0443c] hover:text-[#b53c35] transition"
                               >
                                 <X size={20} />
                               </button>
@@ -708,11 +708,11 @@ const ItianProfile = () => {
                                 <input
                                   type="text"
                                   {...register(`projects.${index}.project_title`)}
-                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                                   placeholder="Project title"
                                 />
                                 {errors.projects?.[index]?.project_title && (
-                                  <p className="text-red-500 text-sm mt-1">{errors.projects[index].project_title.message}</p>
+                                  <p className="text-[#d0443c] text-sm mt-1">{errors.projects[index].project_title.message}</p>
                                 )}
                               </div>
                               <div>
@@ -724,19 +724,19 @@ const ItianProfile = () => {
                                   <input
                                     type="text"
                                     {...register(`projects.${index}.project_link`)}
-                                    className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                    className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                                     placeholder="Project URL"
                                   />
                                 </div>
                                 {errors.projects?.[index]?.project_link && (
-                                  <p className="text-red-500 text-sm mt-1">{errors.projects[index].project_link.message}</p>
+                                  <p className="text-[#d0443c] text-sm mt-1">{errors.projects[index].project_link.message}</p>
                                 )}
                               </div>
                               <div>
                                 <label className="block text-gray-700 text-sm font-medium mb-1">Description</label>
                                 <textarea
                                   {...register(`projects.${index}.description`)}
-                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                                   rows={3}
                                   placeholder="Project description"
                                 />
@@ -771,7 +771,7 @@ const ItianProfile = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium shadow-md"
+                    className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition font-medium shadow-md"
                   >
                     Save Changes
                   </button>
@@ -795,14 +795,14 @@ const ItianProfile = () => {
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex items-center">
-                        <Mail className="text-red-600 mr-3" size={20} />
+                        <Mail className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Email</p>
                           <p className="text-gray-900">{profile.email || "Not provided"}</p>
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <Phone className="text-red-600 mr-3" size={20} />
+                        <Phone className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Phone</p>
                           <p className="text-gray-900">{profile.number || "Not provided"}</p>
@@ -810,14 +810,14 @@ const ItianProfile = () => {
                       </div>
                       {profile.portfolio_url && (
                         <div className="flex items-center">
-                          <Globe className="text-red-600 mr-3" size={20} />
+                          <Globe className="text-[#d0443c] mr-3" size={20} />
                           <div>
                             <p className="text-gray-500 text-sm">Portfolio</p>
                             <a 
                               href={profile.portfolio_url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="text-red-600 hover:underline"
+                              className="text-[#d0443c] hover:underline"
                             >
                               {profile.portfolio_url}
                             </a>
@@ -826,14 +826,14 @@ const ItianProfile = () => {
                       )}
                       {profile.linkedin_profile_url && (
                         <div className="flex items-center">
-                          <Linkedin className="text-red-600 mr-3" size={20} />
+                          <Linkedin className="text-[#d0443c] mr-3" size={20} />
                           <div>
                             <p className="text-gray-500 text-sm">LinkedIn</p>
                             <a 
                               href={profile.linkedin_profile_url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="text-red-600 hover:underline"
+                              className="text-[#d0443c] hover:underline"
                             >
                               {profile.linkedin_profile_url}
                             </a>
@@ -842,14 +842,14 @@ const ItianProfile = () => {
                       )}
                       {profile.github_profile_url && (
                         <div className="flex items-center">
-                          <Github className="text-red-600 mr-3" size={20} />
+                          <Github className="text-[#d0443c] mr-3" size={20} />
                           <div>
                             <p className="text-gray-500 text-sm">GitHub</p>
                             <a 
                               href={profile.github_profile_url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="text-red-600 hover:underline"
+                              className="text-[#d0443c] hover:underline"
                             >
                               {profile.github_profile_url}
                             </a>
@@ -858,14 +858,14 @@ const ItianProfile = () => {
                       )}
                       {profile.cv_url && (
                         <div className="flex items-center">
-                          <FileText className="text-red-600 mr-3" size={20} />
+                          <FileText className="text-[#d0443c] mr-3" size={20} />
                           <div>
                             <p className="text-gray-500 text-sm">CV</p>
                             <a 
                               href={profile.cv_url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="text-red-600 hover:underline"
+                              className="text-[#d0443c] hover:underline"
                             >
                               View CV
                             </a>
@@ -891,21 +891,21 @@ const ItianProfile = () => {
                   {expandedSections.professional && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex items-center">
-                        <Briefcase className="text-red-600 mr-3" size={20} />
+                        <Briefcase className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">ITI Track</p>
                           <p className="text-gray-900">{profile.iti_track || "Not provided"}</p>
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <Calendar className="text-red-600 mr-3" size={20} />
+                        <Calendar className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Graduation Year</p>
                           <p className="text-gray-900">{profile.graduation_year || "Not provided"}</p>
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <Star className="text-red-600 mr-3" size={20} />
+                        <Star className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Experience</p>
                           <p className="text-gray-900">
@@ -914,7 +914,7 @@ const ItianProfile = () => {
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <Briefcase className="text-red-600 mr-3" size={20} />
+                        <Briefcase className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Current Position</p>
                           <p className="text-gray-900">
@@ -924,14 +924,14 @@ const ItianProfile = () => {
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <MapPin className="text-red-600 mr-3" size={20} />
+                        <MapPin className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Preferred Locations</p>
                           <p className="text-gray-900">{profile.preferred_job_locations || "Not specified"}</p>
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <Sparkles className="text-red-600 mr-3" size={20} />
+                        <Sparkles className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Job Status</p>
                           <p className="text-gray-900">
@@ -962,7 +962,7 @@ const ItianProfile = () => {
                           {profile.skills.map((skill) => (
                             <span
                               key={skill.id}
-                              className="bg-red-100 text-red-800 px-4 py-2 rounded-full text-sm font-medium"
+                              className="bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-full text-sm font-medium"
                             >
                               {skill.skill_name}
                             </span>
@@ -1000,7 +1000,7 @@ const ItianProfile = () => {
                                   href={project.project_link}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center text-red-600 hover:underline"
+                                  className="inline-flex items-center text-[#d0443c] hover:underline"
                                 >
                                   <Link className="mr-1" size={16} />
                                   View Project
@@ -1022,7 +1022,7 @@ const ItianProfile = () => {
             <p className="text-gray-600 mb-6">You haven't created your profile yet.</p>
             <button
               onClick={() => setEditProfile(true)}
-              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+              className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition font-medium"
             >
               Create Profile
             </button>

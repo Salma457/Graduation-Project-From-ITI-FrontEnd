@@ -26,7 +26,7 @@ function App() {
 
         <Route path="/create-itian-profile" element={<CreateItianProfile />} />
         <Route path="/itian-profile" element={<ItianProfile />} />
-        <Route path="/profile/:username" element={<ViewItianProfile />} />
+         <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
       </Routes>
     </Router>
   );
