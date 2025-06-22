@@ -184,13 +184,11 @@ const JobDetails = () => {
           <div className="job-tags">
             <span className="job-type">{job.job_type}</span>
             <span className="work-type">
-              <span className="wfh-icon">🏢</span>
+              
               {job.status}
             </span>
           </div>
-          <p className="posted-time">
-            Posted on {new Date(job.posted_date).toLocaleDateString()}
-          </p>
+          
         </div>
 
         <div className="job-content">
@@ -215,14 +213,14 @@ const JobDetails = () => {
             ← Back to jobs
           </Link>
           {hasApplied ? (
-            <button onClick={viewProposal} className="view-proposal-btn">
-              View My Proposal
-            </button>
-          ) : (
-            <button onClick={handleApply} className="apply-btn">
-              Apply Now
-            </button>
-          )}
+  <button onClick={viewProposal} className="view-proposal-btn">
+    View My Proposal
+  </button>
+) : (
+  <button onClick={handleApply} className="apply-btn">
+    Apply Now
+  </button>
+)}
         </div>
       </div>
 

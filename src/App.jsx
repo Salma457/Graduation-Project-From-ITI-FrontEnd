@@ -9,10 +9,13 @@ import JobDetails from "./pages/JobDetails.jsx";
 import ApplyForm from "./pages/ApplyForm.jsx";
 import MyApplications from "./pages/MyApplications.jsx";
 import ProposalDetails from "./pages/ProposalDetails.jsx";
+import StripeProvider from './components/StripeProvider.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
 function App() {
 
   return (
     <Router>
+      <StripeProvider>
       <Routes>
         <Route path="/" element={<div className=""><img src={viteLogo} alt="Vite Logo" style={{height: 80, margin: '2rem auto', display: 'block'}} /><h1>Home Page</h1></div>} />
         <Route path="/register" element={<Register/>} />
@@ -23,8 +26,10 @@ function App() {
         <Route path="/apply/:id" element={<ApplyForm />} />
         <Route path="/my-applications" element={<MyApplications />} />
         <Route path="/my-applications/:id" element={<ProposalDetails />} />
+        <Route path="/payment" element={<PaymentPage />} />
 
       </Routes>
+     </StripeProvider>
     </Router>
   )
 }
