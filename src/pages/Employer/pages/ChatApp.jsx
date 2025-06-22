@@ -8,7 +8,6 @@ const ChatApp = () => {
   const location = useLocation();
   
   // Fix: Properly destructure the state parameters
-  const { user: contactId, name: contactName } = location.state || {};
 
   // State declarations
   const [contacts, setContacts] = useState([]);
@@ -25,13 +24,12 @@ const ChatApp = () => {
 
   const messagesEndRef = useRef(null);
   const emojiPickerRef = useRef(null);
-
-  // Handle initial contact selection - Fix: Use contactId and contactName
+const contactId = location.state?.user;
+const contactName = location.state?.name;
 useEffect(() => {
   if (contactId && !contacts.some(c => c.contact_id === contactId)) {
-    // إنشاء اتصال مؤقت بمفتاح فريد
     const tempContact = {
-      id: `temp-${Date.now()}`, // استخدام الطابع الزمني لجعل المفتاح فريداً
+      id: `temp-${Date.now()}`,
       contact_id: contactId,
       contact_name: contactName,
       contact_avatar: null,
@@ -39,7 +37,7 @@ useEffect(() => {
       created_at: new Date().toISOString(),
       from_id: contactId
     };
-    
+
     setContacts(prev => [tempContact, ...prev]);
     setSelectedContact(tempContact);
     fetchMessages(contactId);
@@ -51,7 +49,7 @@ useEffect(() => {
       markMessagesAsRead(contactId);
     }
   }
-}, [contactId, contacts]);// <-- Removed `contacts` dependency
+}, [contactId, contactName, location.key]);
 
   // Online presence tracking
   useEffect(() => {
