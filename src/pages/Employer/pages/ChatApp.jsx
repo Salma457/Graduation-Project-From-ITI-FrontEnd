@@ -344,7 +344,7 @@ const handleContactSelect = useCallback((contact) => {
         event: 'INSERT', 
         schema: 'public', 
         table: 'ch_messages',
-        filter: `or(to_id.eq.${userId},from_id.eq.${userId})`
+filter: `or(from_id.eq.${userId},to_id.eq.${userId})`
       },
       (payload) => {
         // Only add to messages if it belongs to current conversation
