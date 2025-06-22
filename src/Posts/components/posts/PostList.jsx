@@ -3,13 +3,21 @@ import { fetchPosts, fetchMyPosts } from '../../services/api';
 import PostCard from './PostCard';
 import CreatePostModal from './CreatePostModal';
 import FilterPosts from './FilterPosts';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchItianProfile } from '../../store/itianSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const PostList = () => {
-  const { user } = useAuth();
-  const [posts, setPosts] = useState([]);
+ const dispatch = useDispatch();
+ const user = useSelector((state) => state.itian.user);
+//  const isLoadingUser = useSelector((state) => state.itian.loading);
+
+ useEffect(() => {
+   if (!user) {
+     dispatch(fetchItianProfile());
+  }
+ }, [user, dispatch]);  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -60,8 +68,8 @@ const PostList = () => {
   }, [activeTab, page, filters]);
 
   useEffect(() => {
-    loadPosts(true);
-  }, [activeTab, filters]);
+  loadPosts(true);
+}, [loadPosts])
 
   const lastPostRef = useCallback(node => {
     if (loading) return;
@@ -76,11 +84,11 @@ const PostList = () => {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  useEffect(() => {
-    if (page > 1) {
-      loadPosts();
-    }
-  }, [page]);
+ useEffect(() => {
+  if (page > 1) {
+    loadPosts();
+  }
+}, [page, loadPosts]);
 
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { reactToPost, removeReaction, deletePost } from '../../services/api';
 import ReactionPicker from './ReactionPicker';
@@ -18,8 +18,7 @@ const reactionIcons = {
 };
 
 const PostCard = ({ post, onDelete, onUpdate }) => {
-  const { user } = useAuth();
-  const [showComments, setShowComments] = useState(false);
+const user = useSelector((state) => state.itian.user);  const [showComments, setShowComments] = useState(false);
   const [reactions, setReactions] = useState(post.reactions || {});
   const [userReaction, setUserReaction] = useState(post.user_reaction);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
