@@ -8,7 +8,6 @@ const ChatApp = () => {
   const location = useLocation();
   
   // Fix: Properly destructure the state parameters
-  const { user: contactId, name: contactName } = location.state || {};
 
   // State declarations
   const [contacts, setContacts] = useState([]);
@@ -25,13 +24,12 @@ const ChatApp = () => {
 
   const messagesEndRef = useRef(null);
   const emojiPickerRef = useRef(null);
-
-  // Handle initial contact selection - Fix: Use contactId and contactName
+const contactId = location.state?.user;
+const contactName = location.state?.name;
 useEffect(() => {
   if (contactId && !contacts.some(c => c.contact_id === contactId)) {
-    // إنشاء اتصال مؤقت بمفتاح فريد
     const tempContact = {
-      id: `temp-${Date.now()}`, // استخدام الطابع الزمني لجعل المفتاح فريداً
+      id: `temp-${Date.now()}`,
       contact_id: contactId,
       contact_name: contactName,
       contact_avatar: null,
@@ -39,7 +37,7 @@ useEffect(() => {
       created_at: new Date().toISOString(),
       from_id: contactId
     };
-    
+
     setContacts(prev => [tempContact, ...prev]);
     setSelectedContact(tempContact);
     fetchMessages(contactId);
@@ -51,7 +49,7 @@ useEffect(() => {
       markMessagesAsRead(contactId);
     }
   }
-}, [contactId, contacts]);// <-- Removed `contacts` dependency
+}, [contactId, contactName, location.key]);
 
   // Online presence tracking
   useEffect(() => {
@@ -400,7 +398,7 @@ const handleContactSelect = useCallback((contact) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-red-100 to-red-200 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br  via-red-100 flex items-center justify-center">
         <div className="relative">
           <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
           <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
@@ -412,10 +410,10 @@ const handleContactSelect = useCallback((contact) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-red-100 to-red-200">
+    <div className="min-h-screen bg-gradient-to-br via-red-100 ">
       <div className="container mx-auto max-w-7xl h-screen flex flex-col p-2 md:p-4">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 backdrop-blur-lg rounded-xl shadow-2xl border border-red-300 mb-4 p-4 md:p-6">
+        <div className="bg-gradient-to-r  backdrop-blur-lg rounded-xl shadow-2xl border border-red-300 mb-4 p-4 md:p-6"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button 
@@ -426,7 +424,7 @@ const handleContactSelect = useCallback((contact) => {
               </button>
               <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
                 <MessageCircle className="text-white drop-shadow-lg" size={28} />
-                <span className="hidden sm:inline drop-shadow-md">Red Messenger</span>
+                <span className="hidden sm:inline drop-shadow-md">Messenger</span>
                 <span className="sm:hidden drop-shadow-md">Chat</span>
               </h1>
             </div>
@@ -446,7 +444,7 @@ const handleContactSelect = useCallback((contact) => {
         </div>
 
         {/* Chat Container */}
-        <div className="flex-1 flex bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-red-200 overflow-hidden">
+        <div className="flex-1 flex bg-white backdrop-blur-lg rounded-xl shadow-2xl border border-red-200 overflow-hidden">
           {/* Mobile Menu Button */}
           {isMobileMenuOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
@@ -454,7 +452,7 @@ const handleContactSelect = useCallback((contact) => {
 
           {/* Contacts Sidebar */}
           <div className={`w-72 md:w-80 border-r-2 border-red-200 bg-gradient-to-b from-red-50 via-white to-red-50 absolute md:relative z-50 md:z-auto h-full transition-all duration-300 ${isMobileMenuOpen ? 'left-0' : '-left-full'} md:left-0`}>
-            <div className="p-4 border-b-2 border-red-200 bg-gradient-to-r from-red-500 to-red-600">
+            <div  className="p-4 border-b-2 border-red-200" style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
               <div className="relative md:hidden">
                 <input
                   type="text"
@@ -470,7 +468,7 @@ const handleContactSelect = useCallback((contact) => {
             <div className="overflow-y-auto h-[calc(100%-80px)]">
               {filteredContacts.length === 0 ? (
                 <div className="p-6 text-center">
-                  <div className="bg-gradient-to-br from-red-100 to-red-200 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                  <div className="bg-gradient-to-br rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
                     <MessageCircle className="text-red-500" size={24} />
                   </div>
                   <p className="text-red-800 font-medium">No conversations found</p>
@@ -484,13 +482,13 @@ const handleContactSelect = useCallback((contact) => {
 
                     className={`p-3 border-b border-red-100 relative cursor-pointer transition-all duration-200 hover:shadow-md ${
                       selectedContact?.contact_id === contact.contact_id 
-                        ? 'bg-gradient-to-r from-red-200 to-red-100 shadow-inner border-l-4 border-l-red-500' 
+                        ? 'bg-gradient-to-r  shadow-inner border-l-4 border-l-red-500' 
                         : 'hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300">
+                        <div className="w-12 h-12 bg-gradient-to-br rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
                           {contact.contact_avatar ? (
                             <img 
                               src={contact.contact_avatar} 
@@ -543,28 +541,26 @@ const handleContactSelect = useCallback((contact) => {
             {selectedContact ? (
               <>
                 {/* Chat Header */}
-                <div className="p-4 border-b-2 border-red-200 bg-gradient-to-r from-red-500 to-red-600 backdrop-blur-sm flex items-center justify-between">
+                <div className="p-4 border-b-2 border-red-200 bg-gradient-to-r  backdrop-blur-sm flex items-center justify-between"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
                   <div className="flex items-center gap-3">
                     <button className="md:hidden text-white hover:text-red-200 transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
                       <Menu size={24} />
                     </button>
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
+                      <div className="w-12 h-12 bg-gradient-to-br  rounded-full flex items-center justify-center shadow-lg ring-2 ring-white"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
                         <User size={20} className="text-white" />
                       </div>
                     </div>
                     <div>
-                      {/* Replace "Red Messenger" with selectedContact.contact_name */}
                       <h3 className="font-semibold text-white drop-shadow-md">
                         {selectedContact ? selectedContact.contact_name : "Select a chat"}
                       </h3>
-                      {/* Online status indicator */}
                       {selectedContact && (
                         <div className="text-xs font-medium flex items-center gap-1">
                           <div className={`w-2 h-2 rounded-full ${
                             isOnline(selectedContact.contact_id) 
                               ? 'bg-green-500 animate-pulse' 
-                              : 'bg-gray-400'
+                              : 'bg-red-200'
                           }`}></div>
                           <span className={isOnline(selectedContact.contact_id) 
                             ? 'text-green-200' 
@@ -578,7 +574,7 @@ const handleContactSelect = useCallback((contact) => {
                   </div>
                 </div>
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-white via-red-50 to-red-100">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -681,7 +677,7 @@ const handleContactSelect = useCallback((contact) => {
                   <div className="bg-gradient-to-br from-red-200 to-red-300 rounded-full p-8 w-32 h-32 mx-auto mb-8 flex items-center justify-center shadow-2xl ring-4 ring-red-100">
                     <MessageCircle size={48} className="text-red-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-red-800 mb-3 drop-shadow-sm">Red Messenger</h3>
+                  <h3 className="text-2xl font-bold text-red-800 mb-3 drop-shadow-sm">Messenger</h3>
                   <p className="text-red-600 text-lg">Select a conversation to start chatting</p>
                   <div className="flex justify-center gap-2 mt-4">
                     <span className="text-2xl animate-bounce">💬</span>

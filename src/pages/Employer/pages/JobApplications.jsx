@@ -448,7 +448,7 @@ const JobApplications = () => {
                       if (userId) window.open(`/itian-profile/${userId}`, '_blank');
                     }}
                    onMessage={() => {
-                    const userId = app.user_id || app.user?.id || app.iti_id || app.id;
+                    const userId = app.itian?.user_id || app.user?.id;
                     const userName = app.itian 
                       ? `${app.itian.first_name} ${app.itian.last_name}` 
                       : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
