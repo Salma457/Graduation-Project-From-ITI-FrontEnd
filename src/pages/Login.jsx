@@ -13,6 +13,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -49,6 +50,45 @@ const Login = () => {
       // set user role in global state
       dispatch(setRole(response.data.user.role));
 
+      // تحقق من البروفايل بناءً على الـ role
+      const userRole = response.data.user.role;
+      if (userRole === 'employer') {
+        try {
+          const profileCheck = await axios.get("http://127.0.0.1:8000/api/employer-profile", {
+            headers: { Authorization: `Bearer ${response.data.access_token}` },
+          });
+          if (profileCheck.status === 200) {
+            navigate("/employer-profile"); // لو فيه بروفايل
+          } else {
+            navigate("/create-employer-profile"); // لو مش فيه بروفايل
+          }
+        } catch (err) {
+          if (err.response?.status === 404) {
+            navigate("/create-employer-profile"); // لو مش فيه بروفايل
+          } else {
+            throw err; // لو فيه خطأ تاني
+          }
+        }
+      } else if (userRole === 'itian') {
+        try {
+          const profileCheck = await axios.get("http://127.0.0.1:8000/api/itian-profile", {
+            headers: { Authorization: `Bearer ${response.data.access_token}` },
+          });
+          if (profileCheck.status === 200) {
+            navigate("/itian-profile"); // لو فيه بروفايل
+          } else {
+            navigate("/create-itian-profile"); // لو مش فيه بروفايل
+          }
+        } catch (err) {
+          if (err.response?.status === 404) {
+            navigate("/create-itian-profile"); // لو مش فيه بروفايل
+          } else {
+            throw err; // لو فيه خطأ تاني
+          }
+        }
+      } else {
+        navigate("/dashboard"); // لو الـ role تاني (admin أو غيره)
+      }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
         setErrors(error.response.data.errors);
@@ -93,12 +133,11 @@ const Login = () => {
                   return;
                 }
                 try {
-                
-                  const response =  await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
+                  const response = await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
                   console.log(response);
                   setGeneralError('Password reset link sent to your email.');
                 } catch (error) {
-                  console.log(error)
+                  console.log(error);
                   setGeneralError('Failed to send reset link. Please try again.');
                 }
               }}
@@ -120,6 +159,16 @@ const Login = () => {
                 <div className="register-hero-person">🏢</div>
                 <div className="register-hero-person">🤝</div>
                 <div className="register-hero-person">💼</div>
+              </div>
+            </>
+          ) : formData.role === 'itian' ? (
+            <>
+              <h1 className="register-hero-title">Welcome Back, ITIAN!</h1>
+              <p className="register-hero-desc">Log in to showcase your skills and connect with top employers.</p>
+              <div className="register-hero-people">
+                <div className="register-hero-person">👩‍💻</div>
+                <div className="register-hero-person">💻</div>
+                <div className="register-hero-person">🎓</div>
               </div>
             </>
           ) : (
