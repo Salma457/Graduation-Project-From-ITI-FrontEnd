@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import "./Register.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { setUser } from '../store/userSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +12,8 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -39,12 +42,19 @@ const Login = () => {
     }
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login', formData);
-      console.log('Login successful!', response);
+      console.log('Login successful!', response.data.user.role);
 
       // store access-token in localstorage
       localStorage.setItem('access-token', response.data.access_token);
-localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
+      // set user object in global state
+      dispatch(setUser(response.data.user));
+      localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
 
+      if (response.data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/'); // fallback
+      }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
         setErrors(error.response.data.errors);
