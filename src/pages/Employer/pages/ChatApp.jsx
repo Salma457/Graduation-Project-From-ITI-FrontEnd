@@ -553,7 +553,6 @@ const fetchContacts = useCallback(async () => {
                       </div>
                     </div>
                     <div>
-                      {/* Replace "Red Messenger" with selectedContact.contact_name */}
                       <h3 className="font-semibold text-white drop-shadow-md">
                         {selectedContact ? selectedContact.contact_name : "Select a chat"}
                       </h3>
