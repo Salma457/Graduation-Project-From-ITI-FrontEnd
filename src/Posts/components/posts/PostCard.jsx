@@ -6,6 +6,7 @@ import { reactToPost, removeReaction, deletePost } from '../../services/api';
 import ReactionPicker from './ReactionPicker';
 import CommentSection from './CommentSection';
 import EditPostModal from './EditPostModal';
+import ReactionsModal from './ReactionsModal';
 
 const reactionIcons = {
   like: '👍',
@@ -18,7 +19,8 @@ const reactionIcons = {
 };
 
 const PostCard = ({ post, onDelete, onUpdate }) => {
-const user = useSelector((state) => state.itian.user);  const [showComments, setShowComments] = useState(false);
+  const user = useSelector((state) => state.itian.user);
+  const [showComments, setShowComments] = useState(false);
   const [reactions, setReactions] = useState(post.reactions || {});
   const [userReaction, setUserReaction] = useState(post.user_reaction);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -26,7 +28,7 @@ const user = useSelector((state) => state.itian.user);  const [showComments, set
   const [isDeleting, setIsDeleting] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showReactionDetails, setShowReactionDetails] = useState(false);
+  const [showReactionsModal, setShowReactionsModal] = useState(false);
 
   const isMyPost = user?.user_id === post.itian?.user_id;
 
@@ -81,6 +83,9 @@ const user = useSelector((state) => state.itian.user);  const [showComments, set
     setIsEditing(true);
     setShowOptions(false);
   };
+
+  // Calculate total reactions count
+  const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
 
   return (
     <motion.div 
@@ -223,7 +228,7 @@ const user = useSelector((state) => state.itian.user);  const [showComments, set
                 <motion.button 
                   key={type} 
                   whileHover={{ scale: 1.05 }}
-                  onClick={() => setShowReactionDetails(true)}
+                  onClick={() => setShowReactionsModal(true)}
                   className="flex items-center px-2 py-0.5 bg-gray-50 rounded-full font-medium border border-gray-100"
                 >
                   <span className="mr-1 text-xs">{reactionIcons[type]}</span>
@@ -232,14 +237,24 @@ const user = useSelector((state) => state.itian.user);  const [showComments, set
               ))}
           </div>
           
-          {post.comments_count > 0 && (
-            <button 
-              onClick={() => setShowComments(!showComments)}
-              className="text-gray-500 hover:text-red-500 transition-colors text-xs"
-            >
-              {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
-            </button>
-          )}
+          <div className="flex space-x-3">
+            {post.comments_count > 0 && (
+              <button 
+                onClick={() => setShowComments(!showComments)}
+                className="text-gray-500 hover:text-red-500 transition-colors"
+              >
+                {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
+              </button>
+            )}
+            {totalReactions > 0 && (
+              <button 
+                onClick={() => setShowReactionsModal(true)}
+                className="text-gray-500 hover:text-blue-500 transition-colors"
+              >
+                {totalReactions} {totalReactions === 1 ? 'reaction' : 'reactions'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -303,66 +318,6 @@ const user = useSelector((state) => state.itian.user);  const [showComments, set
           >
             <CommentSection postId={post.id} />
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Reaction Details Modal */}
-      <AnimatePresence>
-        {showReactionDetails && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-              onClick={() => setShowReactionDetails(false)}
-            />
-            
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-gray-200 z-10 max-h-[80vh] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Reactions</h3>
-                <button 
-                  onClick={() => setShowReactionDetails(false)}
-                  className="text-gray-500 hover:text-red-500 text-xl"
-                >
-                  ×
-                </button>
-              </div>
-              
-              {Object.entries(reactions)
-                .filter(([, count]) => count > 0)
-                .sort((a, b) => b[1] - a[1])
-                .map(([type, count]) => (
-                  <div key={type} className="mb-4">
-                    <h4 className="font-medium text-gray-700 capitalize mb-2 flex items-center">
-                      <span className="mr-2">{reactionIcons[type]}</span>
-                      {type} ({count})
-                    </h4>
-                    <ul className="space-y-2">
-                      {/* Replace with actual user data from your API */}
-                      <li className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-sm">👤</span>
-                        </div>
-                        <span>User Name</span>
-                      </li>
-                      <li className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-sm">👤</span>
-                        </div>
-                        <span>Another User</span>
-                      </li>
-                    </ul>
-                  </div>
-                ))}
-            </motion.div>
-          </div>
         )}
       </AnimatePresence>
 
@@ -438,6 +393,14 @@ const user = useSelector((state) => state.itian.user);  const [showComments, set
           post={post}
           onClose={() => setIsEditing(false)}
           onUpdate={onUpdate}
+        />
+      )}
+
+      {/* Reactions Modal */}
+      {showReactionsModal && (
+        <ReactionsModal 
+          postId={post.id} 
+          onClose={() => setShowReactionsModal(false)} 
         />
       )}
     </motion.div>
