@@ -1,88 +1,141 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Building2,
   MapPin,
   Mail,
   Phone,
   Globe,
-  Users, // For company size or general users
-  Edit3, // Not used in view, but keeping for consistency if needed
-  Save, // Not used in view
-  X, // Not used in view
-  Upload, // Not used in view
-  Sparkles, // For loading animation
-  User, // For contact person icon
-  Link, // For website URL icon
+  Users,
+  User,
+  Link,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+  FileText,
+  Briefcase,
+  Calendar,
+  Star,
 } from "lucide-react";
 
-// Component for section headers (reusable)
-const SectionHeader = ({ icon: Icon, title }) => (
-  <div className="bg-gradient-to-r from-red-600 to-red-800 px-8 py-6 rounded-t-xl">
-    <h3 className="text-2xl font-bold text-white flex items-center">
-      <Icon className="h-7 w-7 mr-4 text-white" />
-      {title}
-    </h3>
-  </div>
-);
-
 const ViewEmployerProfile = () => {
-  const { username } = useParams(); // Get username from URL
+  const { userId } = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [expandedSections, setExpandedSections] = useState({
+    contact: true,
+    company: true,
+  });
 
-  const BASE_URL = "http://localhost:8000"; // Your Laravel backend URL
+  const BASE_URL = "http://localhost:8000";
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const fetchProfileData = async () => {
+    if (!userId) {
+      setError("User ID is required.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem('access-token');
+      if (!token) {
+        setError("You must be logged in to view profiles.");
+        setLoading(false);
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/employer-public-profile/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept": "application/json",
+        },
+      });
+
+      if (response.status === 200 && response.data) {
+        const profileData = response.data.data;
+        setProfile(profileData);
+      } else {
+        setError("No profile data available for this employer.");
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+
+      if (err.response) {
+        const status = err.response.status;
+        const message = err.response.data?.message || err.message;
+
+        if (status === 401 || status === 403) {
+          setError("You are not authorized to view this profile. Please log in.");
+          navigate('/login');
+        } else if (status === 404) {
+          setError("Employer profile not found for this user ID.");
+        } else if (status === 500) {
+          setError("Server error occurred. Please try again later.");
+        } else {
+          setError(`Error ${status}: ${message}`);
+        }
+      } else if (err.request) {
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEmployerProfile = async () => {
-      try {
-        setLoading(true);
-        // Use the public route to fetch profile by username
-        const response = await axios.get(
-          `${BASE_URL}/api/employer-public-profile/${username}`
-        );
-        setProfile(response.data.data); // Access data.data as per controller response
-        setError("");
-      } catch (err) {
-        console.error("Error fetching public employer profile:", err);
-        if (err.response && err.response.data && err.response.data.message) {
-          setError(err.response.data.message);
-        } else {
-          setError("Failed to load employer profile. Please try again.");
-        }
-        setProfile(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (username) {
-      fetchEmployerProfile();
-    }
-  }, [username, BASE_URL]);
+    fetchProfileData();
+  }, [userId, navigate]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
-        <Sparkles className="h-12 w-12 animate-pulse text-red-600" />
-        <p className="text-gray-700 text-xl ml-4">Loading employer profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
+          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+        </div>
+        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading employer profile...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-8">
-        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full text-center">
-          <p className="text-red-600 text-xl font-semibold mb-6">{error}</p>
-          <a
-            href="/" // Or a more appropriate fallback page
-            className="px-6 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200"
-          >
-            Go to Home
-          </a>
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
+          <p className="text-red-500 text-lg mb-4">{error}</p>
+          {error.includes("log in") ? (
+            <button
+              onClick={() => navigate('/login')}
+              className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#a0302c] transition duration-300 shadow-md"
+            >
+              Go to Login
+            </button>
+          ) : (
+            <button
+              onClick={fetchProfileData}
+              className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#a0302c] transition duration-300 shadow-md"
+            >
+              Try Again
+            </button>
+          )}
         </div>
       </div>
     );
@@ -90,100 +143,215 @@ const ViewEmployerProfile = () => {
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
-        <p className="text-gray-600 text-xl">No employer profile found for this user.</p>
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
+          <Sparkles className="h-12 w-12 text-[#d0443c] mx-auto mb-4" />
+          <p className="text-gray-700 text-lg mb-4">No employer profile data available.</p>
+          <p className="text-gray-600 mb-6">It seems this employer does not have a public profile yet.</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#a0302c] transition duration-300 shadow-md"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Profile Header Section */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
-          <div className="relative h-48 bg-gradient-to-r from-red-700 to-red-900 flex items-center justify-center">
-            {profile.company_logo_url ? (
-              <img
-                src={profile.company_logo_url}
-                alt={`${profile.company_name} Logo`}
-                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-              />
-            ) : (
-              <Building2 className="w-24 h-24 text-red-200" />
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Profile Card */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+          <div className="relative">
+            {/* Cover Photo */}
+            <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#a0302c]"></div>
+            
+            {/* Company Logo */}
+            <div className="absolute -bottom-16 left-6">
+              <div className="relative">
+                <div className="w-36 h-36 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
+                  {profile.company_logo_url ? (
+                    <img 
+                      src={profile.company_logo_url} 
+                      alt="Company Logo" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500" style={{ display: profile.company_logo_url ? 'none' : 'flex' }}>
+                    <Building2 size={72} />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="p-8 text-center -mt-16 relative z-10">
-            <h2 className="text-4xl font-extrabold text-gray-900 mb-2">
-              {profile.company_name}
-            </h2>
-            <p className="text-red-600 text-xl font-medium mb-4">
-              {profile.industry || "Industry Not Specified"}
-            </p>
-            <div className="flex items-center justify-center text-gray-700 text-lg space-x-4">
+
+          {/* Company Info */}
+          <div className="pt-20 px-6 pb-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {profile.company_name}
+                </h2>
+                {profile.industry && (
+                  <p className="text-gray-600 mt-1">{profile.industry}</p>
+                )}
+                <p className="text-gray-600 mt-2">{profile.company_description || "No company description provided"}</p>
+              </div>
+            </div>
+
+            {/* Company Info Tags */}
+            <div className="mt-6 flex flex-wrap gap-4">
+              {profile.industry && (
+                <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                  <Building2 className="text-[#d0443c] mr-2" size={16} />
+                  <span className="text-gray-700">{profile.industry}</span>
+                </div>
+              )}
               {profile.location && (
-                <span className="flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-gray-500" />
-                  {profile.location}
-                </span>
+                <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                  <MapPin className="text-[#d0443c] mr-2" size={16} />
+                  <span className="text-gray-700">{profile.location}</span>
+                </div>
               )}
               {profile.company_size && (
-                <span className="flex items-center">
-                  <Users className="h-5 w-5 mr-2 text-gray-500" />
-                  {profile.company_size}
-                </span>
+                <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                  <Users className="text-[#d0443c] mr-2" size={16} />
+                  <span className="text-gray-700">{profile.company_size}</span>
+                </div>
+              )}
+              {profile.username && (
+                <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                  <User className="text-[#d0443c] mr-2" size={16} />
+                  <span className="text-gray-700">@{profile.username}</span>
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Company Description Section */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200">
-          <SectionHeader icon={Building2} title="About Our Company" />
-          <div className="p-8 text-gray-700 text-lg leading-relaxed">
-            <p>{profile.company_description || "No company description provided yet."}</p>
+        {/* Profile Sections */}
+        <div className="space-y-6">
+          {/* Contact Information Card */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div 
+              className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
+              onClick={() => toggleSection('contact')}
+            >
+              <h3 className="text-xl font-bold text-gray-900">
+                Contact Information
+              </h3>
+              {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
+            </div>
+            
+            {expandedSections.contact && (
+              <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {profile.contact_person_name && (
+                  <div className="flex items-center">
+                    <User className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Contact Person</p>
+                      <p className="text-gray-900">{profile.contact_person_name}</p>
+                    </div>
+                  </div>
+                )}
+                {profile.contact_email && (
+                  <div className="flex items-center">
+                    <Mail className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Email</p>
+                      <p className="text-gray-900">{profile.contact_email}</p>
+                    </div>
+                  </div>
+                )}
+                {profile.phone_number && (
+                  <div className="flex items-center">
+                    <Phone className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Phone</p>
+                      <p className="text-gray-900">{profile.phone_number}</p>
+                    </div>
+                  </div>
+                )}
+                {profile.website_url && (
+                  <div className="flex items-center">
+                    <Globe className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Website</p>
+                      <a 
+                        href={profile.website_url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-[#d0443c] hover:underline"
+                      >
+                        {profile.website_url}
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Contact Information Section */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200">
-          <SectionHeader icon={Mail} title="Contact Information" />
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 text-lg">
-            <div className="flex items-center text-gray-800">
-              <User className="h-6 w-6 text-red-500 mr-3" />
-              <span className="font-semibold">Contact Person:</span>{" "}
-              {profile.contact_person_name || "N/A"}
+          {/* Company Details Card */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div 
+              className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
+              onClick={() => toggleSection('company')}
+            >
+              <h3 className="text-xl font-bold text-gray-900">
+                Company Details
+              </h3>
+              {expandedSections.company ? <ChevronUp /> : <ChevronDown />}
             </div>
-            <div className="flex items-center text-gray-800">
-              <Mail className="h-6 w-6 text-red-500 mr-3" />
-              <span className="font-semibold">Email:</span>{" "}
-              {profile.contact_email || "N/A"}
-            </div>
-            <div className="flex items-center text-gray-800">
-              <Phone className="h-6 w-6 text-red-500 mr-3" />
-              <span className="font-semibold">Phone:</span>{" "}
-              {profile.phone_number || "N/A"}
-            </div>
-            <div className="flex items-center text-gray-800">
-              <Link className="h-6 w-6 text-red-500 mr-3" />
-              <span className="font-semibold">Website:</span>{" "}
-              {profile.website_url ? (
-                <a
-                  href={profile.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline ml-1"
-                >
-                  {profile.website_url}
-                </a>
-              ) : (
-                "N/A"
-              )}
-            </div>
-            {profile.username && (
-              <div className="flex items-center text-gray-800">
-                <User className="h-6 w-6 text-red-500 mr-3" />
-                <span className="font-semibold">Username:</span>{" "}
-                {profile.username}
+            
+            {expandedSections.company && (
+              <div className="px-6 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="flex items-center">
+                    <Building2 className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Industry</p>
+                      <p className="text-gray-900">{profile.industry || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Company Size</p>
+                      <p className="text-gray-900">{profile.company_size || "Not specified"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <MapPin className="text-[#d0443c] mr-3" size={20} />
+                    <div>
+                      <p className="text-gray-500 text-sm">Location</p>
+                      <p className="text-gray-900">{profile.location || "Not specified"}</p>
+                    </div>
+                  </div>
+                  {profile.username && (
+                    <div className="flex items-center">
+                      <User className="text-[#d0443c] mr-3" size={20} />
+                      <div>
+                        <p className="text-gray-500 text-sm">Username</p>
+                        <p className="text-gray-900">@{profile.username}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {profile.company_description && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">About the Company</h4>
+                    <p className="text-gray-700 leading-relaxed">{profile.company_description}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
