@@ -16,7 +16,7 @@ export const fetchPosts = async (params = {}) => {
     headers: getAuthHeaders(),
     params
   });
-  return response.data; // هنرجع full object مش بس .data
+  return response.data; 
 };
 
 
@@ -77,7 +77,7 @@ export const createPost = async (postData) => {
     },
   });
 
-  return response.data.data; // أو .data حسب استجابة الـ API
+  return response.data.data; 
 };
 
 
@@ -85,7 +85,7 @@ export const createPost = async (postData) => {
 export const reactToPost = async (postId, reactionType) => {
   const response = await axios.post(
     `${API_BASE_URL}/posts/${postId}/react`,
-    { reaction_type: reactionType }, // ✅ المفتاح الصحيح
+    { reaction_type: reactionType }, 
     { headers: getAuthHeaders() }
   );
   return response.data;
