@@ -28,6 +28,7 @@ import {
   FileText,
 } from "lucide-react";
 
+// تعريف الـ Schema باستخدام Yup للتحقق من البيانات
 const schema = Yup.object().shape({
   first_name: Yup.string()
     .required("First name is required")
@@ -128,6 +129,7 @@ const ItianProfile = () => {
     name: "projects",
   });
 
+  // جلب بيانات الملف الشخصي
   const fetchProfileData = async () => {
     setLoading(true);
     setError("");
@@ -176,6 +178,7 @@ const ItianProfile = () => {
     fetchProfileData();
   }, []);
 
+  // التعامل مع تغيير صورة الملف الشخصي
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -187,23 +190,26 @@ const ItianProfile = () => {
     }
   };
 
+  // التعامل مع تغيير الـ CV
   const handleCvChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.type !== "application/pdf") {
-        setError("CV must be a PDF file.");
+        setCvError("CV must be a PDF file.");
         setValue("cv", null);
         setPreviewCv(null);
-        return;
+      } else {
+        setPreviewCv(URL.createObjectURL(file));
+        setValue("cv", file);
+        setCvError("");
       }
-      setPreviewCv(URL.createObjectURL(file));
-      setValue("cv", [file]);
     } else {
       setPreviewCv(profile?.cv_url || null);
       setValue("cv", null);
     }
   };
 
+  // إرسال البيانات عند الـ Submit
   const onSubmit = async (data) => {
     setLoading(true);
     setError("");
@@ -229,9 +235,10 @@ const ItianProfile = () => {
     if (data.profile_picture && data.profile_picture[0]) {
       formData.append("profile_picture", data.profile_picture[0]);
     }
-    // رفع السيرة الذاتية
-    if (data.cv && data.cv[0]) {
-      formData.append("cv", data.cv[0]);
+
+    // رفع الـ CV
+    if (data.cv && data.cv instanceof File) {
+      formData.append("cv", data.cv);
     }
 
     // المهارات
@@ -298,6 +305,7 @@ const ItianProfile = () => {
     }
   };
 
+  // إلغاء التعديل
   const handleCancel = () => {
     setEditProfile(false);
     reset(profile);
@@ -305,6 +313,7 @@ const ItianProfile = () => {
     setPreviewCv(profile?.cv_url || null);
   };
 
+  // تقليب الأقسام (Expand/Collapse)
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -312,6 +321,7 @@ const ItianProfile = () => {
     }));
   };
 
+  // عرض حالة التحميل
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -325,6 +335,7 @@ const ItianProfile = () => {
     );
   }
 
+  // عرض رسالة خطأ إذا لم يتم العثور على الملف
   if (error && !profile) {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
@@ -349,17 +360,13 @@ const ItianProfile = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {profile ? (
           <>
             {/* Profile Card */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               <div className="relative">
-                {/* Cover Photo */}
                 <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#b53c35]"></div>
-                
-                {/* Profile Picture */}
                 <div className="absolute -bottom-16 left-6">
                   <div className="relative">
                     <div className="w-36 h-36 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
@@ -386,7 +393,6 @@ const ItianProfile = () => {
                 </div>
               </div>
 
-              {/* Profile Info */}
               <div className="pt-20 px-6 pb-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -431,7 +437,6 @@ const ItianProfile = () => {
                     )}
                   </div>
                   
-                  {/* Edit Button */}
                   {!editProfile && (
                     <button
                       onClick={() => setEditProfile(true)}
@@ -443,7 +448,6 @@ const ItianProfile = () => {
                   )}
                 </div>
 
-                {/* ITI Info */}
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                     <Briefcase className="text-[#d0443c] mr-2" size={16} />
@@ -463,21 +467,17 @@ const ItianProfile = () => {
               </div>
             </div>
 
-            {/* Edit Form or Profile Display */}
             {editProfile ? (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Contact Information Card */}
+                {/* Contact Information */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div 
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection('contact')}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Contact Information
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
                     {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
                   </div>
-                  
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -562,31 +562,27 @@ const ItianProfile = () => {
                               <input
                                 type="file"
                                 accept="application/pdf"
-                                {...register("cv")}
                                 onChange={handleCvChange}
                                 className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] file:hidden"
                               />
                             </div>
                           </label>
                         </div>
-                        {(errors.cv || cvError) && <p className="text-[#d0443c] text-sm mt-1">{errors.cv?.message || cvError}</p>}
+                        {cvError && <p className="text-[#d0443c] text-sm mt-1">{cvError}</p>}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Professional Details Card */}
+                {/* Professional Details */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div 
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection('professional')}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Professional Details
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Professional Details</h3>
                     {expandedSections.professional ? <ChevronUp /> : <ChevronDown />}
                   </div>
-                  
                   {expandedSections.professional && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -659,18 +655,15 @@ const ItianProfile = () => {
                   )}
                 </div>
 
-                {/* Skills Card */}
+                {/* Skills */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div 
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection('skills')}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Skills
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Skills</h3>
                     {expandedSections.skills ? <ChevronUp /> : <ChevronDown />}
                   </div>
-                  
                   {expandedSections.skills && (
                     <div className="px-6 pb-6">
                       <div className="space-y-4">
@@ -703,18 +696,15 @@ const ItianProfile = () => {
                   )}
                 </div>
 
-                {/* Projects Card */}
+                {/* Projects */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div 
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection('projects')}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Projects
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Projects</h3>
                     {expandedSections.projects ? <ChevronUp /> : <ChevronDown />}
                   </div>
-                  
                   {expandedSections.projects && (
                     <div className="px-6 pb-6">
                       <div className="space-y-6">
@@ -806,20 +796,16 @@ const ItianProfile = () => {
                 </div>
               </form>
             ) : (
-              /* Profile View (when not editing) */
               <div className="space-y-6">
-                {/* Contact Information Card */}
+                {/* Contact Information */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div 
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection('contact')}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Contact Information
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
                     {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
                   </div>
-                  
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex items-center">
@@ -904,18 +890,15 @@ const ItianProfile = () => {
                   )}
                 </div>
 
-                {/* Professional Details Card */}
+                {/* Professional Details */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div 
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection('professional')}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Professional Details
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Professional Details</h3>
                     {expandedSections.professional ? <ChevronUp /> : <ChevronDown />}
                   </div>
-                  
                   {expandedSections.professional && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex items-center">
@@ -971,19 +954,16 @@ const ItianProfile = () => {
                   )}
                 </div>
 
-                {/* Skills Card */}
+                {/* Skills */}
                 {profile.skills?.length > 0 && (
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div 
                       className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                       onClick={() => toggleSection('skills')}
                     >
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Skills
-                      </h3>
+                      <h3 className="text-xl font-bold text-gray-900">Skills</h3>
                       {expandedSections.skills ? <ChevronUp /> : <ChevronDown />}
                     </div>
-                    
                     {expandedSections.skills && (
                       <div className="px-6 pb-6">
                         <div className="flex flex-wrap gap-3">
@@ -1001,19 +981,16 @@ const ItianProfile = () => {
                   </div>
                 )}
 
-                {/* Projects Card */}
+                {/* Projects */}
                 {profile.projects?.length > 0 && (
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div 
                       className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                       onClick={() => toggleSection('projects')}
                     >
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Projects
-                      </h3>
+                      <h3 className="text-xl font-bold text-gray-900">Projects</h3>
                       {expandedSections.projects ? <ChevronUp /> : <ChevronDown />}
                     </div>
-                    
                     {expandedSections.projects && (
                       <div className="px-6 pb-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
