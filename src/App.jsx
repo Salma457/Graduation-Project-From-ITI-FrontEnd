@@ -109,7 +109,7 @@ function App() {
           </Route>
 
           {/* 🟪 Public profiles (outside layout or custom later) */}
-            <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+           <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
           <Route path="/employer-profile" element={<EmployerProfile />} />
           <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
           <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />

@@ -26,7 +26,11 @@ const schema = Yup.object().shape({
     .url("Website URL must be a valid URL")
     .max(500, "Website URL must be at most 500 characters"),
   industry: Yup.string().nullable().max(255, "Industry must be at most 255 characters"),
-  company_size: Yup.string().nullable().max(100, "Company size must be at most 100 characters"),
+  company_size: Yup.string()
+    .nullable()
+    .notRequired()
+    .matches(/^\d*$/, "Company size must contain numbers only")
+    .max(100, "Company size must be at most 100 characters"),
   location: Yup.string().nullable().max(255, "Location must be at most 255 characters"),
   contact_person_name: Yup.string()
     .nullable()
@@ -371,7 +375,7 @@ const CreateEmployerProfile = () => {
                     <Mail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    type="email"
+                    type="text"
                     {...register("contact_email")}
                     className={`w-full pl-10 px-4 py-3 border-2 ${errors.contact_email ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
                     placeholder="Enter contact email"
