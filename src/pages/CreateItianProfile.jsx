@@ -153,6 +153,7 @@ const CreateItianProfile = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(""); // إضافة حالة خطأ للصورة
 
   // Check for token on mount
   useEffect(() => {
@@ -175,9 +176,33 @@ const CreateItianProfile = () => {
     }
   }, [profilePictureFile]);
 
+  // التحقق من الصورة عند التغيير
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validImageTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/jpg',
+      ];
+      if (!validImageTypes.includes(file.type)) {
+        setImageError("The profile picture field must be an image (jpg, png, gif, webp).");
+        return;
+      }
+      setImageError("");
+    } else {
+      setImageError("");
+    }
+  };
+
   const onSubmit = async (data) => {
-    setLoading(true);
     setError("");
+    if (imageError) {
+      return;
+    }
+    setLoading(true);
 
     const token = localStorage.getItem("access-token");
     if (!token) {
@@ -505,6 +530,7 @@ const CreateItianProfile = () => {
                 <input
                   type="file"
                   {...register("profile_picture")}
+                  onChange={handleProfilePictureChange}
                   style={{
                     width: "100%",
                     padding: "0.75rem",
@@ -514,6 +540,9 @@ const CreateItianProfile = () => {
                     transition: "all 0.3s ease",
                   }}
                 />
+                {imageError && (
+                  <p style={{ color: "#E63946", fontSize: "0.875rem", marginTop: "0.25rem" }}>{imageError}</p>
+                )}
               </div>
               <div>
                 <label
