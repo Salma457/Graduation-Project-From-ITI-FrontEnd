@@ -105,6 +105,18 @@ const schema = Yup.object().shape({
       })
     )
     .min(1, "At least one project is required"),
+  cv: Yup.mixed()
+    .test('fileType', 'CV must be a PDF, DOC, or DOCX file', (value) => {
+      if (!value || value.length === 0) return true; // allow empty (nullable)
+      const file = value[0];
+      if (!file) return true;
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      return allowedTypes.includes(file.type);
+    }),
 });
 
 const CreateItianProfile = () => {
@@ -170,6 +182,12 @@ const CreateItianProfile = () => {
     const token = localStorage.getItem("access-token");
     if (!token) {
       setError("Authentication required. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    // Check for client-side validation errors before sending
+    if (Object.keys(errors).length > 0) {
       setLoading(false);
       return;
     }
@@ -938,6 +956,11 @@ const CreateItianProfile = () => {
                 transition: "all 0.3s ease",
               }}
             />
+            {errors.cv && (
+              <p style={{ color: "#E63946", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+                {errors.cv.message}
+              </p>
+            )}
           </div>
 
           <div
