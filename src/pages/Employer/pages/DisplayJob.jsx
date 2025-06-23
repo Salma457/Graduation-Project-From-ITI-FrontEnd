@@ -10,7 +10,8 @@ import '../style/jobList.css';
 const JobList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { jobs, loading, error } = useSelector(state => state.jobPost);
+  const jobPostState = useSelector(state => state.jobPost || {});
+  const { jobs = [], loading = false, error = null } = jobPostState;
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -67,6 +68,10 @@ const JobList = () => {
   };
 
   const handleEdit = (job) => {
+    const deadline = job.application_deadline 
+      ? new Date(job.application_deadline).toISOString().split('T')[0] 
+      : '';
+      
     setEditData({
       ...job,
       job_title: job.job_title || '',
@@ -78,15 +83,20 @@ const JobList = () => {
       salary_range_min: job.salary_range_min || '',
       salary_range_max: job.salary_range_max || '',
       currency: job.currency || 'EGP',
-      application_deadline: job.application_deadline || ''
+      application_deadline: deadline
     });
     setModalIsOpen(true);
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    dispatch(editJob({ jobId: editData.id, jobData: editData }));
-    setModalIsOpen(false);
+    try {
+      await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
+      setModalIsOpen(false);
+      dispatch(fetchEmployerJobs());
+    } catch (error) {
+      Swal.fire('Error!', 'Failed to update job.', 'error');
+    }
   };
 
   const handleDelete = (jobId) => {
@@ -483,12 +493,14 @@ return (
               <div className="list-card-details">
                 <div className="list-meta">
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Company Type:</span>
-                    <span className="list-meta-value">{job.company_name || "IT Industry"}</span>
+                    <span className="list-meta-label">Company:</span>
+                    <span className="list-meta-value">
+                      {job.company_name || "Company"}
+                    </span>
                   </div>
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Year founded:</span>
-                    <span className="list-meta-value">{job.job_type || "2019"}</span>
+                    <span className="list-meta-label">Job Type:</span>
+                    <span className="list-meta-value">{job.job_type || "Full-time"}</span>
                   </div>
                 </div>
                 

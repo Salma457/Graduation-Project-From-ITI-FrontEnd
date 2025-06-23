@@ -34,23 +34,8 @@ const PostJob = () => {
 
   useEffect(() => {
     if (success) {
-  const paymentId = localStorage.getItem("paid_payment_id");
-  if (paymentId) {
-    axios.put(
-      `http://localhost:8000/api/payments/${paymentId}/mark-used`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access-token")}`,
-        },
-      }
-    );
-    localStorage.removeItem("paid_payment_id"); // نظفها بعد الاستخدام
-  }
-
-  navigate("/employer/jobs");
-}
-
+      navigate('/employer/jobs');
+    }
   }, [success, navigate]);
 
   const validateField = (name, value) => {
@@ -192,7 +177,6 @@ const PostJob = () => {
     // Convert data to proper format
     const jobData = {
       ...formData,
-        payment_id: localStorage.getItem("paid_payment_id"),
       posted_date: new Date().toISOString().split('T')[0],
       salary_range_min: formData.salary_range_min ? parseInt(formData.salary_range_min) : null,
       salary_range_max: formData.salary_range_max ? parseInt(formData.salary_range_max) : null,

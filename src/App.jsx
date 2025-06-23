@@ -20,7 +20,8 @@ import ChatApp from './pages/Employer/pages/ChatApp';
 // Admin
 // Admin
 import adminRoutes from './pages/admin/adminRoutes.jsx';
-// Posts
+// Payment
+import PaymentPage from './pages/PaymentPage.jsx';
 // Posts
 import PostsList from './Posts/components/posts/PostList.jsx';
 // Public/Jobseeker
@@ -69,7 +70,10 @@ function App() {
           <Route path="/employer/job/:id" element={<JobDetails />} />
           <Route path="/employer/job/:id/applications" element={<JobApplications />} />
           <Route path="/mychat" element={<ChatApp />} />
-          {/* Posts */}
+          {/* Payment */}
+          <Route path="/payment" element={<PaymentPage />} />
+         
+          {/* Reset Password */}
           {/* Posts */}
           <Route path="/posts" element={<PostsList />} />
           {/* Public job seeker routes */}
