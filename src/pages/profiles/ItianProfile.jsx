@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { setRole, setUser } from "../store/userSlice";
+import { setRole, setUser } from "../../store/userSlice";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -27,7 +27,6 @@ import {
   Phone,
   FileText,
 } from "lucide-react";
-import Notifications from "../components/Notification";
 
 const schema = Yup.object().shape({
   first_name: Yup.string()
@@ -327,7 +326,6 @@ const ItianProfile = () => {
 
   return (
     <div className="min-h-screen bg-white">
-                <Notifications />
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {profile ? (

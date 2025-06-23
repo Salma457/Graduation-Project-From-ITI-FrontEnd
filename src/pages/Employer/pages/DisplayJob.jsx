@@ -10,7 +10,14 @@ import '../style/jobList.css';
 const JobList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { jobs, loading, error, employerData } = useSelector(state => state.jobPost); // Added employerData
+const jobPostState = useSelector(state => state.jobPost) || {};
+const {
+  jobs = [],
+  loading = false,
+  error = null,
+  employerData = null
+} = jobPostState;
+
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filter, setFilter] = useState('all');

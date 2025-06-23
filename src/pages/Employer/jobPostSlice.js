@@ -409,10 +409,12 @@ const jobPostSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchEmployerData.fulfilled, (state, action) => {
-        state.loading = false;
-        state.jobs = action.payload.jobs;
-        state.employerData = action.payload.company;
-      })
+  console.log('📦 Employer Data:', action.payload);
+  state.loading = false;
+  state.jobs = action.payload.jobs;
+  state.employerData = action.payload.company;
+})
+
       .addCase(fetchEmployerData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
