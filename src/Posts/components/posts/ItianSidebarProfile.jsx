@@ -43,7 +43,7 @@ const ItianSidebarProfile = ({ profile }) => {
           
           {profile.bio && (
             <p className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
-              {profile.bio}
+              {profile.iti_track}
             </p>
           )}
         </div>
