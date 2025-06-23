@@ -5,9 +5,11 @@ import store from './store.js';
 import './App.css';
 import viteLogo from '../public/vite.svg';
 // Auth & User
+// Auth & User
 import Register from './pages/Register.jsx';
 import Login from './pages/Login.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+// Employer
 // Employer
 import PostJob from './pages/Employer/pages/PostJob.jsx';
 import JobList from './pages/Employer/pages/DisplayJob';
@@ -16,26 +18,25 @@ import JobDetails from './pages/Employer/pages/JobDetails';
 import JobApplications from './pages/Employer/pages/JobApplications';
 import ChatApp from './pages/Employer/pages/ChatApp';
 // Admin
+// Admin
 import adminRoutes from './pages/admin/adminRoutes.jsx';
+// Posts
 // Posts
 import PostsList from './Posts/components/posts/PostList.jsx';
 // Public/Jobseeker
-import JobsPage from './pages/itian/JobsPage.jsx';
-import JobDetailsPublic from './pages/itian/JobDetails.jsx';
-import ApplyForm from './pages/itian/ApplyForm.jsx';
-import MyApplications from './pages/itian/MyApplications.jsx';
-import ProposalDetails from './pages/itian/ProposalDetails.jsx';
+import JobsPage from './pages/Itian/JobsPage.jsx';
+import JobDetailsPublic from './pages/Itian/JobDetails.jsx';
+import ApplyForm from './pages/Itian/ApplyForm.jsx';
+import MyApplications from './pages/Itian/MyApplications.jsx';
+import ProposalDetails from './pages/Itian/ProposalDetails.jsx';
 // Profiles
-import CreateEmployerProfile from './pages/profiles/CreateEmployerProfile.jsx';
+import CreateEmployerProfile from './pages/profiles/CreateEmployerProfile';
 import EmployerProfile from './pages/profiles/EmployerProfile.jsx';
-import CreateItianProfile from './pages/profiles/CreateItianProfile.jsx';
+import CreateItianProfile from './pages/profiles/CreateItianProfile';
 import ItianProfile from './pages/profiles/ItianProfile.jsx';
-import ViewItianProfile from './pages/profiles/ViewItianProfile.jsx';
+import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
-import { fetchItianProfile } from './store/itianProfileSlice';
-import { fetchEmployerProfile } from './store/employerProfileSlice';
-import applicationStore from './applicationStore.js'; // Application Redux store (imported for reference)
-
+import applicationStore from './applicationStore.js';
 function App() {
   const user = useSelector(state => state.user.user);
   const dispatch = useDispatch();
@@ -61,12 +62,14 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           {adminRoutes}
           {/* Employer routes */}
+          {/* Employer routes */}
           <Route path="/employer/post-job" element={<PostJob />} />
           <Route path="/employer/jobs" element={<JobList />} />
           <Route path="/employer/trash" element={<TrashPage />} />
           <Route path="/employer/job/:id" element={<JobDetails />} />
           <Route path="/employer/job/:id/applications" element={<JobApplications />} />
           <Route path="/mychat" element={<ChatApp />} />
+          {/* Posts */}
           {/* Posts */}
           <Route path="/posts" element={<PostsList />} />
           {/* Public job seeker routes */}
@@ -75,6 +78,15 @@ function App() {
           <Route path="/apply/:id" element={<ApplyForm />} />
           <Route path="/my-applications" element={<MyApplications />} />
           <Route path="/my-applications/:id" element={<ProposalDetails />} />
+          {/* Profile routes */}
+          <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+          <Route path="/employer-profile" element={<EmployerProfile />} />
+          <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
+          <Route path="/create-itian-profile" element={<CreateItianProfile />} />
+          <Route path="/itian-profile" element={<ItianProfile />} />
+          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+          <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
           {/* Profile routes */}
           <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
           <Route path="/employer-profile" element={<EmployerProfile />} />

@@ -38,7 +38,7 @@ const cardVariants = {
 
 const PostCard = memo(({ post, onDelete, onUpdate }) => {
   const navigate = useNavigate();
-  const user = useSelector((state) => state.itian.user);
+  const user = useSelector((state) => state.itian?.user ?? null);
   
   const [showComments, setShowComments] = useState(false);
   const [reactions, setReactions] = useState(post.reactions || {});

@@ -138,12 +138,12 @@ const JobsPage = () => {
             ) : (
               <div className="no-jobs">
                 <div className="no-jobs-icon">😕</div>
-                <p>No jobs match your search criteria</p>
+                <p>No jobs found</p>
                 <button
                   onClick={handleClearAll}
-                  className="clear-all-btn"
+                   className="clear-all-btn"
                 >
-                  Reset Filters
+                  
                 </button>
               </div>
             )}

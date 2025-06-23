@@ -3,8 +3,9 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
 import "../../css/ProposalDetails.css";
+
 import { Sparkles } from 'lucide-react'; // أو أي مكتبة الأيقونات التي تستخدمها
-Modal.setAppElement('#root');
+
 
 const ProposalDetails = () => {
   const { id } = useParams();
