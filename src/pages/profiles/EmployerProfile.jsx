@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { setRole } from "../store/userSlice";
+import { setRole } from "../../store/userSlice";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";

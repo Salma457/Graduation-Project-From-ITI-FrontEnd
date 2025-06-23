@@ -20,20 +20,21 @@ import adminRoutes from './pages/admin/adminRoutes.jsx';
 // Posts
 import PostsList from './Posts/components/posts/PostList.jsx';
 // Public/Jobseeker
-import JobsPage from './pages/JobsPage.jsx';
-import JobDetailsPublic from './pages/JobDetails.jsx';
-import ApplyForm from './pages/ApplyForm.jsx';
-import MyApplications from './pages/MyApplications.jsx';
-import ProposalDetails from './pages/ProposalDetails.jsx';
+import JobsPage from './pages/itian/JobsPage.jsx';
+import JobDetailsPublic from './pages/itian/JobDetails.jsx';
+import ApplyForm from './pages/itian/ApplyForm.jsx';
+import MyApplications from './pages/itian/MyApplications.jsx';
+import ProposalDetails from './pages/itian/ProposalDetails.jsx';
 // Profiles
-import CreateEmployerProfile from './pages/CreateEmployerProfile';
-import EmployerProfile from './pages/EmployerProfile.jsx';
-import CreateItianProfile from './pages/CreateItianProfile';
-import ItianProfile from './pages/ItianProfile.jsx';
-import ViewItianProfile from './pages/ViewItianProfile';
-import ViewEmployerProfile from './pages/ViewEmployerProfile.jsx';
+import CreateEmployerProfile from './pages/profiles/CreateEmployerProfile.jsx';
+import EmployerProfile from './pages/profiles/EmployerProfile.jsx';
+import CreateItianProfile from './pages/profiles/CreateItianProfile.jsx';
+import ItianProfile from './pages/profiles/ItianProfile.jsx';
+import ViewItianProfile from './pages/profiles/ViewItianProfile.jsx';
+import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
 import { fetchItianProfile } from './store/itianProfileSlice';
 import { fetchEmployerProfile } from './store/employerProfileSlice';
+import applicationStore from './applicationStore.js'; // Application Redux store (imported for reference)
 
 function App() {
   const user = useSelector(state => state.user.user);
@@ -41,9 +42,9 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'ITIAN') {
+      if (user.role === 'itian') {
         dispatch(fetchItianProfile(user.id));
-      } else if (user.role === 'EMPLOYER') {
+      } else if (user.role === 'employer') {
         dispatch(fetchEmployerProfile(user.id));
       }
     }
@@ -51,6 +52,7 @@ function App() {
 
   return (
     <Provider store={store}>
+      <Provider store={applicationStore}>
       <Router>
         <Routes>
           <Route path="/" element={<div className=""><img src={viteLogo} alt="Vite Logo" style={{height: 80, margin: '2rem auto', display: 'block'}} /><h1>Home Page</h1></div>} />
@@ -84,6 +86,7 @@ function App() {
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
         </Routes>
       </Router>
+      </Provider>
     </Provider>
   );
 }

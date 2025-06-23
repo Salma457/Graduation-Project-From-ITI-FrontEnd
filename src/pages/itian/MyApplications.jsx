@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
-import "../css/MyApplications.css";
+import "../../css/MyApplications.css";
 import { Sparkles } from 'lucide-react';
 Modal.setAppElement('#root');
 
