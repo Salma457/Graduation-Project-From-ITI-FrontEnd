@@ -1,143 +1,159 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { FiLinkedin, FiGithub, FiExternalLink } from 'react-icons/fi';
 
 const ItianSidebarProfile = ({ profile }) => {
   if (!profile) return null;
 
-  const {
-    first_name,
-    last_name,
-    profile_picture_url,
-    bio,
-    current_job_title,
-    current_company,
-    linkedin_profile_url,
-    github_profile_url,
-    portfolio_url,
-    experience_years,
-    graduation_year,
-    iti_track,
-    skills,
-    projects
-  } = profile;
-
   return (
-    <div className="bg-white rounded-2xl shadow-md p-0 sticky top-6 h-[90vh] overflow-hidden relative">
-      {/* Header with Show Profile Button */}
-      <div className="flex justify-end p-3">
-        <a
-          href="/itian-profile"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-red-500 hover:text-red-700 underline"
-        >
-          Show Profile
-        </a>
+    <motion.div 
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold text-gray-800">Profile Overview</h3>
+          <a
+            href="/itian-profile"
+            className="text-sm text-red-600 hover:text-red-800 flex items-center"
+          >
+            View Full <FiExternalLink className="ml-1" />
+          </a>
+        </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="px-6 pb-6 overflow-y-auto h-[calc(100%-3rem)] scrollbar scrollbar-thumb-red-300 scrollbar-track-gray-100 pr-2">
+      {/* Profile Content */}
+      <div className="p-4 space-y-4">
+        {/* Profile Info */}
         <div className="flex flex-col items-center text-center">
-          <img
-            src={profile_picture_url || `https://ui-avatars.com/api/?name=${first_name}+${last_name}`}
-            alt="Profile"
-            className="w-24 h-24 rounded-full object-cover mb-4 shadow"
-          />
-          <h2 className="text-xl font-semibold text-gray-800">
-            {first_name} {last_name}
+          <div className="relative group mb-3">
+            <img
+              src={profile.profile_picture_url || `https://ui-avatars.com/api/?name=${profile.first_name}+${profile.last_name}&background=random`}
+              alt="Profile"
+              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+            />
+          </div>
+          
+          <h2 className="text-lg font-bold text-gray-800">
+            {profile.first_name} {profile.last_name}
           </h2>
-          <p className="text-gray-500 text-sm">
-            {current_job_title} at {current_company}
-          </p>
-          {bio && <p className="mt-2 text-sm text-gray-600 italic">{bio}</p>}
+          
+          {profile.bio && (
+            <p className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+              {profile.bio}
+            </p>
+          )}
         </div>
 
-        <hr className="my-4 border-gray-200" />
-
-        <div className="text-sm text-gray-700 space-y-1">
-          <p><strong>Experience:</strong> {experience_years} years</p>
-          <p><strong>Track:</strong> {iti_track}</p>
-          <p><strong>Graduation:</strong> {graduation_year}</p>
+        {/* Details Grid */}
+        <div className="grid grid-cols-2 gap-2">
+          <DetailCard label="Experience" value={`${profile.experience_years || 0} yrs`} />
+          <DetailCard label="Track" value={profile.iti_track || '-'} />
+          <DetailCard label="Graduation" value={profile.graduation_year || '-'} />
+          <DetailCard label="Status" value="Active" />
         </div>
 
-        {skills?.length > 0 && (
-          <>
-            <hr className="my-4 border-gray-200" />
-            <div>
-              <h4 className="text-gray-800 font-semibold mb-1">Skills:</h4>
-              <div className="flex flex-wrap gap-2">
-                {skills.map(skill => (
-                  <span
-                    key={skill.id}
-                    className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium"
-                  >
-                    {skill.skill_name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        {/* Skills */}
+        <div className="pt-2">
+          <SectionTitle>Skills</SectionTitle>
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {profile.skills?.length > 0 ? (
+              profile.skills.map(skill => (
+                <SkillBadge key={skill.id} skill={skill.skill_name} />
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No skills added</p>
+            )}
+          </div>
+        </div>
 
-        {projects?.length > 0 && (
-          <>
-            <hr className="my-4 border-gray-200" />
-            <div>
-              <h4 className="text-gray-800 font-semibold mb-1">Projects:</h4>
-              <ul className="list-disc list-inside text-sm text-gray-600">
-                {projects.map(project => (
-                  <li key={project.id}>
-                    <a
-                      href={project.project_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-red-500 hover:underline"
-                    >
-                      {project.project_title}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
+        {/* Projects */}
+        <div className="pt-2">
+          <SectionTitle>Projects</SectionTitle>
+          <ul className="mt-1 space-y-1.5">
+            {profile.projects?.length > 0 ? (
+              profile.projects.map(project => (
+                <ProjectItem 
+                  key={project.id} 
+                  title={project.project_title} 
+                  link={project.project_link} 
+                />
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No projects added</p>
+            )}
+          </ul>
+        </div>
 
-        <hr className="my-4 border-gray-200" />
-
-        <div className="flex justify-center gap-4 flex-wrap">
-          {linkedin_profile_url && (
-            <a
-              href={linkedin_profile_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline text-sm"
-            >
-              LinkedIn
-            </a>
-          )}
-          {github_profile_url && (
-            <a
-              href={github_profile_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-800 hover:underline text-sm"
-            >
-              GitHub
-            </a>
-          )}
-          {portfolio_url && (
-            <a
-              href={portfolio_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-green-700 hover:underline text-sm"
-            >
-              Portfolio
-            </a>
-          )}
+        {/* Social Links */}
+        <div className="flex justify-center gap-3 pt-3 mt-3 border-t border-gray-100">
+          <SocialLink 
+            icon={<FiLinkedin className="text-blue-600" />} 
+            url={profile.linkedin_profile_url}
+          />
+          <SocialLink 
+            icon={<FiGithub className="text-gray-800" />} 
+            url={profile.github_profile_url}
+          />
+          <SocialLink 
+            icon={<FiExternalLink className="text-green-600" />} 
+            url={profile.portfolio_url}
+          />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
+
+// Helper Components
+const DetailCard = ({ label, value }) => (
+  <div className="bg-gray-50 p-2 rounded-lg">
+    <p className="text-xs text-gray-500 font-medium">{label}</p>
+    <p className="text-sm font-semibold text-gray-700">{value}</p>
+  </div>
+);
+
+const SectionTitle = ({ children }) => (
+  <h4 className="text-sm font-semibold text-gray-700 flex items-center">
+    <span className="w-1 h-3 bg-red-500 mr-2 rounded-full"></span>
+    {children}
+  </h4>
+);
+
+const SkillBadge = ({ skill }) => (
+  <span className="bg-red-50 text-red-700 px-2 py-0.5 rounded-full text-xs">
+    {skill}
+  </span>
+);
+
+const ProjectItem = ({ title, link }) => (
+  <li className="flex items-start">
+    <span className="text-red-500 mr-1 mt-1 text-xs">•</span>
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-xs text-gray-700 hover:text-red-600 hover:underline flex items-center"
+    >
+      {title}
+      <FiExternalLink className="ml-1" size={10} />
+    </a>
+  </li>
+);
+
+const SocialLink = ({ icon, url }) => (
+  <motion.a
+    whileHover={{ y: -2 }}
+    href={url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-gray-100 p-1.5 rounded-full text-sm"
+  >
+    {icon}
+  </motion.a>
+);
 
 export default ItianSidebarProfile;
