@@ -63,11 +63,13 @@ const schema = Yup.object().shape({
     .max(20),
   skills: Yup.array().of(
     Yup.object().shape({
+      id: Yup.number().nullable(),
       skill_name: Yup.string().required("Skill name is required").max(100),
     })
   ),
   projects: Yup.array().of(
     Yup.object().shape({
+      id: Yup.number().nullable(),
       project_title: Yup.string().required("Project title is required").max(255),
       description: Yup.string().nullable(),
       project_link: Yup.string().url("Invalid URL").nullable(),
@@ -83,6 +85,7 @@ const ItianProfile = () => {
   const [editProfile, setEditProfile] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [previewCv, setPreviewCv] = useState(null);
+  const [cvError, setCvError] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     contact: true,
     professional: true,
@@ -173,6 +176,34 @@ const ItianProfile = () => {
     fetchProfileData();
   }, []);
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));
+      setValue("profile_picture", [file]);
+    } else {
+      setPreviewImage(profile?.profile_picture_url || null);
+      setValue("profile_picture", null);
+    }
+  };
+
+  const handleCvChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        setError("CV must be a PDF file.");
+        setValue("cv", null);
+        setPreviewCv(null);
+        return;
+      }
+      setPreviewCv(URL.createObjectURL(file));
+      setValue("cv", [file]);
+    } else {
+      setPreviewCv(profile?.cv_url || null);
+      setValue("cv", null);
+    }
+  };
+
   const onSubmit = async (data) => {
     setLoading(true);
     setError("");
@@ -180,34 +211,56 @@ const ItianProfile = () => {
 
     const formData = new FormData();
 
+    // إضافة الحقول العادية
     for (const key in data) {
-      if (key !== "skills" && key !== "projects" && key !== "profile_picture" && key !== "cv") {
+      if (
+        key !== "skills" &&
+        key !== "projects" &&
+        key !== "profile_picture" &&
+        key !== "cv"
+      ) {
         if (data[key] !== null && data[key] !== undefined) {
           formData.append(key, data[key]);
         }
       }
     }
 
+    // رفع صورة البروفايل
     if (data.profile_picture && data.profile_picture[0]) {
       formData.append("profile_picture", data.profile_picture[0]);
     }
+    // رفع السيرة الذاتية
     if (data.cv && data.cv[0]) {
       formData.append("cv", data.cv[0]);
     }
 
-    data.skills.forEach((skill, index) => {
-      if (skill.skill_name && skill.skill_name.trim() !== "") {
-        formData.append(`skills[${index}][skill_name]`, skill.skill_name.trim());
-      }
-    });
+    // المهارات
+    if (Array.isArray(data.skills)) {
+      data.skills.forEach((skill, index) => {
+        if (skill.skill_name && skill.skill_name.trim() !== "") {
+          if (skill.id) {
+            formData.append(`skills[${index}][id]`, skill.id);
+          }
+          formData.append(`skills[${index}][skill_name]`, skill.skill_name.trim());
+        }
+      });
+    }
 
-    data.projects.forEach((project, index) => {
-      if (project.project_title && project.project_title.trim() !== "") {
-        formData.append(`projects[${index}][project_title]`, project.project_title.trim());
-        if (project.description) formData.append(`projects[${index}][description]`, project.description);
-        if (project.project_link) formData.append(`projects[${index}][project_link]`, project.project_link);
-      }
-    });
+    // المشاريع
+    if (Array.isArray(data.projects)) {
+      data.projects.forEach((project, index) => {
+        if (project.project_title && project.project_title.trim() !== "") {
+          if (project.id) {
+            formData.append(`projects[${index}][id]`, project.id);
+          }
+          formData.append(`projects[${index}][project_title]`, project.project_title.trim());
+          if (project.description)
+            formData.append(`projects[${index}][description]`, project.description);
+          if (project.project_link)
+            formData.append(`projects[${index}][project_link]`, project.project_link);
+        }
+      });
+    }
 
     try {
       const token = localStorage.getItem("access-token");
@@ -217,8 +270,7 @@ const ItianProfile = () => {
         return;
       }
 
-      const user_id = profile.user_id;
-
+      const user_id = profile?.user_id;
       const response = await axios.post(
         `${BASE_URL}/api/itian-profiles/${user_id}/update`,
         formData,
@@ -235,15 +287,12 @@ const ItianProfile = () => {
         setPreviewImage(response.data.data.profile_picture_url || null);
         setPreviewCv(response.data.data.cv_url || null);
         setError("");
+        reset(response.data.data);
       } else {
         setError(response.data.message || "Failed to update profile.");
       }
     } catch (err) {
-      console.error("Update error:", err.response?.data || err.message);
       setError(`Failed to update profile. ${err.response?.data?.message || err.message}`);
-      if (err.response?.data?.errors) {
-        console.log("Validation errors:", err.response.data.errors);
-      }
     } finally {
       setLoading(false);
     }
@@ -252,30 +301,8 @@ const ItianProfile = () => {
   const handleCancel = () => {
     setEditProfile(false);
     reset(profile);
-    setPreviewImage(profile.profile_picture_url || null);
-    setPreviewCv(profile.cv_url || null);
-  };
-
-  const handleProfilePictureChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-      setValue("profile_picture", file);
-    } else {
-      setPreviewImage(profile.profile_picture_url || null);
-      setValue("profile_picture", null);
-    }
-  };
-
-  const handleCvChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewCv(URL.createObjectURL(file));
-      setValue("cv", file);
-    } else {
-      setPreviewCv(profile.cv_url || null);
-      setValue("cv", null);
-    }
+    setPreviewImage(profile?.profile_picture_url || null);
+    setPreviewCv(profile?.cv_url || null);
   };
 
   const toggleSection = (section) => {
@@ -480,13 +507,13 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("portfolio_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                            className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
                         {errors.portfolio_url && <p className="text-[#d0443c] text-sm mt-1">{errors.portfolio_url.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-gray-600 font-medium mb-2">LinkedIn Profile</label>
+                        <label className="block text-gray-700 font-medium mb-2">LinkedIn Profile</label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Linkedin size={16} className="text-gray-400" />
@@ -494,13 +521,13 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("linkedin_profile_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-blue-500"
+                            className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
                         {errors.linkedin_profile_url && <p className="text-[#d0443c] text-sm mt-1">{errors.linkedin_profile_url.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-gray-600 font-medium mb-2">GitHub Profile</label>
+                        <label className="block text-gray-700 font-medium mb-2">GitHub Profile</label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Github size={16} className="text-gray-400" />
@@ -508,14 +535,14 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("github_profile_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-blue-500"
+                            className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
-                        {errors.github_profile_url && <p className="text-[#d0443c] text-sm">{errors.github_profile_url.message}</p>}
+                        {errors.github_profile_url && <p className="text-[#d0443c] text-sm mt-1">{errors.github_profile_url.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-gray-600 font-medium mb-2">CV Upload</label>
-                        <div class="flex items-center gap-4">
+                        <label className="block text-gray-700 font-medium mb-2">CV Upload</label>
+                        <div className="flex items-center gap-4">
                           {previewCv && (
                             <a
                               href={previewCv}
@@ -534,6 +561,7 @@ const ItianProfile = () => {
                               </div>
                               <input
                                 type="file"
+                                accept="application/pdf"
                                 {...register("cv")}
                                 onChange={handleCvChange}
                                 className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] file:hidden"
@@ -541,7 +569,7 @@ const ItianProfile = () => {
                             </div>
                           </label>
                         </div>
-                        {errors.cv && <p className="text-[#d0443c] text-sm mt-1">{errors.cv.message}</p>}
+                        {(errors.cv || cvError) && <p className="text-[#d0443c] text-sm mt-1">{errors.cv?.message || cvError}</p>}
                       </div>
                     </div>
                   )}
