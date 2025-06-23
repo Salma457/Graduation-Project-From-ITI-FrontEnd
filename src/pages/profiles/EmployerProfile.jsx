@@ -1,0 +1,576 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setRole } from "../../store/userSlice";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
+import {
+  Building,
+  Mail,
+  Globe,
+  MapPin,
+  Phone,
+  Upload,
+  Edit,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  User,
+  XCircle,
+  Briefcase,
+} from "lucide-react";
+
+// Yup validation schema for EmployerProfile
+const schema = Yup.object().shape({
+  company_name: Yup.string()
+    .required("Company name is required")
+    .max(255, "Company name must be at most 255 characters"),
+  company_logo: Yup.mixed()
+    .nullable()
+    .test("fileSize", "Company logo is too large (max 2MB)", (value) => {
+      if (!value || !value[0]) return true;
+      return value[0].size <= 2048 * 1024; // 2MB
+    })
+    .test("fileType", "Invalid company logo type (jpeg, png, jpg, gif)", (value) => {
+      if (!value || !value[0]) return true;
+      return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
+    }),
+  company_description: Yup.string().nullable(),
+  website_url: Yup.string().url("Invalid URL").nullable(),
+  industry: Yup.string().nullable().max(100),
+  company_size: Yup.string().nullable().max(100),
+  location: Yup.string().nullable().max(255),
+  contact_person_name: Yup.string().nullable().max(255),
+  contact_email: Yup.string().email("Invalid email format").nullable().max(255),
+  phone_number: Yup.string()
+    .nullable()
+    .matches(/^\+?[0-9]{7,15}$/, "Invalid phone number format")
+    .max(20),
+  is_verified: Yup.boolean().nullable(),
+});
+
+const EmployerProfile = () => {
+  const dispatch = useDispatch();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editProfile, setEditProfile] = useState(false);
+  const [previewLogo, setPreviewLogo] = useState(null);
+  const [companyLogoRemoved, setCompanyLogoRemoved] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    companyInfo: true,
+    contact: true,
+  });
+
+  const BASE_URL = "http://localhost:8000";
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+    watch,
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  const companyLogoWatch = watch("company_logo");
+  useEffect(() => {
+    if (companyLogoWatch && companyLogoWatch.length > 0 && companyLogoWatch[0] instanceof File) {
+      setPreviewLogo(URL.createObjectURL(companyLogoWatch[0]));
+      setCompanyLogoRemoved(false);
+    } else if (companyLogoRemoved) {
+      setPreviewLogo(null);
+    } else {
+      setPreviewLogo(profile?.company_logo_url || null);
+    }
+  }, [companyLogoWatch, companyLogoRemoved, profile?.company_logo_url]);
+
+  const handleCompanyLogoChange = (e) => {
+    const file = e.target.files[0];
+    setValue("company_logo", file);
+    setCompanyLogoRemoved(false);
+  };
+
+  const fetchProfileData = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("access-token");
+      if (!token) {
+        setError("Authentication token not found. Please log in.");
+        setLoading(false);
+        dispatch(setRole(null));
+        return;
+      }
+
+      const response = await axios.get(`${BASE_URL}/api/employer-profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 204 || !response.data) {
+        setProfile(null);
+        setError("No employer profile data found. Please create your profile.");
+      } else {
+        const profileData = response.data;
+        setProfile(profileData);
+        reset(profileData);
+        setPreviewLogo(profileData.company_logo_url || null);
+        setCompanyLogoRemoved(false);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      if (err.response && err.response.status === 401) {
+        setError("Unauthorized. Please log in again.");
+        dispatch(setRole(null));
+      } else if (err.response && err.response.status === 404) {
+        setProfile(null);
+        setError("No employer profile data found. Please create your profile.");
+      } else {
+        setError(`Failed to load profile. ${err.response?.data?.message || err.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    setError("");
+    setEditProfile(false);
+
+    const formData = new FormData();
+    const token = localStorage.getItem("access-token");
+    if (!token) {
+      setError("Authentication token not found. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Submitting data:", data); // Debug log
+    for (const key in data) {
+      if (key === "company_logo") {
+        if (data.company_logo && data.company_logo.length > 0 && data.company_logo[0] instanceof File) {
+          formData.append("company_logo", data.company_logo[0]);
+        } else if (companyLogoRemoved) {
+          formData.append("company_logo_removed", "true");
+        }
+      } else {
+        if (data[key] !== null && data[key] !== undefined) {
+          formData.append(key, data[key]);
+        }
+      }
+    }
+
+    try {
+      const userId = profile?.user_id;
+      if (!userId) {
+        setError("User ID not found. Please log in again or fetch profile data.");
+        setLoading(false);
+        return;
+      }
+
+      console.log(`Sending request to: ${BASE_URL}/api/employer-profiles/${userId}/update`); // Debug URL
+      const response = await axios.post(
+        `${BASE_URL}/api/employer-profiles/${userId}/update`, // Changed to POST
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setProfile(response.data.data);
+      setPreviewLogo(response.data.data.company_logo_url || null);
+      setCompanyLogoRemoved(false);
+      setError("");
+      reset(response.data.data); // Reset form with updated data
+    } catch (err) {
+      console.error("Update error:", err.response?.data || err.message); // Debug log
+      let errorMessage = "Failed to update profile. Please try again.";
+      if (err.response) {
+        if (err.response.status === 422 && err.response.data.errors) {
+          errorMessage = Object.values(err.response.data.errors)
+            .flat()
+            .join(". ");
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else {
+          errorMessage = `Status: ${err.response.status} - ${err.message}`;
+        }
+      }
+      setError(errorMessage);
+      setEditProfile(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditProfile(false);
+    reset(profile);
+    setPreviewLogo(profile?.company_logo_url || null);
+    setCompanyLogoRemoved(false);
+  };
+
+  const handleRemoveCompanyLogo = () => {
+    setPreviewLogo(null);
+    setValue("company_logo", null);
+    setCompanyLogoRemoved(true);
+  };
+
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  const handlePostJob = () => {
+    // Navigate to job posting page
+    console.log("Navigating to job posting page");
+    // You can replace this with your actual navigation logic
+    // navigate('/post-job');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-[#d0443c] rounded-full animate-spin animation-delay-150"></div>
+          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#d0443c] w-8 h-8 animate-pulse" />
+        </div>
+        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading employer profile...</p>
+      </div>
+    );
+  }
+
+  if (error && !profile) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-white">
+        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
+          <p className="text-[#d0443c] text-lg mb-4">{error}</p>
+          <button
+            onClick={() => {
+              if (error.includes("create your profile")) {
+                setEditProfile(true);
+              } else {
+                fetchProfileData();
+              }
+            }}
+            className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition duration-300 shadow-md"
+          >
+            {error.includes("create your profile") ? "Create Profile" : "Try Again"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="container mx-auto px-4 py-8">
+        {profile || editProfile ? (
+          <>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+              <div className="relative">
+                <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#b53c35]"></div>
+                <div className="absolute -bottom-16 left-6">
+                  <div className="relative">
+                    <div className="w-36 h-36 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden flex items-center justify-center">
+                      {previewLogo ? (
+                        <img src={previewLogo} alt="Company Logo" className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                          <Building size={72} />
+                        </div>
+                      )}
+                    </div>
+                    {editProfile && (
+                      <>
+                        <label className="absolute bottom-0 right-0 bg-[#d0443c] p-2 rounded-full cursor-pointer shadow-md hover:bg-[#b53c35] transition">
+                          <Upload size={16} className="text-white" />
+                          <input
+                            type="file"
+                            className="hidden"
+                            {...register("company_logo")}
+                            onChange={(e) => handleCompanyLogoChange(e)}
+                          />
+                        </label>
+                        {previewLogo && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveCompanyLogo}
+                            className="absolute top-0 right-0 bg-red-500 p-1 rounded-full cursor-pointer shadow-md hover:bg-red-700 transition"
+                            title="Remove company logo"
+                          >
+                            <XCircle size={16} className="text-white" />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="pt-20 px-6 pb-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    {editProfile ? (
+                      <input
+                        type="text"
+                        {...register("company_name")}
+                        className="w-full text-2xl font-bold px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        placeholder="Company Name"
+                      />
+                    ) : (
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {profile?.company_name || "Company Name Not Set"}
+                      </h2>
+                    )}
+                    {errors.company_name && <p className="text-[#d0443c] text-sm">{errors.company_name.message}</p>}
+                    {editProfile ? (
+                      <textarea
+                        {...register("company_description")}
+                        className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        placeholder="Tell us about your company..."
+                      />
+                    ) : (
+                      <p className="text-gray-600 mt-2">{profile?.company_description || "No company description provided"}</p>
+                    )}
+                  </div>
+                  {!editProfile && profile && Object.keys(profile).length > 0 && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditProfile(true)}
+                        className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
+                      >
+                        <Edit size={18} />
+                        <span>Edit Profile</span>
+                      </button>
+                      <button
+                        onClick={handlePostJob}
+                        className="flex items-center gap-2 bg-[#d0443c] text-white px-4 py-2 rounded-lg hover:bg-[#b53c35] transition shadow-md"
+                      >
+                        <Briefcase size={18} />
+                        <span>Post Job</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {!editProfile && profile && Object.keys(profile).length > 0 && (
+                  <div className="mt-6 flex flex-wrap gap-4">
+                    {profile.industry && (
+                      <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                        <Building className="text-[#d0443c] mr-2" size={16} />
+                        <span className="text-gray-700">{profile.industry}</span>
+                      </div>
+                    )}
+                    {profile.location && (
+                      <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                        <MapPin className="text-[#d0443c] mr-2" size={16} />
+                        <span className="text-gray-700">{profile.location}</span>
+                      </div>
+                    )}
+                    {profile.company_size && (
+                      <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
+                        <User className="text-[#d0443c] mr-2" size={16} />
+                        <span className="text-gray-700">{profile.company_size} employees</span>
+                      </div>
+                    )}
+                    {profile.website_url && (
+                      <a
+                        href={profile.website_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center bg-gray-50 px-4 py-2 rounded-lg text-[#d0443c] hover:underline"
+                      >
+                        <Globe className="mr-2" size={16} />
+                        <span>Website</span>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            {(editProfile || !profile) ? (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div
+                    className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
+                    onClick={() => toggleSection("companyInfo")}
+                  >
+                    <h3 className="text-xl font-bold text-gray-900">Additional Company Information</h3>
+                    {expandedSections.companyInfo ? <ChevronUp /> : <ChevronDown />}
+                  </div>
+                  {expandedSections.companyInfo && (
+                    <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Industry</label>
+                        <input
+                          type="text"
+                          {...register("industry")}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        />
+                        {errors.industry && <p className="text-[#d0443c] text-sm mt-1">{errors.industry.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Company Size</label>
+                        <input
+                          type="text"
+                          {...register("company_size")}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          placeholder="e.g., 1-10, 50-100, 1000+"
+                        />
+                        {errors.company_size && <p className="text-[#d0443c] text-sm mt-1">{errors.company_size.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Location</label>
+                        <input
+                          type="text"
+                          {...register("location")}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          placeholder="e.g., New York, NY, USA"
+                        />
+                        {errors.location && <p className="text-[#d0443c] text-sm mt-1">{errors.location.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Website URL</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Globe size={16} className="text-gray-400" />
+                          </div>
+                          <input
+                            type="text"
+                            {...register("website_url")}
+                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          />
+                        </div>
+                        {errors.website_url && <p className="text-[#d0443c] text-sm mt-1">{errors.website_url.message}</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div
+                    className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
+                    onClick={() => toggleSection("contact")}
+                  >
+                    <h3 className="text-xl font-bold text-gray-900">Contact Person Information</h3>
+                    {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
+                  </div>
+                  {expandedSections.contact && (
+                    <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Contact Person Name</label>
+                        <input
+                          type="text"
+                          {...register("contact_person_name")}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        />
+                        {errors.contact_person_name && <p className="text-[#d0443c] text-sm mt-1">{errors.contact_person_name.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Contact Email</label>
+                        <input
+                          type="text"
+                          {...register("contact_email")}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        />
+                        {errors.contact_email && <p className="text-[#d0443c] text-sm mt-1">{errors.contact_email.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-gray-700 font-medium mb-2">Phone Number</label>
+                        <input
+                          type="text"
+                          {...register("phone_number")}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        />
+                        {errors.phone_number && <p className="text-[#d0443c] text-sm mt-1">{errors.phone_number.message}</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end gap-4 mt-6">
+                  {profile && (
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-300"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition duration-300 shadow-md"
+                    disabled={loading}
+                  >
+                    {loading ? "Saving..." : profile ? "Save Changes" : "Create Profile"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div
+                    className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
+                    onClick={() => toggleSection("contact")}
+                  >
+                    <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
+                    {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
+                  </div>
+                  {expandedSections.contact && (
+                    <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {profile?.contact_person_name && (
+                        <div className="flex items-center text-gray-700">
+                          <User className="text-[#d0443c] mr-2" size={20} />
+                          <span>{profile.contact_person_name}</span>
+                        </div>
+                      )}
+                      {profile?.contact_email && (
+                        <div className="flex items-center text-gray-700">
+                          <Mail className="text-[#d0443c] mr-2" size={20} />
+                          <span>{profile.contact_email}</span>
+                        </div>
+                      )}
+                      {profile?.phone_number && (
+                        <div className="flex items-center text-gray-700">
+                          <Phone className="text-[#d0443c] mr-2" size={20} />
+                          <span>{profile.phone_number}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Employer Profile Found</h2>
+            <p className="text-gray-600 mb-6">You haven't created your employer profile yet.</p>
+            <button
+              onClick={() => setEditProfile(true)}
+              className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition font-medium"
+            >
+              Create Employer Profile
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EmployerProfile;

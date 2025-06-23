@@ -1,82 +1,97 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiPlus, FiRefreshCw } from 'react-icons/fi';
 import { fetchPosts, fetchMyPosts } from '../../services/api';
 import PostCard from './PostCard';
 import CreatePostModal from './CreatePostModal';
-import FilterPosts from './FilterPosts';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchItianProfile } from '../../store/itianSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ItianSidebarProfile from './ItianSidebarProfile';
 
 const PostList = () => {
- const dispatch = useDispatch();
- const user = useSelector((state) => state.itian.user);
-//  const isLoadingUser = useSelector((state) => state.itian.loading);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.itian?.user ?? null);
 
- useEffect(() => {
-   if (!user) {
-     dispatch(fetchItianProfile());
-  }
- }, [user, dispatch]);  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  useEffect(() => {
+    if (!user) {
+      dispatch(fetchItianProfile());
+    }
+  }, [user, dispatch]);
+
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [filters, setFilters] = useState({
-    sort: 'newest',
-    search: '',
-    reactions: []
-  });
 
   const observer = useRef();
 
-  const loadPosts = useCallback(async (reset = false) => {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }
+    }
+  };
+
+  const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
     try {
       setLoading(true);
-      const currentPage = reset ? 1 : page;
-
-      const params = {
-        page: currentPage,
-        sort: filters.sort,
-        search: filters.search,
-        reactions: filters.reactions.join(',')
-      };
-
       const data = activeTab === 'all'
-        ? await fetchPosts(params)
-        : await fetchMyPosts(params);
+        ? await fetchPosts({ page: pageNumber })
+        : await fetchMyPosts({ page: pageNumber });
 
       const postsArray = Array.isArray(data.data) ? data.data : [];
 
       if (reset) {
         setPosts(postsArray);
-        setPage(1);
       } else {
         setPosts(prev => [...prev, ...postsArray]);
       }
 
       setHasMore(data.current_page < data.last_page);
     } catch (err) {
-      setError('Failed to load posts. Please try again later.');
+      toast.error('Failed to load posts. Please try again.');
       console.error('Error fetching posts:', err);
-      toast.error('Failed to load posts');
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, filters]);
+  }, [activeTab]);
 
   useEffect(() => {
-  loadPosts(true);
-}, [loadPosts])
+    setPage(1);
+    loadPosts(true, 1);
+  }, [activeTab, loadPosts]);
+
+  useEffect(() => {
+    if (page === 1) return;
+    loadPosts(false, page);
+  }, [page, loadPosts]);
 
   const lastPostRef = useCallback(node => {
-    if (loading) return;
+    if (loading || !hasMore) return;
     if (observer.current) observer.current.disconnect();
 
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting) {
         setPage(prev => prev + 1);
       }
     });
@@ -84,125 +99,168 @@ const PostList = () => {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
- useEffect(() => {
-  if (page > 1) {
-    loadPosts();
-  }
-}, [page, loadPosts]);
-
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
     setIsModalOpen(false);
-    toast.success('✅ Post created successfully!');
+    toast.success('Post created successfully!');
   };
 
   const handleDeletePost = (postId) => {
     setPosts(posts.filter(post => post.id !== postId));
+    toast.success('Post deleted successfully!');
   };
 
   const handleUpdatePost = (updatedPost) => {
     setPosts(posts.map(post =>
       post.id === updatedPost.id ? updatedPost : post
     ));
-    toast.success('✅ Post updated successfully!');
+    toast.success('Post updated successfully!');
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
+  const handleRefresh = () => {
+    setPage(1);
+    loadPosts(true, 1);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 relative">
-      <div className={`max-w-3xl mx-auto transition-all duration-300 ${isModalOpen ? 'blur-md pointer-events-none scale-[0.98] opacity-80' : ''}`}>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'all' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-200 hover:bg-gray-300'}`}
-            >
-              All Posts
-            </button>
-            <button
-              onClick={() => setActiveTab('my')}
-              className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'my' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-200 hover:bg-gray-300'}`}
-            >
-              My Posts
-            </button>
-          </div>
-
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <FilterPosts
-              filters={filters}
-              onChange={handleFilterChange}
-            />
-
-            {user && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-all whitespace-nowrap"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Post
-              </button>
-            )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        {/* Left Sidebar - تم تقليل العرض هنا */}
+        <div className="hidden lg:block w-64 bg-white border-r border-gray-200 p-4 sticky top-0 h-screen overflow-y-auto">
+          <div className="space-y-6">
+            {user && <ItianSidebarProfile profile={user} />}
           </div>
         </div>
 
-        {loading && page === 1 ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-white p-6 rounded-lg shadow text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <button
-              onClick={() => loadPosts(true)}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {posts.map((post, index) => (
-              <div
-                key={post.id}
-                ref={index === posts.length - 1 ? lastPostRef : null}
+        {/* Main Content - تم تعديل المساحة هنا */}
+        <div className="flex-1 py-8 pl-2 pr-4 sm:pl-4 sm:pr-6 lg:pl-6 lg:pr-8">
+          <div className="max-w-3xl mx-auto">
+            {/* Header with Tabs */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+              <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
+                {['all', 'my'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      activeTab === tab
+                        ? 'bg-white shadow-sm text-red-600'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    {tab === 'all' ? 'All Posts' : 'My Posts'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <motion.button
+                  whileHover={{ rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                >
+                  <FiRefreshCw className={`${loading ? 'animate-spin' : ''}`} />
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Posts List */}
+            {loading && page === 1 ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+              </div>
+            ) : posts.length === 0 ? (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center"
               >
-                <PostCard
-                  post={post}
-                  onDelete={handleDeletePost}
-                  onUpdate={handleUpdatePost}
-                />
-              </div>
-            ))}
+                <h3 className="text-lg font-medium text-gray-700 mb-2">No posts found</h3>
+                <p className="text-gray-500 mb-4">Be the first to share something!</p>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg inline-flex items-center"
+                >
+                  <FiPlus className="mr-2" />
+                  Create Post
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-6"
+              >
+                {posts.map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    variants={itemVariants}
+                    ref={index === posts.length - 1 ? lastPostRef : null}
+                  >
+                    <PostCard
+                      post={post}
+                      onDelete={handleDeletePost}
+                      onUpdate={handleUpdatePost}
+                    />
+                  </motion.div>
+                ))}
 
-            {loading && page > 1 && (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
-              </div>
-            )}
+                {loading && page > 1 && (
+                  <div className="flex justify-center py-6">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+                  </div>
+                )}
 
-            {!hasMore && (
-              <div className="text-center py-4 text-gray-500">
-                No more posts to load
-              </div>
+                {!hasMore && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-6 text-gray-500"
+                  >
+                    You've reached the end
+                  </motion.div>
+                )}
+              </motion.div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Create Post Modal */}
-      <CreatePostModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onPostCreated={handlePostCreated}
-      />
+      {/* Create Post Button */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsModalOpen(true)}
+        className="fixed bottom-8 right-8 z-20 bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-xl flex items-center justify-center"
+      >
+        <FiPlus className="text-xl" />
+      </motion.button>
 
-      {/* ✅ Toast messages container */}
-      <ToastContainer position="top-center" autoClose={2000} />
+      <AnimatePresence>
+        {isModalOpen && (
+          <CreatePostModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onPostCreated={handlePostCreated}
+          />
+        )}
+      </AnimatePresence>
+
+      <ToastContainer 
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };

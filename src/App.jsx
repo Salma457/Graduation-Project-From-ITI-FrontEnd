@@ -17,24 +17,26 @@ import JobApplications from './pages/Employer/pages/JobApplications';
 import ChatApp from './pages/Employer/pages/ChatApp';
 // Admin
 import adminRoutes from './pages/admin/adminRoutes.jsx';
+// Payment
+import PaymentPage from './pages/PaymentPage.jsx';
 // Posts
 import PostsList from './Posts/components/posts/PostList.jsx';
 // Public/Jobseeker
-import JobsPage from './pages/JobsPage.jsx';
-import JobDetailsPublic from './pages/JobDetails.jsx';
-import ApplyForm from './pages/ApplyForm.jsx';
-import MyApplications from './pages/MyApplications.jsx';
-import ProposalDetails from './pages/ProposalDetails.jsx';
+import JobsPage from './pages/Itian/JobsPage.jsx';
+import JobDetailsPublic from './pages/Itian/JobDetails.jsx';
+import ApplyForm from './pages/Itian/ApplyForm.jsx';
+import MyApplications from './pages/Itian/MyApplications.jsx';
+import ProposalDetails from './pages/Itian/ProposalDetails.jsx';
 // Profiles
-import CreateEmployerProfile from './pages/CreateEmployerProfile';
-import EmployerProfile from './pages/EmployerProfile.jsx';
-import CreateItianProfile from './pages/CreateItianProfile';
-import ItianProfile from './pages/ItianProfile.jsx';
-import ViewItianProfile from './pages/ViewItianProfile';
-import ViewEmployerProfile from './pages/ViewEmployerProfile.jsx';
+import CreateEmployerProfile from './pages/profiles/CreateEmployerProfile';
+import EmployerProfile from './pages/profiles/EmployerProfile.jsx';
+import CreateItianProfile from './pages/profiles/CreateItianProfile';
+import ItianProfile from './pages/profiles/ItianProfile.jsx';
+import ViewItianProfile from './pages/profiles/ViewItianProfile';
+import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
+import applicationStore from './applicationStore.js';
 import { fetchItianProfile } from './store/itianProfileSlice';
 import { fetchEmployerProfile } from './store/employerProfileSlice';
-import Navbar from './components/Navbar';
 import useAuthInit from './hooks/useAuthInit';
 
 function App() {
@@ -54,8 +56,7 @@ function App() {
 
   return (
     <Provider store={store}>
-            <Navbar />
-
+      <Provider store={applicationStore}>
       <Router>
         <Routes>
 <Route
@@ -78,12 +79,17 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           {adminRoutes}
           {/* Employer routes */}
+          {/* Employer routes */}
           <Route path="/employer/post-job" element={<PostJob />} />
           <Route path="/employer/jobs" element={<JobList />} />
           <Route path="/employer/trash" element={<TrashPage />} />
           <Route path="/employer/job/:id" element={<JobDetails />} />
           <Route path="/employer/job/:id/applications" element={<JobApplications />} />
           <Route path="/mychat" element={<ChatApp />} />
+          {/* Payment */}
+          <Route path="/payment" element={<PaymentPage />} />
+         
+          {/* Reset Password */}
           {/* Posts */}
           <Route path="/posts" element={<PostsList />} />
           {/* Public job seeker routes */}
@@ -96,12 +102,23 @@ function App() {
           <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
           <Route path="/employer-profile" element={<EmployerProfile />} />
           <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           <Route path="/create-itian-profile" element={<CreateItianProfile />} />
           <Route path="/itian-profile" element={<ItianProfile />} />
-          <Route path="/profile/:username" element={<ViewItianProfile />} />
+          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+          <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+          {/* Profile routes */}
+          <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+          <Route path="/employer-profile" element={<EmployerProfile />} />
+          <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
+          <Route path="/create-itian-profile" element={<CreateItianProfile />} />
+          <Route path="/itian-profile" element={<ItianProfile />} />
+          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
         </Routes>
       </Router>
+      </Provider>
     </Provider>
   );
 }
