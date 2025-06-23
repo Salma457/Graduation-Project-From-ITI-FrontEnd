@@ -28,10 +28,6 @@ const schema = Yup.object().shape({
     .max(255, "Company name must be at most 255 characters"),
   company_logo: Yup.mixed()
     .nullable()
-    .test("fileSize", "Company logo is too large (max 2MB)", (value) => {
-      if (!value || !value[0]) return true;
-      return value[0].size <= 2048 * 1024; // 2MB
-    })
     .test("fileType", "Invalid company logo type (jpeg, png, jpg, gif)", (value) => {
       if (!value || !value[0]) return true;
       return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
@@ -58,7 +54,7 @@ const EmployerProfile = () => {
   const [editProfile, setEditProfile] = useState(false);
   const [previewLogo, setPreviewLogo] = useState(null);
   const [companyLogoRemoved, setCompanyLogoRemoved] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null); // إضافة state للملف المختار
+  const [selectedFile, setSelectedFile] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     companyInfo: true,
     contact: true,
@@ -89,12 +85,11 @@ const EmployerProfile = () => {
     }
   }, [selectedFile, companyLogoRemoved, profile?.company_logo_url]);
 
-  // تحسين دالة التعامل مع تغيير الصورة
   const handleCompanyLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      setValue("company_logo", e.target.files); // تمرير FileList كاملة
+      setValue("company_logo", e.target.files);
       setCompanyLogoRemoved(false);
     }
   };
@@ -168,19 +163,16 @@ const EmployerProfile = () => {
         return;
       }
 
-      // إنشاء FormData بطريقة صحيحة
       const formData = new FormData();
       
-      console.log("Submitting data:", data); // Debug log
+      console.log("Submitting data:", data);
 
-      // إضافة البيانات النصية
       Object.keys(data).forEach(key => {
         if (key !== "company_logo" && data[key] !== null && data[key] !== undefined && data[key] !== '') {
           formData.append(key, data[key]);
         }
       });
 
-      // التعامل مع الصورة
       if (selectedFile) {
         formData.append("company_logo", selectedFile);
         console.log("Adding file to FormData:", selectedFile.name);
@@ -189,7 +181,6 @@ const EmployerProfile = () => {
         console.log("Marking logo as removed");
       }
 
-      // طباعة محتويات FormData للتدبيق
       console.log("FormData contents:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
@@ -426,7 +417,6 @@ const EmployerProfile = () => {
             </div>
             {(editProfile || !profile) ? (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* إظهار أخطاء الصورة */}
                 {errors.company_logo && (
                   <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
                     {errors.company_logo.message}
