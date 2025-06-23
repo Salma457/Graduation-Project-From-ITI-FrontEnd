@@ -12,7 +12,7 @@ import ItianSidebarProfile from './ItianSidebarProfile';
 
 const PostList = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.itian.user);
+  const user = useSelector((state) => state.itian?.user ?? null);
 
   useEffect(() => {
     if (!user) {
