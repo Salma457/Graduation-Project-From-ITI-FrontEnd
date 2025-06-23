@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import JobCard from "../components/JobCard";
-import Filters from "../components/Filters";
+import JobCard from "../../components/JobCard";
+import Filters from "../../components/Filters";
 import axios from "axios";
-import "../css/JobsPage.css";
-import "../css/Pagination.css";
+import "../../css/JobsPage.css";
+import "../../css/Pagination.css";
 import { Sparkles, Search } from 'lucide-react'; 
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -13,7 +13,7 @@ import {
   setFilters,
   setPagination,
   clearAll,
-} from '../applicationSlice';
+} from '../../applicationSlice';
 
 const api = axios.create({
   baseURL: "http://localhost:8000/api",
@@ -138,12 +138,12 @@ const JobsPage = () => {
             ) : (
               <div className="no-jobs">
                 <div className="no-jobs-icon">😕</div>
-                <p>No jobs match your search criteria</p>
+                <p>No jobs found</p>
                 <button
                   onClick={handleClearAll}
-                  className="clear-all-btn"
+                   className="clear-all-btn"
                 >
-                  Reset Filters
+                  
                 </button>
               </div>
             )}

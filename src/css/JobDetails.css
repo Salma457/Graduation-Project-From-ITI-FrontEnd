@@ -615,3 +615,41 @@ body {
     font-size: 15px;
   }
 }
+/* View Proposal Button */
+.view-proposal-btn {
+  background: linear-gradient(to right, #e35d5b, #d64542);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(227, 93, 91, 0.2);
+  position: relative;
+  overflow: hidden;
+  margin-left: auto;
+}
+
+.view-proposal-btn:hover {
+  background: linear-gradient(to right, #d64542, #c03939);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(227, 93, 91, 0.3);
+}
+
+.view-proposal-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+  transform: translateX(-100%);
+  transition: transform 0.3s;
+}
+
+.view-proposal-btn:hover::after {
+  transform: translateX(0);
+}

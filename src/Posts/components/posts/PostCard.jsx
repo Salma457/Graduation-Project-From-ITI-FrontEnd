@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { reactToPost, removeReaction, deletePost } from '../../services/api';
 import ReactionPicker from './ReactionPicker';
 import CommentSection from './CommentSection';
 import EditPostModal from './EditPostModal';
+import ReactionsModal from './ReactionsModal';
 
 const reactionIcons = {
   like: '👍',
@@ -17,8 +19,27 @@ const reactionIcons = {
   support: '💪'
 };
 
-const PostCard = ({ post, onDelete, onUpdate }) => {
-  const { user } = useAuth();
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      type: "spring",
+      damping: 20,
+      stiffness: 150
+    }
+  },
+  hover: {
+    y: -2,
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
+  }
+};
+
+const PostCard = memo(({ post, onDelete, onUpdate }) => {
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.itian?.user ?? null);
+  
   const [showComments, setShowComments] = useState(false);
   const [reactions, setReactions] = useState(post.reactions || {});
   const [userReaction, setUserReaction] = useState(post.user_reaction);
@@ -27,11 +48,16 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showReactionDetails, setShowReactionDetails] = useState(false);
+  const [showReactionsModal, setShowReactionsModal] = useState(false);
 
   const isMyPost = user?.user_id === post.itian?.user_id;
+  const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
 
-  const handleReaction = async (reactionType) => {
+  const handleProfileClick = useCallback(() => {
+    navigate(`/itian-profile/${post.itian.user_id}`);
+  }, [navigate, post.itian.user_id]);
+
+  const handleReaction = useCallback(async (reactionType) => {
     try {
       if (userReaction === reactionType) {
         await removeReaction(post.id);
@@ -60,9 +86,9 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
       console.error('Error reacting to post:', error);
       toast.error('Failed to react to post');
     }
-  };
+  }, [post.id, userReaction]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       setIsDeleting(true);
       await deletePost(post.id);
@@ -76,146 +102,267 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
       setShowOptions(false);
       setShowDeleteConfirm(false);
     }
-  };
+  }, [post.id, onDelete]);
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     setIsEditing(true);
     setShowOptions(false);
-  };
+  }, []);
+
+  const UserAvatar = () => (
+    <motion.div 
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="relative cursor-pointer"
+      onClick={handleProfileClick}
+    >
+      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center overflow-hidden ring-2 ring-white group-hover:ring-red-300 transition-all duration-300">
+        {post.itian.profile_picture ? (
+          <motion.img
+            src={`http://localhost:8000/storage/${post.itian.profile_picture}`}
+            alt="Profile"
+            className="h-full w-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        ) : (
+          <span className="text-red-600 font-semibold text-xl">
+            {post.itian.first_name?.charAt(0)}
+          </span>
+        )}
+      </div>
+      {userReaction && (
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.1 }}
+          className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm"
+        >
+          <span className="text-sm">{reactionIcons[userReaction]}</span>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+
+  const PostOptions = () => (
+    <div className="relative">
+      <motion.button 
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setShowOptions(!showOptions)}
+        className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+        aria-label="Post options"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+        </svg>
+      </motion.button>
+
+      <AnimatePresence>
+        {showOptions && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-xl z-10 border border-gray-200 overflow-hidden"
+          >
+            <div className="py-1">
+              <motion.button
+                whileHover={{ x: 3 }}
+                onClick={handleEdit}
+                className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+                Edit Post
+              </motion.button>
+              <motion.button
+                whileHover={{ x: 3 }}
+                onClick={() => {
+                  setShowOptions(false);
+                  setShowDeleteConfirm(true);
+                }}
+                className="flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Delete Post
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
+  const DeleteConfirmationModal = () => (
+    <AnimatePresence>
+      {showDeleteConfirm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
+          
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-gray-200 z-10"
+          >
+            <div className="text-center space-y-5">
+              <motion.div 
+                animate={{ 
+                  rotate: [0, 10, -10, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ duration: 0.6 }}
+                className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-50"
+              >
+                <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </motion.div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Delete this post?</h3>
+                <p className="text-gray-500">This action cannot be undone.</p>
+              </div>
+
+              <div className="flex justify-center space-x-4 pt-2">
+                <motion.button
+                  whileHover={{ scale: 1.03, backgroundColor: "#f3f4f6" }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-5 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all font-medium"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.03, backgroundColor: "#dc2626" }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleDelete}
+                  className="px-5 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all font-medium flex items-center justify-center min-w-[120px]"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover="hover"
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg relative group border border-gray-100 max-w-2xl mx-auto"
+      className="bg-white rounded-xl shadow-sm overflow-hidden relative group border border-gray-100"
     >
+      {/* Sidebar indicator */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-red-200 to-red-400"></div>
+      
       {/* Post header */}
-      <div className="p-4 pb-0">
+      <div className="pl-5 pr-5 pb-0 pt-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            {/* Avatar with reaction indicator */}
-            <div className="relative">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center overflow-hidden">
-                {post.itian.profile_picture ? (
-                  <img
-                    src={`http://localhost:8000/storage/${post.itian.profile_picture}`}
-                    alt="Profile"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-red-600 font-semibold">
-                    {post.itian.first_name?.charAt(0)}
-                  </span>
-                )}
-              </div>
-              {userReaction && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm"
-                >
-                  <span className="text-sm">{reactionIcons[userReaction]}</span>
-                </motion.div>
-              )}
-            </div>
-
-            {/* User info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">
+            <UserAvatar />
+            
+            <motion.div 
+              className="flex-1 min-w-0 cursor-pointer"
+              onClick={handleProfileClick}
+              whileHover={{ x: 3 }}
+            >
+              <motion.h3 
+                className="font-semibold text-gray-900 truncate hover:text-red-600 transition-colors"
+                whileHover={{ scale: 1.01 }}
+              >
                 {post.itian.first_name} {post.itian.last_name}
-              </h3>
-              <p className="text-xs text-gray-500">
+              </motion.h3>
+              <motion.p 
+                className="text-xs text-gray-500"
+                whileHover={{ x: 3 }}
+              >
                 {new Date(post.created_at).toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   hour: '2-digit',
                   minute: '2-digit'
                 })}
-              </p>
-            </div>
+              </motion.p>
+            </motion.div>
           </div>
           
-          {/* Post options dropdown */}
-          {isMyPost && (
-            <div className="relative">
-              <button 
-                onClick={() => setShowOptions(!showOptions)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-                aria-label="Post options"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                </svg>
-              </button>
-
-              <AnimatePresence>
-                {showOptions && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border border-gray-200"
-                  >
-                    <div className="py-1">
-                      <button
-                        onClick={handleEdit}
-                        className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowOptions(false);
-                          setShowDeleteConfirm(true);
-                        }}
-                        className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        Delete
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+          {isMyPost && <PostOptions />}
         </div>
       </div>
 
       {/* Post content */}
-      <div className="p-4 pt-2">
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">{post.title}</h2>
-        <p className="text-gray-700 whitespace-pre-line leading-relaxed">{post.content}</p>
+      <div className="p-5 pt-3">
+        <motion.h2 
+          className="text-xl font-bold text-gray-800 mb-3"
+          whileHover={{ x: 2 }}
+        >
+          {post.title}
+        </motion.h2>
+        <motion.p 
+          className="text-gray-700 whitespace-pre-line leading-relaxed"
+          whileHover={{ x: 2 }}
+        >
+          {post.content}
+        </motion.p>
         
         {/* Post image */}
         {post.image && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="mt-3 rounded-lg overflow-hidden"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="mt-4 rounded-xl overflow-hidden border border-gray-100"
           >
-            <img 
+            <motion.img 
               src={`http://localhost:8000/storage/${post.image}`} 
               alt="Post" 
-              className="w-full h-auto object-cover max-h-96"
+              className="w-full h-auto object-cover max-h-96 cursor-pointer"
               loading="lazy"
+              whileHover={{ scale: 1.01 }}
             />
           </motion.div>
         )}
       </div>
 
       {/* Reactions and comments count */}
-      <div className="px-4 pb-2">
+      <div className="px-5 pb-3">
         <div className="flex items-center justify-between text-xs">
-          <div className="flex space-x-1">
+          <div className="flex space-x-2">
             {Object.entries(reactions)
               .filter(([, count]) => count > 0)
               .sort((a, b) => b[1] - a[1])
@@ -223,37 +370,55 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
               .map(([type, count]) => (
                 <motion.button 
                   key={type} 
-                  whileHover={{ scale: 1.05 }}
-                  onClick={() => setShowReactionDetails(true)}
-                  className="flex items-center px-2 py-0.5 bg-gray-50 rounded-full font-medium border border-gray-100"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowReactionsModal(true)}
+                  className="flex items-center px-3 py-1 bg-gray-50 rounded-full font-medium border border-gray-100 shadow-sm"
                 >
                   <span className="mr-1 text-xs">{reactionIcons[type]}</span>
-                  {count}
+                  <span>{count}</span>
                 </motion.button>
               ))}
           </div>
           
-          {post.comments_count > 0 && (
-            <button 
-              onClick={() => setShowComments(!showComments)}
-              className="text-gray-500 hover:text-red-500 transition-colors text-xs"
-            >
-              {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
-            </button>
-          )}
+          <div className="flex space-x-4">
+            {post.comments_count > 0 && (
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowComments(!showComments)}
+                className="text-gray-500 hover:text-red-500 transition-colors"
+              >
+                {post.comments_count} {post.comments_count === 1 ? 'comment' : 'comments'}
+              </motion.button>
+            )}
+            {totalReactions > 0 && (
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowReactionsModal(true)}
+                className="text-gray-500 hover:text-red-500 transition-colors"
+              >
+                {totalReactions} {totalReactions === 1 ? 'reaction' : 'reactions'}
+              </motion.button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Action buttons */}
-      <div className="border-t border-gray-100 px-4 py-1">
+      <div className="border-t border-gray-100 px-5 py-2">
         <div className="flex justify-around">
           {/* Reaction button */}
           <div className="relative">
             <motion.button 
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowReactionPicker(!showReactionPicker)}
-              className={`flex items-center justify-center space-x-1 px-3 py-2 rounded-lg transition-colors text-sm ${
-                userReaction ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+              className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                userReaction 
+                  ? 'text-red-500 bg-red-50' 
+                  : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
               }`}
             >
               {userReaction ? (
@@ -263,28 +428,39 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
                 </>
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                   </svg>
                   <span>React</span>
                 </>
               )}
             </motion.button>
-            {showReactionPicker && (
-              <ReactionPicker 
-                onSelect={handleReaction}
-                onClose={() => setShowReactionPicker(false)}
-              />
-            )}
+            
+            <AnimatePresence>
+              {showReactionPicker && (
+                <ReactionPicker 
+                  onSelect={(type) => {
+                    handleReaction(type);
+                    setShowReactionPicker(false);
+                  }}
+                  onClose={() => setShowReactionPicker(false)}
+                />
+              )}
+            </AnimatePresence>
           </div>
           
           {/* Comment button */}
           <motion.button 
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center justify-center space-x-1 px-3 py-2 rounded-lg text-gray-500 hover:text-red-500 transition-colors text-sm"
+            className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium ${
+              showComments 
+                ? 'text-red-500 bg-red-50' 
+                : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+            } transition-all`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <span>Comment</span>
@@ -299,7 +475,7 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="border-t border-gray-100 overflow-hidden"
           >
             <CommentSection postId={post.id} />
@@ -307,133 +483,9 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
         )}
       </AnimatePresence>
 
-      {/* Reaction Details Modal */}
-      <AnimatePresence>
-        {showReactionDetails && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-              onClick={() => setShowReactionDetails(false)}
-            />
-            
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-gray-200 z-10 max-h-[80vh] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Reactions</h3>
-                <button 
-                  onClick={() => setShowReactionDetails(false)}
-                  className="text-gray-500 hover:text-red-500 text-xl"
-                >
-                  ×
-                </button>
-              </div>
-              
-              {Object.entries(reactions)
-                .filter(([, count]) => count > 0)
-                .sort((a, b) => b[1] - a[1])
-                .map(([type, count]) => (
-                  <div key={type} className="mb-4">
-                    <h4 className="font-medium text-gray-700 capitalize mb-2 flex items-center">
-                      <span className="mr-2">{reactionIcons[type]}</span>
-                      {type} ({count})
-                    </h4>
-                    <ul className="space-y-2">
-                      {/* Replace with actual user data from your API */}
-                      <li className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-sm">👤</span>
-                        </div>
-                        <span>User Name</span>
-                      </li>
-                      <li className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-sm">👤</span>
-                        </div>
-                        <span>Another User</span>
-                      </li>
-                    </ul>
-                  </div>
-                ))}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Delete confirmation modal */}
-      <AnimatePresence>
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-              onClick={() => setShowDeleteConfirm(false)}
-            />
-            
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-5 border border-gray-200 z-10"
-            >
-              <div className="text-center space-y-4">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50">
-                  <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-1">Delete this post?</h3>
-                  <p className="text-gray-500 text-sm">This action cannot be undone.</p>
-                </div>
-
-                <div className="flex justify-center space-x-3 pt-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all text-sm"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleDelete}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all text-sm flex items-center justify-center min-w-[100px]"
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Deleting
-                      </>
-                    ) : (
-                      'Delete'
-                    )}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Post Modal */}
+      {/* Modals */}
+      <DeleteConfirmationModal />
+      
       {isEditing && (
         <EditPostModal 
           post={post}
@@ -441,8 +493,15 @@ const PostCard = ({ post, onDelete, onUpdate }) => {
           onUpdate={onUpdate}
         />
       )}
+
+      {showReactionsModal && (
+        <ReactionsModal 
+          postId={post.id} 
+          onClose={() => setShowReactionsModal(false)} 
+        />
+      )}
     </motion.div>
   );
-};
+});
 
 export default PostCard;

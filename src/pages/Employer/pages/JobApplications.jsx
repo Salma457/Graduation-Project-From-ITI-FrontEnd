@@ -107,15 +107,16 @@ const JobApplications = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-auto">
-            {(app.status === 'rejected' && app.status === 'approved') && (
-              <button
-                className={`flex-1 flex items-center justify-center ${statusInfo.actionBg} text-white rounded-lg px-3 py-2 text-sm font-medium transition-colors`}
-                onClick={onViewMore}
-              >
-                <Info className="w-4 h-4 mr-1" />
-                Details
-              </button>
-            )}
+            {app.status !== 'approved' && app.status !== 'rejected' && (
+            <button
+              className={`flex-1 flex items-center justify-center ${statusInfo.actionBg} text-white rounded-lg px-3 py-2 text-sm font-medium transition-colors`}
+              onClick={onViewMore}
+            >
+              <Info className="w-4 h-4 mr-1" />
+              Details
+            </button>
+          )}
+
             <button
               className="flex-1 flex items-center justify-center bg-gray-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-700 transition-colors"
               onClick={onViewProfile}
@@ -307,7 +308,7 @@ const JobApplications = () => {
       const token = localStorage.getItem("access-token");
 
       // Send status update (Laravel handles sending the email if approved)
-      await axios.put(
+      await axios.patch(
         `http://localhost:8000/api/job-application/${appId}/status`,
         { status: backendStatus },
         {

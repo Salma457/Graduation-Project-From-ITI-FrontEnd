@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchEmployerJobs, editJob, deleteJob } from '../jobPostSlice';
+import { fetchEmployerData, editJob, deleteJob } from '../jobPostSlice'; // Changed from fetchEmployerJobs
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
-import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, ChevronLeft, ChevronRight, Building2, MapPin, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../style/jobList.css';
 
 const JobList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { jobs, loading, error } = useSelector(state => state.jobPost);
+const jobPostState = useSelector(state => state.jobPost) || {};
+const {
+  jobs = [],
+  loading = false,
+  error = null,
+  employerData = null
+} = jobPostState;
+
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -22,7 +29,7 @@ const JobList = () => {
   const jobsPerPage = 5;
 
   useEffect(() => {
-    dispatch(fetchEmployerJobs());
+    dispatch(fetchEmployerData()); // Changed to fetch both jobs and employer data
   }, [dispatch]);
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
@@ -67,6 +74,10 @@ const JobList = () => {
   };
 
   const handleEdit = (job) => {
+    const deadline = job.application_deadline 
+      ? new Date(job.application_deadline).toISOString().split('T')[0] 
+      : '';
+      
     setEditData({
       ...job,
       job_title: job.job_title || '',
@@ -78,15 +89,16 @@ const JobList = () => {
       salary_range_min: job.salary_range_min || '',
       salary_range_max: job.salary_range_max || '',
       currency: job.currency || 'EGP',
-      application_deadline: job.application_deadline || ''
+      application_deadline: deadline
     });
     setModalIsOpen(true);
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    dispatch(editJob({ jobId: editData.id, jobData: editData }));
-    setModalIsOpen(false);
+      await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
+      setModalIsOpen(false);
+      dispatch(fetchEmployerData()); // Changed to refetch both jobs and employer data
   };
 
   const handleDelete = (jobId) => {
@@ -120,6 +132,10 @@ const JobList = () => {
 
   const getJobInitials = (title) => {
     return title ? title.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'JB';
+  };
+
+  const getCompanyInitials = (name) => {
+    return name ? name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'CO';
   };
 
   // Pagination component
@@ -265,270 +281,381 @@ const JobList = () => {
     </div>
   );
 
-  return (
-    <div className="job-list-container">
-      <div className="job-list-header">
-        <h1 className="job-list-title">Job Listings</h1>
-        <div className="job-count">
-          {filteredJobs.length} jobs found
-          {totalPages > 1 && (
-            <span style={{ marginLeft: '8px', color: '#6b7280' }}>
-              (Page {currentPage} of {totalPages})
-            </span>
-          )}
-        </div>
-        <button
-          className="go-to-trash-btn"
-          style={{ marginLeft: '16px', background: '#991b1b', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-          onClick={() => navigate('/employer/trash')}
-        >
-          Go to Trash
-        </button>
-      </div>
-
-      <div className="job-list-filters">
-        <div className="filter-row">
-          <div className="search-filter">
-            <svg className="search-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search jobs, companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="filter-controls">
-            <div className="status-filter">
-              <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-                <option value="all">All Status</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
-                <option value="Pending">Pending</option>
-              </select>
-            </div>
-            
-            <div className="sort-filter">
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="title">Title A-Z</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {filteredJobs.length === 0 ? (
-        <div className="job-list-empty">
-          <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="m9 12 2 2 4-4"/>
-          </svg>
-          <h3>No jobs found</h3>
-          <p>Try adjusting your search criteria or filters</p>
-        </div>
-      ) : (
-        <>
-          <Modal
-            isOpen={modalIsOpen}
-            onRequestClose={() => setModalIsOpen(false)}
-            contentLabel="Edit Job"
-            ariaHideApp={false}
-            className="edit-job-modal"
-            overlayClassName="edit-job-modal-overlay"
-          >
-            {editData && (
-              <form onSubmit={handleEditSubmit} className="edit-job-form">
-                <h2 className="edit-job-title">Edit Job</h2>
-                <div className="edit-job-field">
-                  <label>Job Title</label>
-                  <input
-                    type="text"
-                    value={editData.job_title}
-                    onChange={e => setEditData({ ...editData, job_title: e.target.value })}
-                    placeholder="Job Title"
-                    required
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Description</label>
-                  <textarea
-                    value={editData.description}
-                    onChange={e => setEditData({ ...editData, description: e.target.value })}
-                    placeholder="Description"
-                    required
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Requirements</label>
-                  <textarea
-                    value={editData.requirements}
-                    onChange={e => setEditData({ ...editData, requirements: e.target.value })}
-                    placeholder="Requirements"
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Qualifications</label>
-                  <textarea
-                    value={editData.qualifications}
-                    onChange={e => setEditData({ ...editData, qualifications: e.target.value })}
-                    placeholder="Qualifications"
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Location</label>
-                  <input
-                    type="text"
-                    value={editData.job_location}
-                    onChange={e => setEditData({ ...editData, job_location: e.target.value })}
-                    placeholder="Location"
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Job Type</label>
-                  <select
-                    value={editData.job_type}
-                    onChange={e => setEditData({ ...editData, job_type: e.target.value })}
-                  >
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Freelance">Freelance</option>
-                    <option value="Internship">Internship</option>
-                  </select>
-                </div>
-                <div className="edit-job-field">
-                  <label>Status</label>
-                  <select
-                    value={editData.status}
-                    onChange={e => setEditData({ ...editData, status: e.target.value })}
-                  >
-                    <option value="Open">Open</option>
-                    <option value="Closed">Closed</option>
-                    <option value="Pending">Pending</option>
-                  </select>
-                </div>
-                <div className="edit-job-field">
-                  <label>Minimum Salary</label>
-                  <input
-                    type="number"
-                    value={editData.salary_range_min}
-                    onChange={e => setEditData({ ...editData, salary_range_min: e.target.value })}
-                    placeholder="Min Salary"
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Maximum Salary</label>
-                  <input
-                    type="number"
-                    value={editData.salary_range_max}
-                    onChange={e => setEditData({ ...editData, salary_range_max: e.target.value })}
-                    placeholder="Max Salary"
-                  />
-                </div>
-                <div className="edit-job-field">
-                  <label>Currency</label>
-                  <select
-                    value={editData.currency}
-                    onChange={e => setEditData({ ...editData, currency: e.target.value })}
-                  >
-                    <option value="EGP">EGP</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                  </select>
-                </div>
-                <div className="edit-job-field">
-                  <label>Application Deadline</label>
-                  <input
-                    type="date"
-                    value={editData.application_deadline}
-                    onChange={e => setEditData({ ...editData, application_deadline: e.target.value })}
-                  />
-                </div>
-                <div className="edit-job-actions">
-                  <button type="submit" className="edit-job-save">Save Changes</button>
-                  <button type="button" className="edit-job-cancel" onClick={() => setModalIsOpen(false)}>Cancel</button>
-                </div>
-              </form>
+return (
+  <div className="list-container">
+    {/* Company Profile Section */}
+    {employerData && (
+      <div className="company-profile-section" style={{
+        background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+        color: 'white',
+        padding: '32px',
+        borderRadius: '12px',
+        marginBottom: '32px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '16px',
+            background: 'rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            backdropFilter: 'blur(10px)'
+          }}>
+            {employerData.logo_url ? (
+              <img 
+                src={employerData.logo_url} 
+                alt="Company Logo" 
+                style={{ width: '100%', height: '100%', borderRadius: '16px', objectFit: 'cover' }}
+              />
+            ) : (
+              getCompanyInitials(employerData.company_name || employerData.name)
             )}
-          </Modal>
+          </div>
           
-          <div className="job-list-grid">
-            {currentJobs.map(job => (
-              <div className="job-card" key={job.id}>
-                <div className="job-card-header">
-                  <div className="job-avatar">
-                    <div className="avatar-circle">
-                      {getJobInitials(job.job_title)}
-                    </div>
-                  </div>
-                  <div className="job-info">
-                    <h3 className="job-title">{job.job_title || "No Title"}</h3>
-                    <div className="job-location">{job.job_location || "Remote"}</div>
-                    <div className="job-posted-time">
-                      {formatTimeAgo(job.created_at || job.posted_date)}
-                    </div>
-                  </div>
-                  <div className="job-actions">
-                    <button className="action-btn view-btn" onClick={() => navigate(`/employer/job/${job.id}`)}>
-                      View
-                    </button>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 'bold' }}>
+              {employerData.company_name || employerData.name || 'Company Name'}
+            </h2>
+            <p style={{ margin: '0 0 16px 0', fontSize: '16px', opacity: 0.9 }}>
+              {employerData.company_description || employerData.description || 'No description available'}
+            </p>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center' }}>
+              {employerData.industry && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building2 size={16} />
+                  <span>{employerData.industry}</span>
+                </div>
+              )}
+              
+              {employerData.location && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MapPin size={16} />
+                  <span>{employerData.location}</span>
+                </div>
+              )}
+              
+              {employerData.founded_year && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calendar size={16} />
+                  <span>Founded {employerData.founded_year}</span>
+                </div>
+              )}
+              
+              {employerData.company_size && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={16} />
+                  <span>{employerData.company_size} employees</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional company info */}
+        {(employerData.website || employerData.email || employerData.phone) && (
+          <div style={{ 
+            marginTop: '24px', 
+            paddingTop: '24px', 
+            borderTop: '1px solid rgba(255,255,255,0.2)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '24px'
+          }}>
+            {employerData.website && (
+              <a 
+                href={employerData.website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: 'white', textDecoration: 'none', opacity: 0.9 }}
+              >
+                🌐 {employerData.website}
+              </a>
+            )}
+            {employerData.email && (
+              <span style={{ opacity: 0.9 }}>
+                ✉️ {employerData.email}
+              </span>
+            )}
+            {employerData.phone && (
+              <span style={{ opacity: 0.9 }}>
+                📞 {employerData.phone}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+
+    <div className="list-header">
+      <h1 className="list-title">Job Listings</h1>
+      <div className="list-count">
+        {filteredJobs.length} jobs found
+        {totalPages > 1 && (
+          <span style={{ marginLeft: '8px', color: '#6b7280' }}>
+            (Page {currentPage} of {totalPages})
+          </span>
+        )}
+      </div>
+      <button
+        className="go-to-trash-btn"
+        style={{ marginLeft: '16px', background: '#991b1b', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+        onClick={() => navigate('/employer/trash')}
+      >
+        Go to Trash
+      </button>
+    </div>
+
+    <div className="list-filters">
+      <div className="list-filter-row">
+        <div className="list-search-filter">
+          <svg className="list-search-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search jobs, companies..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="list-filter-controls">
+          <div className="list-status-filter">
+            <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+              <option value="all">All Status</option>
+              <option value="Open">Open</option>
+              <option value="Closed">Closed</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          
+          <div className="list-sort-filter">
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title">Title A-Z</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {filteredJobs.length === 0 ? (
+      <div className="list-empty">
+        <svg className="list-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <h3>No jobs found</h3>
+        <p>Try adjusting your search criteria or filters</p>
+      </div>
+    ) : (
+      <>
+       <Modal
+  isOpen={modalIsOpen}
+  onRequestClose={() => setModalIsOpen(false)}
+  contentLabel="Edit Job"
+  ariaHideApp={false}
+  className="list-edit-modal"
+  overlayClassName="list-edit-modal-overlay"
+>
+  {editData && (
+    <form onSubmit={handleEditSubmit} className="list-edit-form">
+      <h2 className="list-edit-title">Edit Job</h2>
+      <div className="list-edit-field">
+        <label>Job Title</label>
+        <input
+          type="text"
+          value={editData.job_title}
+          onChange={e => setEditData({ ...editData, job_title: e.target.value })}
+          placeholder="Job Title"
+          required
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Description</label>
+        <textarea
+          value={editData.description}
+          onChange={e => setEditData({ ...editData, description: e.target.value })}
+          placeholder="Description"
+          required
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Requirements</label>
+        <textarea
+          value={editData.requirements}
+          onChange={e => setEditData({ ...editData, requirements: e.target.value })}
+          placeholder="Requirements"
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Qualifications</label>
+        <textarea
+          value={editData.qualifications}
+          onChange={e => setEditData({ ...editData, qualifications: e.target.value })}
+          placeholder="Qualifications"
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Location</label>
+        <input
+          type="text"
+          value={editData.job_location}
+          onChange={e => setEditData({ ...editData, job_location: e.target.value })}
+          placeholder="Location"
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Job Type</label>
+        <select
+          value={editData.job_type}
+          onChange={e => setEditData({ ...editData, job_type: e.target.value })}
+        >
+          <option value="Full-time">Full-time</option>
+          <option value="Part-time">Part-time</option>
+          <option value="Contract">Contract</option>
+          <option value="Freelance">Freelance</option>
+          <option value="Internship">Internship</option>
+        </select>
+      </div>
+      <div className="list-edit-field">
+        <label>Status</label>
+        <select
+          value={editData.status}
+          onChange={e => setEditData({ ...editData, status: e.target.value })}
+        >
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
+      <div className="list-edit-field">
+        <label>Minimum Salary</label>
+        <input
+          type="number"
+          value={editData.salary_range_min}
+          onChange={e => setEditData({ ...editData, salary_range_min: e.target.value })}
+          placeholder="Min Salary"
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Maximum Salary</label>
+        <input
+          type="number"
+          value={editData.salary_range_max}
+          onChange={e => setEditData({ ...editData, salary_range_max: e.target.value })}
+          placeholder="Max Salary"
+        />
+      </div>
+      <div className="list-edit-field">
+        <label>Currency</label>
+        <select
+          value={editData.currency}
+          onChange={e => setEditData({ ...editData, currency: e.target.value })}
+        >
+          <option value="EGP">EGP</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+        </select>
+      </div>
+      <div className="list-edit-field">
+        <label>Application Deadline</label>
+        <input
+          type="date"
+          value={editData.application_deadline}
+          onChange={e => setEditData({ ...editData, application_deadline: e.target.value })}
+        />
+      </div>
+      <div className="list-edit-actions">
+        <button type="submit" className="list-edit-save">Save Changes</button>
+        <button type="button" className="list-edit-cancel" onClick={() => setModalIsOpen(false)}>Cancel</button>
+      </div>
+    </form>
+  )}
+</Modal>
+        
+        <div className="list-grid">
+          {currentJobs.map(job => (
+            <div className="list-card" key={job.id}>
+              <div className="list-card-header">
+                <div className="list-avatar">
+                  <div className="list-avatar-circle">
+                    {getJobInitials(job.job_title)}
                   </div>
                 </div>
-                
-                <div className="job-card-details">
-                  <div className="job-meta">
-                    <div className="meta-item">
-                      <span className="meta-label">Company Type:</span>
-                      <span className="meta-value">{job.company_name || "IT Industry"}</span>
-                    </div>
-                    <div className="meta-item">
-                      <span className="meta-label">Year founded:</span>
-                      <span className="meta-value">{job.job_type || "2019"}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="job-status-badge">
-                    <span className={`status-badge ${job.status?.toLowerCase() || 'open'}`}>
-                      {job.status || 'Open'}
-                    </span>
+                <div className="list-info">
+                  <h3 className="list-title">{job.job_title || "No Title"}</h3>
+                  <div className="list-location">{job.job_location || "Remote"}</div>
+                  <div className="list-posted-time">
+                    {formatTimeAgo(job.created_at || job.posted_date)}
                   </div>
                 </div>
-                
-                <div className="job-card-footer">
-                  <div className="job-salary">
-                    {job.salary_range_min || job.salary_range_max 
-                      ? `${job.salary_range_min || ''}${job.salary_range_min && job.salary_range_max ? ' - ' : ''}${job.salary_range_max || ''} ${job.currency || ''}`
-                      : "Salary not disclosed"}
-                  </div>
-                  <div className="job-footer-actions">
-                    <button className="edit-btn" onClick={() => handleEdit(job)}>
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                      </svg>
-                      Edit
-                    </button>
-                    <button className="delete-btn" onClick={() => handleDelete(job.id)}>
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v.007a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5V5zM5.5 7.5a.5.5 0 01.5.5v8a2 2 0 002 2h4a2 2 0 002-2V8a.5.5 0 011 0v8a3 3 0 01-3 3H8a3 3 0 01-3-3V8a.5.5 0 01.5-.5z" clipRule="evenodd"/>
-                      </svg>
-                      Delete
-                    </button>
-                  </div>
+                <div className="list-actions">
+                  <button className="list-action-btn list-view-btn" onClick={() => navigate(`/employer/job/${job.id}`)}>
+                    View
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
+              
+              <div className="list-card-details">
+                <div className="list-meta">
+                  <div className="list-meta-item">
+                    <span className="list-meta-label">Company:</span>
+                    <span className="list-meta-value">
+                      {employerData?.company_name || employerData?.name || "Company"}
+                    </span>
+                  </div>
+                  <div className="list-meta-item">
+                    <span className="list-meta-label">Job Type:</span>
+                    <span className="list-meta-value">{job.job_type || "Full-time"}</span>
+                  </div>
+                </div>
+                
+                <div className="list-status-badge">
+                  <span className={`list-status-badge ${job.status?.toLowerCase() || 'open'}`}>
+                    {job.status || 'Open'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="list-card-footer">
+                <div className="list-salary">
+                  {job.salary_range_min || job.salary_range_max 
+                    ? `${job.salary_range_min || ''}${job.salary_range_min && job.salary_range_max ? ' - ' : ''}${job.salary_range_max || ''} ${job.currency || ''}`
+                    : "Salary not disclosed"}
+                </div>
+                <div className="list-footer-actions">
+                  <button className="list-edit-btn" onClick={() => handleEdit(job)}>
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                    </svg>
+                    Edit
+                  </button>
+                  <button className="list-delete-btn" onClick={() => handleDelete(job.id)}>
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v.007a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5V5zM5.5 7.5a.5.5 0 01.5.5v8a2 2 0 002 2h4a2 2 0 002-2V8a.5.5 0 011 0v8a3 3 0 01-3 3H8a3 3 0 01-3-3V8a.5.5 0 01.5-.5z" clipRule="evenodd"/>
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-          <PaginationComponent />
-        </>
-      )}
-    </div>
-  );
+        <PaginationComponent />
+      </>
+    )}
+  </div>
+);
 };
 
 export default JobList;

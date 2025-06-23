@@ -6,15 +6,15 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // بعد كده في useEffect مثلاً:
-const token = localStorage.getItem('access-token');
+// const token = localStorage.getItem('access-token');
 // const refresh_token = localStorage.getItem('refresh-token');
 
-if (token) {
-  supabase.auth.setSession({
-    access_token: token,
-    // refresh_token: refresh_token,
-  }).catch(console.error);
-}
+// if (token) {
+//   supabase.auth.setSession({
+//     access_token: token,
+//     // refresh_token: refresh_token,
+//   }).catch(console.error);
+// }
 
 // export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 //   auth: {

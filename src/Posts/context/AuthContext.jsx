@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
-        localStorage.removeItem('access-token');
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -30,29 +29,9 @@ export const AuthProvider = ({ children }) => {
 
     checkAuth();
   }, []);
-
-  const login = async (credentials) => {
-    try {
-      const response = await axios.post('http://localhost:8000/api/login', credentials);
-      localStorage.setItem('access-token', response.data.token);
-      setUser(response.data.user);
-      return response.data;
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('access-token');
-    setUser(null);
-  };
-
   const value = {
     user,
     isLoading,
-    login,
-    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
