@@ -20,6 +20,7 @@ const ChatApp = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [unreadMessages, setUnreadMessages] = useState({});
 
   const messagesEndRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -168,13 +169,16 @@ useEffect(() => {
   };
 
   const checkColumnExists = async () => {
+    try {
       const { error } = await supabase
         .from('ch_messages')
         .select('read_at')
         .limit(0); 
       
       return !error;
-   
+    } catch (err) {
+      return false;
+    }
   };
 
   // Mark messages as read when opening a chat

@@ -25,7 +25,6 @@ import JobDetailsPublic from './pages/JobDetails.jsx';
 import ApplyForm from './pages/ApplyForm.jsx';
 import MyApplications from './pages/MyApplications.jsx';
 import ProposalDetails from './pages/ProposalDetails.jsx';
-import NotificationComponent from './components/NotificationComponent.jsx'; 
 // Profiles
 import CreateEmployerProfile from './pages/CreateEmployerProfile';
 import EmployerProfile from './pages/EmployerProfile.jsx';
@@ -35,16 +34,19 @@ import ViewItianProfile from './pages/ViewItianProfile';
 import ViewEmployerProfile from './pages/ViewEmployerProfile.jsx';
 import { fetchItianProfile } from './store/itianProfileSlice';
 import { fetchEmployerProfile } from './store/employerProfileSlice';
+import Navbar from './components/Navbar';
+import useAuthInit from './hooks/useAuthInit';
 
 function App() {
+    useAuthInit();
   const user = useSelector(state => state.user.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'ITIAN') {
+      if (user.role === 'itian') {
         dispatch(fetchItianProfile(user.id));
-      } else if (user.role === 'EMPLOYER') {
+      } else if (user.role === 'employer') {
         dispatch(fetchEmployerProfile(user.id));
       }
     }
@@ -52,6 +54,8 @@ function App() {
 
   return (
     <Provider store={store}>
+            <Navbar />
+
       <Router>
         <Routes>
 <Route
@@ -65,7 +69,6 @@ function App() {
       />
       <h1 className="text-center text-2xl">Home Page</h1>
       <div className="absolute top-4 right-4 z-50">
-  <NotificationComponent />
 </div>
     </div>
   }
