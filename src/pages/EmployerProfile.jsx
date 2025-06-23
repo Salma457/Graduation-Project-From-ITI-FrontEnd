@@ -29,8 +29,9 @@ const schema = Yup.object().shape({
   company_logo: Yup.mixed()
     .nullable()
     .test("fileType", "Invalid company logo type (jpeg, png, jpg, gif)", (value) => {
-      if (!value || !value[0]) return true;
-      return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
+      if (!value || value.length === 0) return true; // لا يوجد صورة، اعتبره صحيح
+      if (value[0] && typeof value[0] === "string") return true; // إذا كانت القيمة string (رابط قديم)، اعتبره صحيح
+      return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0]?.type);
     }),
   company_description: Yup.string().nullable(),
   website_url: Yup.string().url("Invalid URL").nullable(),
