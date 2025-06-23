@@ -4,7 +4,7 @@ import { useGetNotificationsQuery } from '../api/notificationsApi';
 import { useSelector } from 'react-redux';
 import useSupabaseNotifications from '../hooks/useSupabaseNotifications';
 import { toast } from 'react-hot-toast';
-
+import { supabase } from '../supabaseClient';
 const Notifications = () => {
   const { user } = useSelector(state => state.user);
   const [isOpen, setIsOpen] = useState(false);
@@ -67,11 +67,6 @@ const Notifications = () => {
   }
 
   const unreadCount = notifications?.filter(n => !n.seen)?.length || 0;
-
-  console.log('🔢 Unread notifications count:', unreadCount);
-  console.log('👤 Current user ID:', userId);
-  console.log('📊 Total notifications:', notifications?.length || 0);
-  console.log('📡 Realtime connected:', isConnected);
 
   return (
     <>
@@ -179,11 +174,29 @@ const Notifications = () => {
 
                     return (
                       <div
-                        key={notification.id}
-                        className={`p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer group ${
-                          isUnread ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                        }`}
-                      >
+                          key={notification.id}
+                           onClick={async () => {
+                            console.log('🟢 Trying to update notification with ID:', notification.id);
+
+                            const { error } = await supabase
+                              .from('notifications')
+                              .update({ seen: true })
+                              .eq('id', notification.id);
+
+                            if (error) {
+                              console.error('❌ Error updating seen:', error);
+                            } else {
+                              console.log('✅ Seen updated successfully');
+                              refetch();
+                              if (notification.job_id) {
+                                window.location.href = `/jobs/${notification.job_id}`;
+                              }
+                            }
+                          }}
+                          className={`p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer group ${
+                            !notification.seen ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                          }`}
+                        >
                         <div className="flex items-start gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                             isUnread ? 'bg-blue-100' : 'bg-gray-100'
@@ -217,9 +230,20 @@ const Notifications = () => {
             {/* Footer */}
             {notifications?.length > 0 && (
               <div className="p-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-                <button className="w-full text-center text-blue-600 hover:text-blue-700 font-medium text-sm py-2 hover:bg-blue-50 rounded-lg transition-colors duration-200">
-                  Mark all as read
-                </button>
+              <button
+              onClick={async () => {
+                const storedUserId = localStorage.getItem('user-id');
+                await supabase
+                  .from('notifications')
+                  .update({ seen: true })
+                  .eq('user_id', storedUserId);
+                refetch();
+              }}
+              className="w-full text-center text-blue-600 hover:text-blue-700 font-medium text-sm py-2 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            >
+              Mark all as read
+            </button>
+
               </div>
             )}
           </div>
