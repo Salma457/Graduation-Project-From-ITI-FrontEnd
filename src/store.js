@@ -9,7 +9,7 @@ import { chatApi } from './api/chatApi';
 import itianProfileReducer from './store/itianProfileSlice';
 import employerProfileReducer from './store/employerProfileSlice';
 import itianReducer from './Posts/store/itianSlice.js';
-
+import applicationReducer from './applicationSlice';
 const store = configureStore({
   reducer: {
     user: userReducer,
@@ -21,6 +21,7 @@ const store = configureStore({
     itianProfile: itianProfileReducer,
     employerProfile: employerProfileReducer,
     itian: itianReducer,
+    application: applicationReducer,
     [chatApi.reducerPath]: chatApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

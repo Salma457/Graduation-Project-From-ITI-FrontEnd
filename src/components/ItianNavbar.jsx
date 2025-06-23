@@ -23,7 +23,7 @@ function ItianNavbar() {
     <>
       <nav className="navbar">
         <div className="logo-container">
-          <img src="public/logo.png" alt="Logo" className="logo-img" />
+          <img src="public/logo.png" alt="Logo" className="logo-img " />
           <div className="logo-text">
             <Link to="/">ITIAN</Link>
           </div>

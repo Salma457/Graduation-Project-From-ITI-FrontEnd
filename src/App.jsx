@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-import store from './applicationStore';
+import store from './store';
 import './App.css';
 import viteLogo from '/vite.svg';
 
@@ -68,6 +68,7 @@ function App() {
 
   return (
     <Provider store={store}>
+      
       <Router>
         <Routes>
           {/* 🟩 Pages without layout */}

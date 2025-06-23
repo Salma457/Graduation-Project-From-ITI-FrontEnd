@@ -228,33 +228,29 @@ const JobDetailsPublic = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        className="application-modal"
-        overlayClassName="application-modal-overlay"
+        className="application-modal bg-[#b53c35] rounded-2xl p-0 max-w-lg w-full mx-auto shadow-2xl border-none"
+        overlayClassName="application-modal-overlay bg-black/40 backdrop-blur-sm flex items-center justify-center fixed inset-0 z-50"
       >
-        <div className="application-modal-header">
-          <h2 className="application-modal-title">Apply for {job.job_title}</h2>
-          <button onClick={closeModal} className="application-modal-close">
-            &times;
-          </button>
+        <div className="application-modal-header flex items-center justify-between px-6 pt-6 pb-2">
+          <h2 className="application-modal-title text-white text-xl font-bold">Apply for {job.job_title}</h2>
+          <button onClick={closeModal} className="application-modal-close text-white text-2xl font-bold hover:text-gray-200">&times;</button>
         </div>
 
         {submitSuccess ? (
-          <div className="application-success-message">
-            <h3 className="application-success-title">Application Submitted!</h3>
-            <p className="application-success-text">
-              The employer will contact you if you're shortlisted.
-            </p>
+          <div className="application-success-message text-center px-6 pb-6">
+            <h3 className="application-success-title text-white text-lg font-semibold mb-2">Application Submitted!</h3>
+            <p className="application-success-text text-white/90 mb-4">The employer will contact you if you're shortlisted.</p>
             <button 
               onClick={closeModal} 
-              className="application-modal-close-btn"
+              className="application-modal-close-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="application-form">
-            <div className="application-form-group">
-              <label htmlFor="cover_letter" className="application-form-label">
+          <form onSubmit={handleSubmit} className="application-form px-6 pb-6">
+            <div className="application-form-group mb-4">
+              <label htmlFor="cover_letter" className="application-form-label text-white font-semibold block mb-2">
                 Cover Letter
               </label>
               <textarea
@@ -264,13 +260,17 @@ const JobDetailsPublic = () => {
                 value={formData.cover_letter}
                 onChange={handleInputChange}
                 required
-                placeholder="Write your cover letter here..."
-                className="application-form-textarea"
+                minLength={100}
+                placeholder="Write your cover letter here... (at least 100 characters)"
+                className={`application-form-textarea w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-[#b53c35] p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : ''}`}
               />
+              {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
+                <p className="text-red-200 text-xs mt-1">Cover letter must be at least 100 characters.</p>
+              )}
             </div>
 
-            <div className="application-form-group">
-              <label htmlFor="cv" className="application-form-label">
+            <div className="application-form-group mb-4">
+              <label htmlFor="cv" className="application-form-label text-white font-semibold block mb-2">
                 Upload CV
               </label>
               <input
@@ -280,24 +280,24 @@ const JobDetailsPublic = () => {
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileChange}
                 required
-                className="application-form-file"
+                className="application-form-file w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-[#b53c35] p-2 outline-none transition"
               />
             </div>
 
-            {submitError && <p className="application-form-error">{submitError}</p>}
+            {submitError && <p className="application-form-error text-red-200 mb-2">{submitError}</p>}
 
-            <div className="application-form-actions">
+            <div className="application-form-actions flex justify-end gap-3">
               <button
                 type="button"
                 onClick={closeModal}
-                className="application-cancel-btn"
+                className="application-cancel-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="application-submit-btn"
+                disabled={submitting || formData.cover_letter.length < 100}
+                className="application-submit-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Submitting...' : 'Submit Application'}
               </button>
