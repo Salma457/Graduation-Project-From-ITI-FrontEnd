@@ -58,6 +58,7 @@ const EmployerProfile = () => {
   const [editProfile, setEditProfile] = useState(false);
   const [previewLogo, setPreviewLogo] = useState(null);
   const [companyLogoRemoved, setCompanyLogoRemoved] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null); // إضافة state للملف المختار
   const [expandedSections, setExpandedSections] = useState({
     companyInfo: true,
     contact: true,
@@ -78,20 +79,24 @@ const EmployerProfile = () => {
 
   const companyLogoWatch = watch("company_logo");
   useEffect(() => {
-    if (companyLogoWatch && companyLogoWatch.length > 0 && companyLogoWatch[0] instanceof File) {
-      setPreviewLogo(URL.createObjectURL(companyLogoWatch[0]));
+    if (selectedFile) {
+      setPreviewLogo(URL.createObjectURL(selectedFile));
       setCompanyLogoRemoved(false);
     } else if (companyLogoRemoved) {
       setPreviewLogo(null);
     } else {
       setPreviewLogo(profile?.company_logo_url || null);
     }
-  }, [companyLogoWatch, companyLogoRemoved, profile?.company_logo_url]);
+  }, [selectedFile, companyLogoRemoved, profile?.company_logo_url]);
 
+  // تحسين دالة التعامل مع تغيير الصورة
   const handleCompanyLogoChange = (e) => {
     const file = e.target.files[0];
-    setValue("company_logo", file);
-    setCompanyLogoRemoved(false);
+    if (file) {
+      setSelectedFile(file);
+      setValue("company_logo", e.target.files); // تمرير FileList كاملة
+      setCompanyLogoRemoved(false);
+    }
   };
 
   const fetchProfileData = async () => {
@@ -121,6 +126,7 @@ const EmployerProfile = () => {
         reset(profileData);
         setPreviewLogo(profileData.company_logo_url || null);
         setCompanyLogoRemoved(false);
+        setSelectedFile(null);
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -147,30 +153,14 @@ const EmployerProfile = () => {
     setError("");
     setEditProfile(false);
 
-    const formData = new FormData();
-    const token = localStorage.getItem("access-token");
-    if (!token) {
-      setError("Authentication token not found. Please log in.");
-      setLoading(false);
-      return;
-    }
-
-    console.log("Submitting data:", data); // Debug log
-    for (const key in data) {
-      if (key === "company_logo") {
-        if (data.company_logo && data.company_logo.length > 0 && data.company_logo[0] instanceof File) {
-          formData.append("company_logo", data.company_logo[0]);
-        } else if (companyLogoRemoved) {
-          formData.append("company_logo_removed", "true");
-        }
-      } else {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      }
-    }
-
     try {
+      const token = localStorage.getItem("access-token");
+      if (!token) {
+        setError("Authentication token not found. Please log in.");
+        setLoading(false);
+        return;
+      }
+
       const userId = profile?.user_id;
       if (!userId) {
         setError("User ID not found. Please log in again or fetch profile data.");
@@ -178,9 +168,37 @@ const EmployerProfile = () => {
         return;
       }
 
-      console.log(`Sending request to: ${BASE_URL}/api/employer-profiles/${userId}/update`); // Debug URL
+      // إنشاء FormData بطريقة صحيحة
+      const formData = new FormData();
+      
+      console.log("Submitting data:", data); // Debug log
+
+      // إضافة البيانات النصية
+      Object.keys(data).forEach(key => {
+        if (key !== "company_logo" && data[key] !== null && data[key] !== undefined && data[key] !== '') {
+          formData.append(key, data[key]);
+        }
+      });
+
+      // التعامل مع الصورة
+      if (selectedFile) {
+        formData.append("company_logo", selectedFile);
+        console.log("Adding file to FormData:", selectedFile.name);
+      } else if (companyLogoRemoved) {
+        formData.append("company_logo_removed", "true");
+        console.log("Marking logo as removed");
+      }
+
+      // طباعة محتويات FormData للتدبيق
+      console.log("FormData contents:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+
+      console.log(`Sending request to: ${BASE_URL}/api/employer-profiles/${userId}/update`);
+      
       const response = await axios.post(
-        `${BASE_URL}/api/employer-profiles/${userId}/update`, // Changed to POST
+        `${BASE_URL}/api/employer-profiles/${userId}/update`,
         formData,
         {
           headers: {
@@ -190,13 +208,17 @@ const EmployerProfile = () => {
         }
       );
 
+      console.log("Update response:", response.data);
+
       setProfile(response.data.data);
       setPreviewLogo(response.data.data.company_logo_url || null);
       setCompanyLogoRemoved(false);
+      setSelectedFile(null);
       setError("");
-      reset(response.data.data); // Reset form with updated data
+      reset(response.data.data);
+      
     } catch (err) {
-      console.error("Update error:", err.response?.data || err.message); // Debug log
+      console.error("Update error:", err.response?.data || err.message);
       let errorMessage = "Failed to update profile. Please try again.";
       if (err.response) {
         if (err.response.status === 422 && err.response.data.errors) {
@@ -221,12 +243,14 @@ const EmployerProfile = () => {
     reset(profile);
     setPreviewLogo(profile?.company_logo_url || null);
     setCompanyLogoRemoved(false);
+    setSelectedFile(null);
   };
 
   const handleRemoveCompanyLogo = () => {
     setPreviewLogo(null);
     setValue("company_logo", null);
     setCompanyLogoRemoved(true);
+    setSelectedFile(null);
   };
 
   const toggleSection = (section) => {
@@ -237,10 +261,7 @@ const EmployerProfile = () => {
   };
 
   const handlePostJob = () => {
-    // Navigate to job posting page
     console.log("Navigating to job posting page");
-    // You can replace this with your actual navigation logic
-    // navigate('/post-job');
   };
 
   if (loading) {
@@ -304,8 +325,8 @@ const EmployerProfile = () => {
                           <input
                             type="file"
                             className="hidden"
-                            {...register("company_logo")}
-                            onChange={(e) => handleCompanyLogoChange(e)}
+                            accept="image/jpeg,image/png,image/jpg,image/gif"
+                            onChange={handleCompanyLogoChange}
                           />
                         </label>
                         {previewLogo && (
@@ -405,6 +426,13 @@ const EmployerProfile = () => {
             </div>
             {(editProfile || !profile) ? (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* إظهار أخطاء الصورة */}
+                {errors.company_logo && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                    {errors.company_logo.message}
+                  </div>
+                )}
+                
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
