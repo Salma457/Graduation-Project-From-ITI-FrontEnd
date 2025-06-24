@@ -33,7 +33,7 @@ function EmployerNavbar() {
               <FaBriefcase className="nav-icon" /> Jobs
             </button>
             <div className="dropdown-content">
-              <Link to="/employer/post-job"><FaFileAlt className="dropdown-icon" /> Post New Job</Link>
+              <Link to="/payment"><FaFileAlt className="dropdown-icon" /> Post New Job</Link>
               <Link to="/employer/jobs"><FaFileAlt className="dropdown-icon" /> My Jobs</Link>
             </div>
           </div>
