@@ -218,7 +218,7 @@ const JobDetailsPublic = () => {
     View My Proposal
   </button>
 ) : (
-  <button onClick={handleApply} className="apply-btn">
+  <button onClick={handleApply} className="apply-btnn">
     Apply Now
   </button>
 )}
@@ -249,60 +249,63 @@ const JobDetailsPublic = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="application-form px-6 pb-6">
-            <div className="application-form-group mb-4">
-              <label htmlFor="cover_letter" className="application-form-label text-white font-semibold block mb-2">
-                Cover Letter
-              </label>
-              <textarea
-                id="cover_letter"
-                name="cover_letter"
-                rows="5"
-                value={formData.cover_letter}
-                onChange={handleInputChange}
-                required
-                minLength={100}
-                placeholder="Write your cover letter here... (at least 100 characters)"
-                className={`application-form-textarea w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-[#b53c35] p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : ''}`}
-              />
-              {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
-                <p className="text-red-200 text-xs mt-1">Cover letter must be at least 100 characters.</p>
-              )}
-            </div>
+  <div className="application-form-group mb-4">
+    <label htmlFor="cover_letter" className="application-form-label text-black font-semibold block mb-2">
+      Cover Letter
+    </label>
+    <textarea
+      id="cover_letter"
+      name="cover_letter"
+      rows="5"
+      value={formData.cover_letter}
+      onChange={handleInputChange}
+      required
+      minLength={100}
+      placeholder="Write your cover letter here... (at least 100 characters)"
+      className={`application-form-textarea w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : ''}`}
+    />
+    {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
+      <p className="text-red-500 text-xs mt-1">Cover letter must be at least 100 characters.</p>
+    )}
+  </div>
 
-            <div className="application-form-group mb-4">
-              <label htmlFor="cv" className="application-form-label text-white font-semibold block mb-2">
-                Upload CV
-              </label>
-              <input
-                type="file"
-                id="cv"
-                name="cv"
-                accept=".pdf,.doc,.docx"
-                onChange={handleFileChange}
-                required
-                className="application-form-file w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-[#b53c35] p-2 outline-none transition"
-              />
-            </div>
+  <div className="application-form-group mb-4">
+    <label htmlFor="cv" className="application-form-label text-black font-semibold block mb-2">
+      Upload CV
+    </label>
+    <input
+      type="file"
+      id="cv"
+      name="cv"
+      accept=".pdf,.doc,.docx"
+      onChange={handleFileChange}
+      required
+      className={`application-form-file w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-2 outline-none transition ${(!formData.cv || submitError === 'CV file is required' || (submitError && submitError.toLowerCase().includes('cv'))) ? 'border-red-500' : ''}`}
+    />
+    {(!formData.cv || submitError === 'CV file is required' || (submitError && submitError.toLowerCase().includes('cv'))) && (
+      <p className="text-red-500 text-xs mt-1">CV file is required.</p>
+    )}
+  </div>
 
-            {submitError && <p className="application-form-error text-red-200 mb-2">{submitError}</p>}
+  {submitError && !submitError.toLowerCase().includes('cv') && <p className="application-form-error text-red-500 mb-2">{submitError}</p>}
 
-            <div className="application-form-actions flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="application-cancel-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || formData.cover_letter.length < 100}
-                className="application-submit-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {submitting ? 'Submitting...' : 'Submit Application'}
-              </button>
-            </div>
-          </form>
+  <div className="application-form-actions flex justify-end gap-3">
+    <button
+      type="button"
+      onClick={closeModal}
+      className="application-cancel-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition"
+    >
+      Cancel
+    </button>
+    <button
+      type="submit"
+      disabled={submitting || formData.cover_letter.length < 100 || !formData.cv}
+      className="application-submit-btn bg-white text-[#b53c35] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      {submitting ? 'Submitting...' : 'Submit Application'}
+    </button>
+  </div>
+</form>
         )}
       </Modal>
     </div>
