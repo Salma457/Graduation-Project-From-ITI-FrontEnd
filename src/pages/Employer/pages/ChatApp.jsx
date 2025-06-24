@@ -24,18 +24,16 @@ const ChatApp = () => {
 
   const messagesEndRef = useRef(null);
   const emojiPickerRef = useRef(null);
-const contactId = location.state?.user;
-const contactName = location.state?.name;
+  const contactId = location.state?.user;
+  const contactName = location.state?.name;
 
 
 useEffect(() => {
-  // إعادة تعيين عدد الإشعارات عند فتح الشات
   if (window.resetMessageNotifications) {
     window.resetMessageNotifications();
   }
 }, []);
 
-// وأيضاً في دالة handleContactSelect:
 const handleContactSelect = (contact) => {
   setSelectedContact(contact);
   setUnreadMessages(prev => ({ ...prev, [contact.contact_id]: 0 }));
@@ -43,49 +41,84 @@ const handleContactSelect = (contact) => {
   markMessagesAsRead(contact.contact_id);
   setIsMobileMenuOpen(false);
   
-  // إعادة تعيين عدد الإشعارات عند اختيار محادثة
   if (window.resetMessageNotifications) {
     window.resetMessageNotifications();
   }
 };
 
-// أضيفي هذا أيضاً في useEffect الخاص بـ contactId:
+// استبدل useEffect الخاص بـ contactId بهذا الكود
 useEffect(() => {
-  if (contactId && !contacts.some(c => c.contact_id === contactId)) {
-    const tempContact = {
-      id: `temp-${Date.now()}`,
-      contact_id: contactId,
-      contact_name: contactName,
-      contact_avatar: null,
-      body: "Start a conversation...",
-      created_at: new Date().toISOString(),
-      from_id: contactId
-    };
+  const handleContactFromRoute = async () => {
+    if (contactId && !contacts.some(c => c.contact_id === contactId)) {
+      // جلب معلومات المستخدم
+      const { data: userData } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', contactId)
+        .single();
 
-    setContacts(prev => [tempContact, ...prev]);
-    setSelectedContact(tempContact);
-    fetchMessages(contactId);
-    
-    // إعادة تعيين الإشعارات
-    if (window.resetMessageNotifications) {
-      window.resetMessageNotifications();
-    }
-  } else if (contactId) {
-    const existingContact = contacts.find(c => c.contact_id === contactId);
-    if (existingContact) {
-      setSelectedContact(existingContact);
+      // جلب معلومات ITI Profile
+      const { data: itiData } = await supabase
+        .from('itian_profiles')
+        .select('first_name, last_name, profile_picture')
+        .eq('user_id', contactId)
+        .single();
+
+      // جلب معلومات Employer Profile
+      const { data: empData } = await supabase
+        .from('employer_profiles')
+        .select('company_name, company_logo')
+        .eq('user_id', contactId)
+        .single();
+
+      // تحديد الاسم والصورة
+      let displayName = contactName || `User ${contactId}`;
+      let displayImage = null;
+
+      if (itiData) {
+        displayName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim() || displayName;
+        displayImage = itiData.profile_picture;
+      } else if (empData) {
+        displayName = empData.company_name || displayName;
+        displayImage = empData.company_logo;
+      } else if (userData) {
+        displayName = userData.name || userData.email || displayName;
+      }
+
+      const tempContact = {
+        id: `temp-${Date.now()}`,
+        contact_id: contactId,
+        contact_name: displayName,
+        contact_avatar: displayImage,
+        body: "Start a conversation...",
+        created_at: new Date().toISOString(),
+        from_id: contactId
+      };
+
+      setContacts(prev => [tempContact, ...prev]);
+      setSelectedContact(tempContact);
       fetchMessages(contactId);
-      markMessagesAsRead(contactId);
       
-      // إعادة تعيين الإشعارات
       if (window.resetMessageNotifications) {
         window.resetMessageNotifications();
       }
+    } else if (contactId) {
+      const existingContact = contacts.find(c => c.contact_id === contactId);
+      if (existingContact) {
+        setSelectedContact(existingContact);
+        fetchMessages(contactId);
+        markMessagesAsRead(contactId);
+        
+        if (window.resetMessageNotifications) {
+          window.resetMessageNotifications();
+        }
+      }
     }
-  }
+  };
+
+  handleContactFromRoute();
 }, [contactId, contactName, location.key]);
 
-  // Online presence tracking
   useEffect(() => {
     if (!userId) return;
 
@@ -125,7 +158,6 @@ useEffect(() => {
     };
   }, [userId]);
 
-  // Helper function to check online status
   const isOnline = useCallback((userId) => {
     return onlineUsers.includes(userId);
   }, [onlineUsers]);
@@ -150,7 +182,6 @@ useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
@@ -164,7 +195,6 @@ useEffect(() => {
     };
   }, []);
 
-  // Add emoji to message
   const addEmoji = (emoji) => {
     setNewMessage(prev => prev + emoji);
     setShowEmojiPicker(false);
@@ -384,67 +414,102 @@ const fetchContacts = useCallback(async () => {
     }
   };
 
-  // Set up real-time subscription
-  useEffect(() => {
-    if (!userId) return;
+useEffect(() => {
+  if (!userId) return;
 
-    const channel = supabase
-      .channel('public:ch_messages')
-      .on(
-        'postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'ch_messages',
-          filter: `to_id=eq.${userId}`
-        },
-        (payload) => {
-          if (selectedContact && payload.new.from_id === selectedContact.contact_id) {
-            setMessages(prev => [...prev, payload.new]);
-            // Don't increment unread count for currently selected contact
-          } else {
-            // Increment unread count for other contacts
-            setUnreadCounts(prev => ({
-              ...prev,
-              [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
-            }));
-          }
-          
-          setContacts(prev => {
-            const existingContactIndex = prev.findIndex(
-              contact => contact.contact_id === payload.new.from_id
-            );
-            
-            if (existingContactIndex !== -1) {
-              const updatedContacts = [...prev];
-              updatedContacts[existingContactIndex] = {
-                ...updatedContacts[existingContactIndex],
-                body: payload.new.body,
-                created_at: payload.new.created_at
-              };
-              return updatedContacts;
-            } else {
-              return [{
-                id: payload.new.id,
-                contact_id: payload.new.from_id,
-                contact_name: `User ${payload.new.from_id}`,
-                contact_avatar: null,
-                body: payload.new.body,
-                created_at: payload.new.created_at,
-                from_id: payload.new.from_id
-              }, ...prev];
-            }
-          });
+  const channel = supabase
+    .channel('public:ch_messages')
+    .on(
+      'postgres_changes',
+      { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'ch_messages',
+        filter: `to_id=eq.${userId}`
+      },
+      async (payload) => {
+        if (selectedContact && payload.new.from_id === selectedContact.contact_id) {
+          setMessages(prev => [...prev, payload.new]);
+        } else {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
+          }));
         }
-      )
-      .subscribe();
+        
+        // جلب معلومات المرسل للرسالة الجديدة
+        const senderId = payload.new.from_id;
+        
+        // جلب معلومات المستخدم
+        const { data: userData } = await supabase
+          .from('users')
+          .select('name, email')
+          .eq('id', senderId)
+          .single();
 
-    return () => {
-      if (channel && typeof channel.unsubscribe === 'function') {
-        channel.unsubscribe();
+        // جلب معلومات ITI Profile
+        const { data: itiData } = await supabase
+          .from('itian_profiles')
+          .select('first_name, last_name, profile_picture')
+          .eq('user_id', senderId)
+          .single();
+
+        // جلب معلومات Employer Profile
+        const { data: empData } = await supabase
+          .from('employer_profiles')
+          .select('company_name, company_logo')
+          .eq('user_id', senderId)
+          .single();
+
+        // تحديد الاسم والصورة
+        let senderName = `User ${senderId}`;
+        let senderAvatar = null;
+
+        if (itiData) {
+          senderName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
+          senderAvatar = itiData.profile_picture;
+        } else if (empData) {
+          senderName = empData.company_name || senderName;
+          senderAvatar = empData.company_logo;
+        } else if (userData) {
+          senderName = userData.name || userData.email || senderName;
+        }
+        
+        setContacts(prev => {
+          const existingContactIndex = prev.findIndex(
+            contact => contact.contact_id === senderId
+          );
+          
+          if (existingContactIndex !== -1) {
+            const updatedContacts = [...prev];
+            updatedContacts[existingContactIndex] = {
+              ...updatedContacts[existingContactIndex],
+              body: payload.new.body,
+              created_at: payload.new.created_at
+            };
+            return updatedContacts;
+          } else {
+            return [{
+              id: payload.new.id,
+              contact_id: senderId,
+              contact_name: senderName,
+              contact_avatar: senderAvatar,
+              body: payload.new.body,
+              created_at: payload.new.created_at,
+              from_id: senderId
+            }, ...prev];
+          }
+        });
       }
-    };
-  }, [userId, selectedContact]);
+    )
+    .subscribe();
+
+  return () => {
+    if (channel && typeof channel.unsubscribe === 'function') {
+      channel.unsubscribe();
+    }
+  };
+}, [userId, selectedContact]);
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { 
