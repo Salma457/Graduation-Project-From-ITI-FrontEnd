@@ -56,7 +56,7 @@ const JobDetailsModal = ({ jobId, onClose }) => {
               <p className="mb-2"><span className="font-semibold">Status:</span> {job.status}</p>
               <p className="mb-2"><span className="font-semibold">Posted:</span> {job.posted_date ? new Date(job.posted_date).toLocaleString() : '-'}</p>
               <p className="mb-2"><span className="font-semibold">Views:</span> {job.views_count}</p>
-              <p className="mb-2"><span className="font-semibold">Description:</span> {job.description}</p>
+              <p className="mb-2 break-words whitespace-pre-line max-w-full overflow-x-auto"><span className="font-semibold">Description:</span> {job.description}</p>
               <p className="mb-2"><span className="font-semibold">Requirements:</span> {job.requirements}</p>
               <p className="mb-2"><span className="font-semibold">Qualifications:</span> {job.qualifications}</p>
             </div>

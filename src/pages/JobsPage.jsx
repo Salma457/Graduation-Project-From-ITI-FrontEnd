@@ -5,7 +5,7 @@ import axios from "axios";
 import "../css/JobsPage.css";
 import "../css/Pagination.css";
 import { Sparkles, Search } from 'lucide-react'; 
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchJobs,
   setSearchQuery,
