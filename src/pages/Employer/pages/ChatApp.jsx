@@ -26,6 +26,30 @@ const ChatApp = () => {
   const emojiPickerRef = useRef(null);
 const contactId = location.state?.user;
 const contactName = location.state?.name;
+
+
+useEffect(() => {
+  // إعادة تعيين عدد الإشعارات عند فتح الشات
+  if (window.resetMessageNotifications) {
+    window.resetMessageNotifications();
+  }
+}, []);
+
+// وأيضاً في دالة handleContactSelect:
+const handleContactSelect = (contact) => {
+  setSelectedContact(contact);
+  setUnreadMessages(prev => ({ ...prev, [contact.contact_id]: 0 }));
+  fetchMessages(contact.contact_id);
+  markMessagesAsRead(contact.contact_id);
+  setIsMobileMenuOpen(false);
+  
+  // إعادة تعيين عدد الإشعارات عند اختيار محادثة
+  if (window.resetMessageNotifications) {
+    window.resetMessageNotifications();
+  }
+};
+
+// أضيفي هذا أيضاً في useEffect الخاص بـ contactId:
 useEffect(() => {
   if (contactId && !contacts.some(c => c.contact_id === contactId)) {
     const tempContact = {
@@ -41,12 +65,22 @@ useEffect(() => {
     setContacts(prev => [tempContact, ...prev]);
     setSelectedContact(tempContact);
     fetchMessages(contactId);
+    
+    // إعادة تعيين الإشعارات
+    if (window.resetMessageNotifications) {
+      window.resetMessageNotifications();
+    }
   } else if (contactId) {
     const existingContact = contacts.find(c => c.contact_id === contactId);
     if (existingContact) {
       setSelectedContact(existingContact);
       fetchMessages(contactId);
       markMessagesAsRead(contactId);
+      
+      // إعادة تعيين الإشعارات
+      if (window.resetMessageNotifications) {
+        window.resetMessageNotifications();
+      }
     }
   }
 }, [contactId, contactName, location.key]);
@@ -208,12 +242,11 @@ useEffect(() => {
     }
   };
 
-  // Fetch contacts/conversations
+
 const fetchContacts = useCallback(async () => {
   try {
     setLoading(true);
     
-    // تأكد أن userId هو عدد صحيح
     const numericUserId = parseInt(userId, 10);
     if (isNaN(numericUserId)) {
       throw new Error('Invalid user ID format');
@@ -232,14 +265,49 @@ const fetchContacts = useCallback(async () => {
 
     const data = await response.json();
     
-    const transformedContacts = data.map((msg) => ({
-      id: msg.id,
-      contact_id: msg.from_id === numericUserId ? msg.to_id : msg.from_id,
-      contact_name: msg.contact_name || `User ${msg.from_id === numericUserId ? msg.to_id : msg.from_id}`,
-      contact_avatar: msg.contact_avatar || null,
-      body: msg.body,
-      created_at: msg.created_at,
-      from_id: msg.from_id,
+    const transformedContacts = await Promise.all(data.map(async (msg) => {
+      const contactId = msg.from_id === numericUserId ? msg.to_id : msg.from_id;
+      
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', contactId)
+        .single();
+
+      const { data: itiData, error: itiError } = await supabase
+        .from('itian_profiles')
+        .select('first_name, last_name, profile_picture')
+        .eq('user_id', contactId)
+        .single();
+
+      const { data: empData, error: empError } = await supabase
+        .from('employer_profiles')
+        .select('company_name, company_logo')
+        .eq('user_id', contactId)
+        .single();
+
+      let displayName = `User ${contactId}`; 
+      let displayImage = null;
+
+      if (itiData && !itiError) {
+        displayName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
+        displayImage = itiData.profile_picture;
+      } else if (empData && !empError) {
+        displayName = empData.company_name || displayName;
+        displayImage = empData.company_logo;
+      } else if (userData && !userError) {
+        displayName = userData.name || userData.email || displayName;
+      }
+
+      return {
+        id: msg.id,
+        contact_id: contactId,
+        contact_name: displayName,
+        contact_avatar: displayImage,
+        body: msg.body,
+        created_at: msg.created_at,
+        from_id: msg.from_id,
+      };
     }));
 
     setContacts(transformedContacts);
@@ -250,18 +318,10 @@ const fetchContacts = useCallback(async () => {
     setLoading(false);
   }
 }, [userId]);
+
   useEffect(() => {
   fetchContacts();
-}, [fetchContacts]); // Remove user and name dependencies, use contactId and contactName instead
-
-  // Fetch messages between selected contact and current user
-  const handleContactSelect = (contact) => {
-    setSelectedContact(contact);
-    setUnreadMessages(prev => ({ ...prev, [contact.contact_id]: 0 }));
-    fetchMessages(contact.contact_id);
-    markMessagesAsRead(contact.contact_id); // Mark messages as read when opening chat
-    setIsMobileMenuOpen(false);
-  };
+}, [fetchContacts]); 
 
   const fetchMessages = async (contactId) => {
     const { data, error } = await supabase

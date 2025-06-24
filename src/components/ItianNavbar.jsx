@@ -6,17 +6,16 @@ import {
   FaFileAlt,
   FaBars,
   FaTimes,
-  FaSignOutAlt
+  FaSignOutAlt,
 } from "react-icons/fa";
-import Notifications from "./Notification"; // ✨ الإشعارات
+import Notifications from "./Notification";
+import MessageNotification from "./MessageNotification"; // الكومبوننت الجديد
 import "../css/Navbar.css";
-// import { useSelector } from 'react-redux';
 
 function ItianNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  // const user = useSelector(state => state.user.user);
-  // const role = useSelector(state => state.user.role);
+
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
@@ -36,10 +35,18 @@ function ItianNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
+          <Link to="/posts" className="nav-link">
+            <FaFileAlt className="nav-icon" /> Posts
+          </Link>
           <Link to="/itian-profile" className="nav-link">
             <FaUser className="nav-icon" /> My Profile
           </Link>
-
+          
+          {/* استخدام الكومبوننت الجديد للرسائل */}
+          <Link to="/itian/mychat" className="nav-link">
+            <MessageNotification iconClassName="nav-icon" /> Chat
+          </Link>
+          
           <div
             className={`dropdown ${dropdownOpen ? "open" : ""}`}
             onClick={toggleDropdown}
@@ -57,11 +64,8 @@ function ItianNavbar() {
             </div>
           </div>
 
-          <Link to="/posts" className="nav-link">
-            <FaFileAlt className="nav-icon" /> Posts
-          </Link>
+        
 
-          {/* 🛎 إشعارات */}
           <div className="notification-wrapper">
             <Notifications />
           </div>

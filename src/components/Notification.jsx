@@ -197,8 +197,13 @@ const role = useSelector((state) => state.user.role);
                               console.log('✅ Seen updated successfully');
                               refetch();
                               if (notification.job_id) {
+                              if (role === 'employer') {
+                               window.location.href = `/employer/job/${notification.job_id}`;
+                              } else {
                                 window.location.href = `/jobs/${notification.job_id}`;
                               }
+                            }
+
                             }
                           }}
                           className={`p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer group ${

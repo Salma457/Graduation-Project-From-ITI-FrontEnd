@@ -14,7 +14,7 @@ export const getContactsFromMessages = async (userId) => {
       avatar: msg.contact_avatar,
       lastMessage: msg.body,
       timestamp: msg.created_at,
-      unreadCount: 0 // ممكن تضيف عداد فعلي بعدين
+      unreadCount: 0
     };
   });
 };

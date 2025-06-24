@@ -124,13 +124,6 @@ const JobApplications = () => {
               <User className="w-4 h-4 mr-1" />
               Profile
             </button>
-            <button
-              className="flex-1 flex items-center justify-center bg-blue-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
-              onClick={onMessage}
-            >
-              <MessageCircle className="w-4 h-4 mr-1" />
-              Chat
-            </button>
           </div>
         </div>
       </div>
@@ -444,26 +437,10 @@ const JobApplications = () => {
                     app={app}
                     index={(currentPage - 1) * itemsPerPage + index}
                     onViewMore={() => setOpenCoverLetter(applications.findIndex(a => a.id === app.id))}
-                    onViewProfile={() => {
-                      const userId = app.user_id || app.user?.id || app.iti_id || app.id;
-                      if (userId) window.open(`/itian-profile/${userId}`, '_blank');
-                    }}
-                   onMessage={() => {
-                    const userId = app.itian?.user_id || app.user?.id;
-                    const userName = app.itian 
-                      ? `${app.itian.first_name} ${app.itian.last_name}` 
-                      : (app.applicant_name || app.user?.name || `Applicant #${userId}`);
-                    
-                    if (userId) {
-                      navigate(`/mychat`, { 
-                        state: { 
-                          user: userId,  // This will be used as contactId
-                          name: userName // This will be the displayed name
-                        } 
-                      });
-                    }
+                   onViewProfile={() => {
+                    const userId = app.itian?.user_id || app.user_id || app.user?.id || app.iti_id || app.id;
+                    if (userId) window.open(`/itian-profile/${userId}`);
                   }}
-
                   />
                 ))}
               </div>

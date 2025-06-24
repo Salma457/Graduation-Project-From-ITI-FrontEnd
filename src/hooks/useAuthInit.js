@@ -11,38 +11,42 @@ const useAuthInit = () => {
     if (!token) return;
 
     const fetchUserData = async () => {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      };
+
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-          },
-        };
-
-        try {
-          const res = await axios.get('http://localhost:8000/api/itian-profile', config);
-          const userData = res.data.user || res.data;
-          dispatch(setUser({ ...userData, role: 'itian' }));
-          localStorage.setItem('user', JSON.stringify({ ...userData, role: 'itian' }));
-          localStorage.setItem('user-id', userData?.id || userData?.user_id);
+        // نجرب نجيب بيانات الـ employer أولاً
+        const employerRes = await axios.get('http://localhost:8000/api/employer-profile', config);
+        const employerUser = employerRes.data.user || employerRes.data;
+        if (employerUser) {
+          dispatch(setUser({ ...employerUser, role: 'employer' }));
+          localStorage.setItem('user', JSON.stringify({ ...employerUser, role: 'employer' }));
+          localStorage.setItem('user-id', employerUser?.id || employerUser?.user_id);
           return;
-        } catch (err) {
         }
-
-        try {
-          const res = await axios.get('http://localhost:8000/api/employer-profile', config);
-          const userData = res.data.user || res.data;
-          dispatch(setUser({ ...userData, role: 'employer' }));
-          localStorage.setItem('user', JSON.stringify({ ...userData, role: 'employer' }));
-          localStorage.setItem('user-id', userData?.id || userData?.user_id);
-          return;
-        } catch (err) {
-        }
-
-        console.warn("❌ No valid profile found for current user.");
-      } catch (error) {
-        console.error('🔥 Auth Init Error:', error);
+      } catch (err) {
+        // تجاهل الخطأ لأن ممكن ما يكونش إيمبلوير
       }
+
+      try {
+        // لو مش إيمبلوير، نجرب نجيب بيانات الـ itian
+        const itianRes = await axios.get('http://localhost:8000/api/itian-profile', config);
+        const itianUser = itianRes.data.user || itianRes.data;
+        if (itianUser) {
+          dispatch(setUser({ ...itianUser, role: 'itian' }));
+          localStorage.setItem('user', JSON.stringify({ ...itianUser, role: 'itian' }));
+          localStorage.setItem('user-id', itianUser?.id || itianUser?.user_id);
+          return;
+        }
+      } catch (err) {
+        // تجاهل الخطأ لو برضه مش موجود
+      }
+
+      console.warn("❌ No valid profile found for current user.");
     };
 
     fetchUserData();

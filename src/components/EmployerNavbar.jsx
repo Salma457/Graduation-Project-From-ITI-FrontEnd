@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt } from "react-icons/fa";
 import "../css/Navbar.css";
-import Notifications from './Notification'; // أو المسار المناسب
+import Notifications from './Notification';
+import MessageNotification from './MessageNotification'; // الكومبوننت الجديد
+
 function EmployerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -26,6 +28,14 @@ function EmployerNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
+           <Link to="/employer-profile" className="nav-link">
+            <FaUser className="nav-icon" /> My Profile
+          </Link>
+          
+          <Link to="/employer/mychat" className="nav-link">
+            <MessageNotification iconClassName="nav-icon" /> Chat
+          </Link>
+          
           <div className={`dropdown ${dropdownOpen ? "open" : ""}`} onClick={toggleDropdown}>
             <button className="dropbtn">
               <FaBriefcase className="nav-icon" /> Jobs
@@ -36,10 +46,6 @@ function EmployerNavbar() {
             </div>
           </div>
 
-          <Link to="/employer-profile" className="nav-link">
-            <FaUser className="nav-icon" /> My Profile
-          </Link>
-          
           <div className="notification-wrapper">
            <Notifications />
           </div>

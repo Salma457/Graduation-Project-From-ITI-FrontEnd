@@ -83,19 +83,6 @@ function App() {
             {adminRoutes}
           </Route>
 
-          {/* 🟦 Employer layout */}
-          <Route element={<EmployerLayout />}>
-            <Route path="/employer/post-job" element={<PostJob />} />
-            <Route path="/employer/jobs" element={<JobList />} />
-            <Route path="/employer/trash" element={<TrashPage />} />
-            <Route path="/employer/job/:id" element={<JobDetails />} />
-            <Route path="/employer/job/:id/applications" element={<JobApplications />} />
-            <Route path="/mychat" element={<ChatApp />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/employer-profile" element={<EmployerProfile />} />
-            <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
-          </Route>
-
           {/* 🟨 Itian layout */}
           <Route element={<ItianLayout />}>
             <Route path="/jobs" element={<JobsPage />} />
@@ -106,7 +93,22 @@ function App() {
             <Route path="/posts" element={<PostsList />} />
             <Route path="/itian-profile" element={<ItianProfile />} />
             <Route path="/create-itian-profile" element={<CreateItianProfile />} />
+            <Route path="/itian/mychat" element={<ChatApp />} />
           </Route>
+
+          {/* 🟦 Employer layout */}
+          <Route element={<EmployerLayout />}>
+            <Route path="/employer/post-job" element={<PostJob />} />
+            <Route path="/employer/jobs" element={<JobList />} />
+            <Route path="/employer/trash" element={<TrashPage />} />
+            <Route path="/employer/job/:id" element={<JobDetails />} />
+            <Route path="/employer/job/:id/applications" element={<JobApplications />} />
+            <Route path="/employer/mychat" element={<ChatApp />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/employer-profile" element={<EmployerProfile />} />
+            <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+          </Route>
+
 
           {/* 🟪 Public profiles (outside layout or custom later) */}
           <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
@@ -114,6 +116,7 @@ function App() {
           <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
           <Route path="/profile/:username" element={<ViewItianProfile />} />
+
         </Routes>
       </Router>
   );
