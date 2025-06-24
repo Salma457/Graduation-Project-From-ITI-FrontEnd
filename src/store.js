@@ -23,6 +23,7 @@ const store = configureStore({
     itianProfile: itianProfileReducer,
     employerProfile: employerProfileReducer,
     itian: itianReducer,
+    employerProfile: employerProfileReducer,
     
     [chatApi.reducerPath]: chatApi.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer,
