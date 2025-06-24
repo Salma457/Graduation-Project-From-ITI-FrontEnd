@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchEmployerData, editJob, deleteJob } from '../jobPostSlice'; // Changed from fetchEmployerJobs
+import { fetchEmployerData, editJob, deleteJob } from '../jobPostSlice';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
 import { Sparkles, ChevronLeft, ChevronRight, Building2, MapPin, Calendar, Users } from 'lucide-react';
@@ -10,12 +10,12 @@ import '../style/jobList.css';
 const JobList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-const jobPostState = useSelector(state => state.jobPost) || {};
-const {
-  jobs = [],
-  loading = false,
-  error = null,
-} = jobPostState;
+  const jobPostState = useSelector(state => state.jobPost) || {};
+  const {
+    jobs = [],
+    loading = false,
+    error = null,
+  } = jobPostState;
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -27,11 +27,63 @@ const {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
 
+  // Function to check and update expired jobs
+  const checkAndUpdateExpiredJobs = async () => {
+    const currentDate = new Date();
+    const jobsArray = Array.isArray(jobs) ? jobs : [];
+    
+    for (const job of jobsArray) {
+      // Check if job has application_deadline and is currently Open
+      if (job.application_deadline && job.status === 'Open') {
+        const deadlineDate = new Date(job.application_deadline);
+        
+        // If current date is past the deadline, update status to Closed
+        if (currentDate > deadlineDate) {
+          try {
+            await dispatch(editJob({ 
+              jobId: job.id, 
+              jobData: { ...job, status: 'Closed' } 
+            })).unwrap();
+            console.log(`Job ${job.id} automatically closed due to expired deadline`);
+          } catch (error) {
+            console.error(`Failed to auto-close job ${job.id}:`, error);
+          }
+        }
+      }
+    }
+  };
+
   useEffect(() => {
-    dispatch(fetchEmployerData()); // Changed to fetch both jobs and employer data
+    dispatch(fetchEmployerData());
   }, [dispatch]);
 
+  // Check for expired jobs when component mounts and jobs data changes
+  useEffect(() => {
+    if (jobs.length > 0) {
+      checkAndUpdateExpiredJobs();
+    }
+  }, [jobs, dispatch]);
+
+  // Set up interval to check for expired jobs periodically (every 5 minutes)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (jobs.length > 0) {
+        checkAndUpdateExpiredJobs();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [jobs, dispatch]);
+
   const jobsArray = Array.isArray(jobs) ? jobs : [];
+
+  // Helper function to check if job is expired
+  const isJobExpired = (job) => {
+    if (!job.application_deadline) return false;
+    const currentDate = new Date();
+    const deadlineDate = new Date(job.application_deadline);
+    return currentDate > deadlineDate;
+  };
 
   // Only show jobs that are NOT trashed (deleted_at is null)
   const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
@@ -95,9 +147,9 @@ const {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-      await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
-      setModalIsOpen(false);
-      dispatch(fetchEmployerData()); // Changed to refetch both jobs and employer data
+    await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
+    setModalIsOpen(false);
+    dispatch(fetchEmployerData());
   };
 
   const handleDelete = (jobId) => {
@@ -133,7 +185,37 @@ const {
     return title ? title.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'JB';
   };
 
-
+  // Function to format deadline and show expiry status
+  const formatDeadlineStatus = (job) => {
+    if (!job.application_deadline) return null;
+    
+    const currentDate = new Date();
+    const deadlineDate = new Date(job.application_deadline);
+    const isExpired = currentDate > deadlineDate;
+    
+    const formattedDate = deadlineDate.toLocaleDateString('en-GB');
+    
+    if (isExpired) {
+      return (
+        <div style={{ color: '#dc2626', fontSize: '12px', fontWeight: '500' }}>
+          Expired: {formattedDate}
+        </div>
+      );
+    } else {
+      const timeDiff = deadlineDate - currentDate;
+      const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+      
+      return (
+        <div style={{ 
+          color: daysLeft <= 3 ? '#dc2626' : '#059669', 
+          fontSize: '12px', 
+          fontWeight: '500' 
+        }}>
+          Deadline: {formattedDate} ({daysLeft} days left)
+        </div>
+      );
+    }
+  };
 
   // Pagination component
   const PaginationComponent = () => {
@@ -472,7 +554,14 @@ return (
         
         <div className="list-grid">
           {currentJobs.map(job => (
-            <div className="list-card" key={job.id}>
+            <div 
+              className="list-card" 
+              key={job.id}
+              style={{
+                opacity: isJobExpired(job) ? 0.7 : 1,
+                borderLeft: isJobExpired(job) ? '4px solid #dc2626' : 'none'
+              }}
+            >
               <div className="list-card-header">
                 <div className="list-avatar">
                   <div className="list-avatar-circle">
@@ -485,6 +574,7 @@ return (
                   <div className="list-posted-time">
                     {formatTimeAgo(job.created_at || job.posted_date)}
                   </div>
+                  {formatDeadlineStatus(job)}
                 </div>
                 <div className="list-actions">
                   <button className="list-action-btn list-view-btn" onClick={() => navigate(`/employer/job/${job.id}`)}>
@@ -508,6 +598,7 @@ return (
                 <div className="list-status-badge">
                   <span className={`list-status-badge ${job.status?.toLowerCase() || 'open'}`}>
                     {job.status || 'Open'}
+                    {isJobExpired(job) && job.status === 'Open' && ' (Auto-Closing)'}
                   </span>
                 </div>
               </div>

@@ -31,16 +31,17 @@ const JobDetailsPublic = ({ jobId }) => {
     });
 
 useEffect(() => {
-  const confettiShown = localStorage.getItem(`confetti_shown_for_job_${jobId}`);
- const isAccepted = applicationStatus === "approved"; 
+  const confettiShown = localStorage.getItem(`confetti_shown_for_job_${id}`);
+  const isAccepted = applicationStatus === "approved";
 
   if (isAccepted && !confettiShown) {
     setShowConfetti(true);
-    localStorage.setItem(`confetti_shown_for_job_${jobId}`, 'true');
+    localStorage.setItem(`confetti_shown_for_job_${id}`, 'true');
 
     setTimeout(() => setShowConfetti(false), 5000);
   }
-}, [jobId, applicationStatus]);
+}, [id, applicationStatus]);
+
 
    useEffect(() => {
     const handleResize = () => {

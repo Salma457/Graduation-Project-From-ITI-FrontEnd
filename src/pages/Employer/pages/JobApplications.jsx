@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Confetti from 'react-confetti';
 import 'react-toastify/dist/ReactToastify.css';
+import withReactContent from 'sweetalert2-react-content';
+import Swal from 'sweetalert2';
 
 const JobApplications = () => {
   const { id } = useParams();
@@ -14,7 +16,84 @@ const JobApplications = () => {
   const [openCoverLetter, setOpenCoverLetter] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const MySwal = withReactContent(Swal);
+
+
+const handleViewCV = (cvPath) => {
+  const fullUrl = `http://localhost:8000/storage/${cvPath}`;
   
+  MySwal.fire({
+    title: 'CV Preview',
+    html: `
+      <div style="position: relative;">
+        <button 
+          id="closeCvBtn"
+          style="
+            position: absolute; 
+            top: -10px; 
+            right: -10px; 
+            background: #ff4757; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            width: 30px; 
+            height: 30px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: bold;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: background 0.3s ease;
+          "
+        >
+          ×
+        </button>
+        <iframe
+          src="${fullUrl}"
+          title="CV Preview"
+          width="100%"
+          height="600px"
+          style="border: 1px solid #ddd; border-radius: 8px;"
+        ></iframe>
+      </div>
+    `,
+    width: '90%',
+    showConfirmButton: false,
+    showCloseButton: false,
+    allowOutsideClick: true,
+    allowEscapeKey: true,
+    customClass: {
+      popup: 'cv-preview-popup'
+    },
+    didOpen: () => {
+      // إضافة styles مخصصة للـ popup
+      const popup = MySwal.getPopup();
+      popup.style.padding = '20px';
+      popup.style.borderRadius = '12px';
+      popup.style.boxShadow = '0 10px 40px rgba(0,0,0,0.15)';
+      
+      // إضافة event listener لزر الإغلاق
+      const closeBtn = document.getElementById('closeCvBtn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          MySwal.close();
+        });
+        
+        // إضافة hover effects
+        closeBtn.addEventListener('mouseover', () => {
+          closeBtn.style.background = '#ff3742';
+        });
+        
+        closeBtn.addEventListener('mouseout', () => {
+          closeBtn.style.background = '#ff4757';
+        });
+      }
+    }
+  });
+};
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8); // 8 cards per page (3x4 grid)
@@ -329,7 +408,9 @@ const JobApplications = () => {
     } catch (err) {
       setError(err.message || "Something went wrong");
     }
+
   };
+  
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -498,15 +579,32 @@ const JobApplications = () => {
                   </div>
                   {/* Modal Footer */}
                   <div className="p-6 bg-red-50 border-t border-red-100 flex gap-3 justify-between">
-                    <a
-                      href={applications[openCoverLetter]?.cv || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download CV
-                    </a>
+                <button 
+                    onClick={() => handleViewCV(applications[openCoverLetter]?.cv)}
+                    style={{
+                      background: 'linear-gradient(135deg,rgb(240, 53, 53) 0%,rgb(102, 4, 4) 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(234, 102, 102, 0.3)'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(224, 41, 41, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 15px rgba(234, 102, 102, 0.3)';
+                    }}
+                  >
+                    📄 View CV
+                  </button>
+
                     <div className="flex gap-2">
                       <button
                         className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"

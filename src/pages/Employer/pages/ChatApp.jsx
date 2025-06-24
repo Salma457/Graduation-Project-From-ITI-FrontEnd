@@ -67,7 +67,6 @@ useEffect(() => {
         .eq('user_id', contactId)
         .single();
 
-      // تحديد الاسم والصورة
       let displayName = contactName || `User ${contactId}`;
       let displayImage = null;
 
@@ -76,7 +75,7 @@ useEffect(() => {
 
         if (itiData.profile_picture) {
           const { data: publicUrlData } = supabase.storage
-            .from('profile_pictures') // اسم البكت
+            .from('profile_pictures') 
             .getPublicUrl(itiData.profile_picture.replace('profile_pictures/', '')); // إزالة الجزء الزايد
 
           displayImage = publicUrlData?.publicUrl;

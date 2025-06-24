@@ -1,6 +1,6 @@
 // Notification.jsx
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { useGetNotificationsQuery } from '../api/notificationsApi';
+import { useGetNotificationsQuery , useDeleteAllNotificationsMutation} from '../api/notificationsApi';
 import { useSelector } from 'react-redux';
 import useSupabaseNotifications from '../hooks/useSupabaseNotifications';
 import { toast } from 'react-hot-toast';
@@ -9,6 +9,8 @@ const Notifications = () => {
 
 const user = useSelector((state) => state.user.user);
 const role = useSelector((state) => state.user.role);
+  const [deleteAllNotifications] = useDeleteAllNotificationsMutation(); // 👈 خليه فوق الشرط
+
   const [isOpen, setIsOpen] = useState(false);
   const { data: notifications, isLoading, error, refetch } = useGetNotificationsQuery();
   
@@ -20,7 +22,7 @@ const role = useSelector((state) => state.user.role);
   const storedUserId = localStorage.getItem('user-id') || localStorage.getItem('userId');
   const userId = useMemo(() => user?.id || storedUserId, [user?.id, storedUserId]);
 
-  // Create a stable callback that won't change on every render
+
   const handleNewNotification = useCallback((newNotification) => {
     // Prevent duplicate processing
     if (processingRef.current) {
@@ -72,7 +74,21 @@ const role = useSelector((state) => state.user.role);
     return null;
   }
 
+  // State for delete confirmation
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Function to delete all notifications
+ const handleDeleteAllNotifications = async () => {
+  try {
+    await deleteAllNotifications().unwrap();
+    toast.success('All notifications deleted!', { icon: '🗑️' });
+    refetch();
+    setShowDeleteConfirm(false);
+  } catch (err) {
+    console.error('❌ Error deleting notifications:', err);
+    toast.error('Failed to delete notifications');
+  }
+};
 
   const unreadCount = notifications?.filter(n => !n.seen)?.length || 0;
 
@@ -138,7 +154,7 @@ const role = useSelector((state) => state.user.role);
               )}
               {/* Debug info - remove in production */}
               <p className="text-xs text-gray-500 mt-1">
-                User ID: {userId} | Total: {notifications?.length || 0} | RT: {isConnected ? '✅' : '❌'}
+                Total: {notifications?.length || 0} | RT: {isConnected ? '✅' : '❌'}
               </p>
             </div>
 
@@ -240,28 +256,73 @@ const role = useSelector((state) => state.user.role);
               )}
             </div>
 
-            {/* Footer */}
+            {/* Footer with Mark as Read and Delete All buttons */}
             {notifications?.length > 0 && (
               <div className="p-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-              <button
-              onClick={async () => {
-                const storedUserId = localStorage.getItem('user-id');
-                await supabase
-                  .from('notifications')
-                  .update({ seen: true })
-                  .eq('user_id', storedUserId);
-                refetch();
-              }}
-              className="w-full text-center text-red-600 hover:text-red-700 font-medium text-sm py-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
-            >
-              Mark all as read
-            </button>
-
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      const storedUserId = localStorage.getItem('user-id');
+                      await supabase
+                        .from('notifications')
+                        .update({ seen: true })
+                        .eq('user_id', storedUserId);
+                      refetch();
+                    }}
+                    className="flex-1 text-center text-red-600 hover:text-red-700 font-medium text-sm py-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                  >
+                    Mark all as read
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex-1 text-center text-gray-600 hover:text-red-600 font-medium text-sm py-2 hover:bg-red-50 rounded-lg transition-colors duration-200 flex items-center justify-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete all
+                  </button>
+                </div>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-gray-900">Delete All Notifications?</h3>
+                <p className="text-sm text-gray-600">This action cannot be undone.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAllNotifications}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Overlay to close dropdown */}
       {isOpen && (
