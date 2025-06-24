@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-import store from './applicationStore';
+// import store from './applicationStore';
 import './App.css';
 import viteLogo from '/vite.svg';
 
@@ -52,6 +52,10 @@ import ItianProfile from './pages/profiles/ItianProfile.jsx';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
 
+
+// RAG Search
+import RagChat from './AI Chat/RagChat.jsx';
+
 function App() {
   const user = useSelector((state) => state.user.user);
   const dispatch = useDispatch();
@@ -67,7 +71,6 @@ function App() {
   }, [user, dispatch]);
 
   return (
-    <Provider store={store}>
       <Router>
         <Routes>
           {/* 🟩 Pages without layout */}
@@ -114,9 +117,12 @@ function App() {
           <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
           <Route path="/profile/:username" element={<ViewItianProfile />} />
+
+          {/* cahtAI route */}
+                  <Route path="/rag" element={<RagChat />} />
+
         </Routes>
       </Router>
-    </Provider>
   );
 }
 

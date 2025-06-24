@@ -4,6 +4,8 @@ import { FiLinkedin, FiGithub, FiExternalLink } from 'react-icons/fi';
 
 const ItianSidebarProfile = ({ profile }) => {
   if (!profile) return null;
+  console.log("🧩 Sidebar profile:", profile);
+
 
   return (
     <motion.div 
