@@ -6,7 +6,9 @@ import useSupabaseNotifications from '../hooks/useSupabaseNotifications';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 const Notifications = () => {
-  const { user } = useSelector(state => state.user);
+
+const user = useSelector((state) => state.user.user);
+const role = useSelector((state) => state.user.role);
   const [isOpen, setIsOpen] = useState(false);
   const { data: notifications, isLoading, error, refetch } = useGetNotificationsQuery();
   
@@ -60,11 +62,17 @@ const Notifications = () => {
   // Setup real-time notifications with stable userId
   const { cleanup, isConnected } = useSupabaseNotifications(handleNewNotification, userId);
 
-  // Check permissions
-  if (!user?.role || user.role !== 'itian') {
-    console.log('🚫 User role check failed:', user?.role);
+  if (!user || !role) {
+  console.log('⏳ Waiting for user data...');
+  return null; // ممكن تحط لودر هنا لو حابة
+  }
+
+  if (!['itian', 'employer'].includes(role)) {
+    console.log('🚫 User role not authorized:', role);
     return null;
   }
+
+
 
   const unreadCount = notifications?.filter(n => !n.seen)?.length || 0;
 
@@ -74,10 +82,10 @@ const Notifications = () => {
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300 group"
+          className="relative p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-red-300 group"
         >
           <svg 
-            className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-200" 
+            className="w-6 h-6 text-gray-600 group-hover:text-red-600 transition-colors duration-200" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -108,7 +116,7 @@ const Notifications = () => {
           <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 transform origin-top-right">
             
             {/* Header */}
-            <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+            <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-red-50 to-pink-50 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
@@ -124,7 +132,7 @@ const Notifications = () => {
                 </button>
               </div>
               {unreadCount > 0 && (
-                <p className="text-sm text-blue-600 mt-1 font-medium">
+                <p className="text-sm text-red-600 mt-1 font-medium">
                   {unreadCount} new notification{unreadCount !== 1 ? 's' : ''}
                 </p>
               )}
@@ -138,7 +146,7 @@ const Notifications = () => {
             <div className="max-h-80 overflow-y-auto">
               {isLoading ? (
                 <div className="p-6 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-2"></div>
                   <p className="text-gray-500">Loading notifications...</p>
                 </div>
               ) : error ? (
@@ -152,7 +160,7 @@ const Notifications = () => {
                   <p className="text-gray-500 text-sm mt-1">Please try again</p>
                   <button 
                     onClick={() => refetch()}
-                    className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                    className="mt-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
                   >
                     Retry
                   </button>
@@ -194,14 +202,14 @@ const Notifications = () => {
                             }
                           }}
                           className={`p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer group ${
-                            !notification.seen ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                            !notification.seen ? 'bg-red-50 border-l-4 border-red-500' : ''
                           }`}
                         >
                         <div className="flex items-start gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            isUnread ? 'bg-blue-100' : 'bg-gray-100'
+                            isUnread ? 'bg-red-100' : 'bg-gray-100'
                           }`}>
-                            <svg className={`w-5 h-5 ${isUnread ? 'text-blue-600' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-5 h-5 ${isUnread ? 'text-red-600' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
@@ -210,7 +218,7 @@ const Notifications = () => {
                               <h4 className={`font-semibold text-sm truncate ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>
                                 {notification.title}
                               </h4>
-                              {isUnread && <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 ml-2"></span>}
+                              {isUnread && <span className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0 ml-2"></span>}
                             </div>
                             <p className="text-gray-600 text-sm mt-1 line-clamp-2">
                               {notification.message}
@@ -239,7 +247,7 @@ const Notifications = () => {
                   .eq('user_id', storedUserId);
                 refetch();
               }}
-              className="w-full text-center text-blue-600 hover:text-blue-700 font-medium text-sm py-2 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              className="w-full text-center text-red-600 hover:text-red-700 font-medium text-sm py-2 hover:bg-red-50 rounded-lg transition-colors duration-200"
             >
               Mark all as read
             </button>

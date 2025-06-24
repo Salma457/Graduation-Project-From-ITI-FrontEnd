@@ -51,9 +51,9 @@ import ItianProfile from './pages/profiles/ItianProfile.jsx';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
 
-// import useAuthInit from './hooks/useAuthInit';
+import useAuthInit from './hooks/useAuthInit';
 function App() {
-  // useAuthInit();
+  useAuthInit();
   const user = useSelector((state) => state.user.user);
   const dispatch = useDispatch();
 

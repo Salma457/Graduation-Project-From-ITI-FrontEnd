@@ -1,10 +1,8 @@
-// hooks/useAuthInit.js
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { setUser } from '../store/userSlice';
 
-// useAuthInit.js
 const useAuthInit = () => {
   const dispatch = useDispatch();
 
@@ -12,46 +10,43 @@ const useAuthInit = () => {
     const token = localStorage.getItem('access-token');
     if (!token) return;
 
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
       try {
-        const profileResponse = await axios.get('http://localhost:8000/api/user', {
+        const config = {
           headers: {
             Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
           },
-        });
+        };
 
-        const user = profileResponse.data;
-
-        if (user.role === 'itian') {
-          const itianProfile = await axios.get('http://localhost:8000/api/itian-profile', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          dispatch(setUser({
-            user,
-            role: 'itian',
-            itian_profile: itianProfile.data,
-          }));
-        } else if (user.role === 'employer') {
-          const employerProfile = await axios.get('http://localhost:8000/api/employer-profile', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          dispatch(setUser({
-            user,
-            role: 'employer',
-            employer_profile: employerProfile.data,
-          }));
+        try {
+          const res = await axios.get('http://localhost:8000/api/itian-profile', config);
+          const userData = res.data.user || res.data;
+          dispatch(setUser({ ...userData, role: 'itian' }));
+          localStorage.setItem('user', JSON.stringify({ ...userData, role: 'itian' }));
+          localStorage.setItem('user-id', userData?.id || userData?.user_id);
+          return;
+        } catch (err) {
         }
 
-        // Add admin case if needed
-      } catch (err) {
-        console.error("Auth Init Error:", err);
+        try {
+          const res = await axios.get('http://localhost:8000/api/employer-profile', config);
+          const userData = res.data.user || res.data;
+          dispatch(setUser({ ...userData, role: 'employer' }));
+          localStorage.setItem('user', JSON.stringify({ ...userData, role: 'employer' }));
+          localStorage.setItem('user-id', userData?.id || userData?.user_id);
+          return;
+        } catch (err) {
+        }
+
+        console.warn("❌ No valid profile found for current user.");
+      } catch (error) {
+        console.error('🔥 Auth Init Error:', error);
       }
     };
 
-    fetchUser();
-  }, []);
+    fetchUserData();
+  }, [dispatch]);
 };
 
 export default useAuthInit;

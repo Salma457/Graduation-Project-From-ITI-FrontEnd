@@ -37,6 +37,7 @@ const Navbar = () => {
         {role === 'admin' && (
           <Link to="/admin/dashboard" className="hover:text-green-600">Dashboard</Link>
         )}
+        
       </div>
     </nav>
   );

@@ -170,12 +170,13 @@ useEffect(() => {
 
   const checkColumnExists = async () => {
     try {
+      // Try a query that would fail if column doesn't exist
       const { error } = await supabase
         .from('ch_messages')
         .select('read_at')
-        .limit(0); 
+        .limit(0); // Empty query just to test column existence
       
-      return !error;
+      return !error; // If no error, column exists
     } catch (err) {
       return false;
     }
@@ -231,18 +232,17 @@ const fetchContacts = useCallback(async () => {
 
     const data = await response.json();
     
-   const transformedContacts = data.map((msg) => ({
-  id: msg.id,
- contact_id: msg.from_id === numericUserId ? msg.to_id : msg.from_id,  contact_name: msg.contact_name || `User ${msg.from_id === numericUserId ? msg.to_id : msg.from_id}`,
-  contact_avatar: msg.contact_avatar || null,
-  body: msg.body,
-  created_at: msg.created_at,
-  from_id: msg.from_id,
-}));
+    const transformedContacts = data.map((msg) => ({
+      id: msg.id,
+      contact_id: msg.from_id === numericUserId ? msg.to_id : msg.from_id,
+      contact_name: msg.contact_name || `User ${msg.from_id === numericUserId ? msg.to_id : msg.from_id}`,
+      contact_avatar: msg.contact_avatar || null,
+      body: msg.body,
+      created_at: msg.created_at,
+      from_id: msg.from_id,
+    }));
 
-transformedContacts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-setContacts(transformedContacts);
+    setContacts(transformedContacts);
     await initializeUnreadCounts(transformedContacts);
   } catch (err) {
     console.error('Error fetching contacts:', err);
@@ -255,17 +255,13 @@ setContacts(transformedContacts);
 }, [fetchContacts]); // Remove user and name dependencies, use contactId and contactName instead
 
   // Fetch messages between selected contact and current user
-const handleContactSelect = useCallback((contact) => {
-  // Always set the selected contact first
-  setSelectedContact(contact);
-  
-  // Then fetch messages and mark as read
-  fetchMessages(contact.contact_id);
-  markMessagesAsRead(contact.contact_id);
-  
-  // Close mobile menu if open
-  setIsMobileMenuOpen(false);
-}, []);
+  const handleContactSelect = (contact) => {
+    setSelectedContact(contact);
+    setUnreadMessages(prev => ({ ...prev, [contact.contact_id]: 0 }));
+    fetchMessages(contact.contact_id);
+    markMessagesAsRead(contact.contact_id); // Mark messages as read when opening chat
+    setIsMobileMenuOpen(false);
+  };
 
   const fetchMessages = async (contactId) => {
     const { data, error } = await supabase
@@ -283,108 +279,113 @@ const handleContactSelect = useCallback((contact) => {
   };
 
   // Send message
- const sendMessage = async () => {
-  if (!newMessage.trim() || !selectedContact) return;
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedContact) return;
 
-  const trimmedMessage = newMessage.trim();
-  try {
-    const messageData = {
-      from_id: userId,
-      to_id: selectedContact.contact_id, // Ensure we're using the correct contact ID
-      body: trimmedMessage,
-      created_at: new Date().toISOString(),
-    };
+    const trimmedMessage = newMessage.trim();
+    try {
+      const messageData = {
+        from_id: userId,
+        to_id: selectedContact.contact_id,
+        body: trimmedMessage,
+        created_at: new Date().toISOString(),
+      };
 
-    const { data, error } = await supabase
-      .from('ch_messages')
-      .insert([messageData])
-      .select();
+      const { data, error } = await supabase
+        .from('ch_messages')
+        .insert([messageData])
+        .select();
 
-    if (error) {
-      console.error('Error sending message:', error);
-    } else if (data && data.length > 0) {
-      // Add new message to message list
-      setMessages(prev => [...prev, data[0]]);
+      if (error) {
+        console.error('Error sending message:', error);
+      } else if (data && data.length > 0) {
+        // Add new message to message list
+        setMessages((prev) => [...prev, data[0]]);
 
-      // Update last message in contacts list without changing the selected contact
-      setContacts(prev => {
-      const updatedContacts = prev.map(contact =>
-        contact.contact_id === selectedContact.contact_id
-          ? {
-              ...contact,
-              body: trimmedMessage,
-              created_at: data[0].created_at,
-              id: contact.id.toString().startsWith('temp-') ? data[0].id : contact.id,
-            }
-          : contact
-      );
-      
-      return updatedContacts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    });
+        // Update last message content and time in contacts list
+        setContacts((prev) =>
+          prev.map((contact) =>
+            contact.contact_id === selectedContact.contact_id
+              ? {
+                  ...contact,
+                  body: trimmedMessage,
+                  created_at: data[0].created_at,
+                  id: contact.id.toString().startsWith('temp-') ? data[0].id : contact.id, // Update temp ID with real ID
+                }
+              : contact
+          )
+        );
 
-      // Clear input after success
-      setNewMessage('');
+        // Clear input after success
+        setNewMessage('');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
     }
-  } catch (err) {
-    console.error('Error sending message:', err);
-  }
-};
+  };
 
   // Set up real-time subscription
- useEffect(() => {
-  if (!userId) return;
+  useEffect(() => {
+    if (!userId) return;
 
-  const channel = supabase
-    .channel('public:ch_messages')
-    .on(
-      'postgres_changes',
-      { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'ch_messages',
-        filter: `or(to_id.eq.${userId},from_id.eq.${userId})`
-      },
-      (payload) => {
-        // Only add to messages if it belongs to current conversation
-        if (selectedContact && 
-            (payload.new.from_id === selectedContact.contact_id || 
-             payload.new.to_id === selectedContact.contact_id)) {
-          setMessages(prev => [...prev, payload.new]);
-        }
-        
-        // Update unread counts for other contacts
-        if (!selectedContact || payload.new.from_id !== selectedContact.contact_id) {
-          setUnreadCounts(prev => ({
-            ...prev,
-            [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
-          }));
-        }
-        
-        // Update contacts list
-        setContacts(prev => {
-          const existingContactIndex = prev.findIndex(
-            c => c.contact_id === payload.new.from_id || c.contact_id === payload.new.to_id
-          );
-          
-          if (existingContactIndex !== -1) {
-            const updatedContacts = [...prev];
-            updatedContacts[existingContactIndex] = {
-              ...updatedContacts[existingContactIndex],
-              body: payload.new.body,
-              created_at: payload.new.created_at
-            };
-            return updatedContacts;
+    const channel = supabase
+      .channel('public:ch_messages')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'ch_messages',
+          filter: `to_id=eq.${userId}`
+        },
+        (payload) => {
+          if (selectedContact && payload.new.from_id === selectedContact.contact_id) {
+            setMessages(prev => [...prev, payload.new]);
+            // Don't increment unread count for currently selected contact
+          } else {
+            // Increment unread count for other contacts
+            setUnreadCounts(prev => ({
+              ...prev,
+              [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
+            }));
           }
-          return prev;
-        });
-      }
-    )
-    .subscribe();
+          
+          setContacts(prev => {
+            const existingContactIndex = prev.findIndex(
+              contact => contact.contact_id === payload.new.from_id
+            );
+            
+            if (existingContactIndex !== -1) {
+              const updatedContacts = [...prev];
+              updatedContacts[existingContactIndex] = {
+                ...updatedContacts[existingContactIndex],
+                body: payload.new.body,
+                created_at: payload.new.created_at
+              };
+              return updatedContacts;
+            } else {
+              return [{
+                id: payload.new.id,
+                contact_id: payload.new.from_id,
+                contact_name: `User ${payload.new.from_id}`,
+                contact_avatar: null,
+                body: payload.new.body,
+                created_at: payload.new.created_at,
+                from_id: payload.new.from_id
+              }, ...prev];
+            }
+          });
+        }
+      )
+      .subscribe();
 
-  return () => {
-    channel.unsubscribe();
-  };
-}, [userId, selectedContact]); // Include selectedContact in dependencies
+    return () => {
+      if (channel && typeof channel.unsubscribe === 'function') {
+        channel.unsubscribe();
+      }
+    };
+  }, [userId, selectedContact]);
+
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { 
       hour: '2-digit', 
