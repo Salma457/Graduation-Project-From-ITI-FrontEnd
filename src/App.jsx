@@ -97,8 +97,8 @@ function App() {
             <Route path="/create-itian-profile" element={<CreateItianProfile />} />
             <Route path="/itian/mychat" element={<ChatApp />} />
             <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
-           <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
-           <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
+            <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+            <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           </Route>
 
           {/* 🟦 Employer layout */}
@@ -118,8 +118,7 @@ function App() {
           </Route>
 
 
-          {/* 🟪 Public profiles (outside layout or custom later) */}
-
+         
 
         </Routes>
         

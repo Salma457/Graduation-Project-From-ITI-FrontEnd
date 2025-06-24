@@ -71,10 +71,18 @@ useEffect(() => {
       let displayName = contactName || `User ${contactId}`;
       let displayImage = null;
 
-      if (itiData) {
-        displayName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim() || displayName;
-        displayImage = itiData.profile_picture;
-      } else if (empData) {
+      if (itiData && !itiError) {
+        displayName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
+
+        if (itiData.profile_picture) {
+          const { data: publicUrlData } = supabase.storage
+            .from('profile_pictures') // اسم البكت
+            .getPublicUrl(itiData.profile_picture.replace('profile_pictures/', '')); // إزالة الجزء الزايد
+
+          displayImage = publicUrlData?.publicUrl;
+        }
+      }
+      else if (empData) {
         displayName = empData.company_name || displayName;
         displayImage = empData.company_logo;
       } else if (userData) {
@@ -599,7 +607,7 @@ useEffect(() => {
               ) : (
                 filteredContacts.map((contact) => (
                   <div
-                   key={`${contact.id}-${contact.contact_id}`} // مفتاح مركب لضمان التفرد
+                   key={`${contact.id}-${contact.contact_id}`} 
                     onClick={() => handleContactSelect(contact)}
 
                     className={`p-3 border-b border-red-100 relative cursor-pointer transition-all duration-200 hover:shadow-md ${
@@ -669,10 +677,18 @@ useEffect(() => {
                       <Menu size={24} />
                     </button>
                     <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br  rounded-full flex items-center justify-center shadow-lg ring-2 ring-white"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
-                        <User size={20} className="text-white" />
+                       <div className="w-10 h-10 rounded-full overflow-hidden shadow ring-2 ring-red-300">
+                          {selectedContact?.contact_avatar ? (
+                            <img 
+                              src={selectedContact.contact_avatar}
+                              alt={selectedContact.contact_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User size={24} className="text-red-700 w-full h-full" />
+                          )}
+                        </div>
                       </div>
-                    </div>
                     <div>
                       <h3 className="font-semibold text-white drop-shadow-md">
                         {selectedContact ? selectedContact.contact_name : "Select a chat"}

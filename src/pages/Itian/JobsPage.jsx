@@ -34,6 +34,10 @@ const JobsPage = () => {
     pagination,
   } = useSelector((state) => state.application);
 
+  console.log("Jobs:", jobs);
+  console.log("Loading:", loading);
+  console.log("Pagination:", pagination);
+
   useEffect(() => {
     dispatch(fetchJobs({
       page: pagination.currentPage,
@@ -91,12 +95,16 @@ const JobsPage = () => {
       <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading Jobs...</p>
     </div>
   );
-  
+
   if (error) return (
     <div className="error-container">
       <div className="error-icon">!</div>
       <p>Error: {error}</p>
     </div>
+  );
+
+  const filteredJobs = jobs.filter(
+    job => (job.status || '').toLowerCase() !== 'pending'
   );
 
   return (
@@ -128,16 +136,10 @@ const JobsPage = () => {
         <Filters onFilter={handleFilter} currentFilters={filters} />
 
         <div className="jobs-list-container">
-          
-
           <div className="jobs-list">
-            {jobs.filter(job => ['open', 'closed'].includes((job.status || '').toLowerCase())).length > 0 ? (
-              jobs
-                .filter(job => ['open', 'closed'].includes((job.status || '').toLowerCase()))
-                .map((job) => (
-                  <JobCard key={job.id} job={job} />
-                ))
-            ) : (
+            {loading ? (
+              <div className="text-center py-10 text-gray-500">Loading jobs...</div>
+            ) : filteredJobs.length === 0 ? (
               <div className="no-jobs">
                 <div className="no-jobs-icon">😕</div>
                 <p>No jobs found</p>
@@ -148,6 +150,10 @@ const JobsPage = () => {
                   
                 </button>
               </div>
+            ) : (
+              filteredJobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))
             )}
           </div>
 
@@ -161,7 +167,7 @@ const JobsPage = () => {
                 >
                   Previous
                 </button>
-                
+
                 <div className="page-numbers">
                   {Array.from({ length: Math.min(5, pagination.lastPage) }, (_, i) => {
                     let pageNum;
@@ -174,7 +180,7 @@ const JobsPage = () => {
                     } else {
                       pageNum = pagination.currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <button
                         key={pageNum}
@@ -186,7 +192,7 @@ const JobsPage = () => {
                     );
                   })}
                 </div>
-                
+
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={pagination.currentPage === pagination.lastPage}

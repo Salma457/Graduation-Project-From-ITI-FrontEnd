@@ -1,13 +1,12 @@
 import { Sparkles, ChevronLeft, Star, Award, MapPin, Download, Eye, X, AlertCircle, Calendar, Mail, Phone, User, Bookmark, Info, MessageCircle, ChevronRight, CheckCircle, XCircle, Clock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Confetti from 'react-confetti';
 import 'react-toastify/dist/ReactToastify.css';
 
 const JobApplications = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,7 +19,7 @@ const JobApplications = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8); // 8 cards per page (3x4 grid)
 
-  const ApplicationCard = ({ app, index, onViewMore, onViewProfile, onMessage = false }) => {
+  const ApplicationCard = ({ app, index, onViewMore, onViewProfile = false }) => {
     const getStatusInfo = (status) => {
       switch (status) {
         case 'approved':
