@@ -20,12 +20,16 @@ const schema = Yup.object().shape({
       if (!value || !value[0]) return true;
       return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
     }),
-  company_description: Yup.string().nullable(),
+  company_description: Yup.string()
+    .required("Company description is required")
+    .max(1000, "Company description must be at most 1000 characters"),
   website_url: Yup.string()
-    .nullable()
+    .required("Website URL is required")
     .url("Website URL must be a valid URL")
     .max(500, "Website URL must be at most 500 characters"),
-  industry: Yup.string().nullable().max(255, "Industry must be at most 255 characters"),
+  industry: Yup.string()
+    .required("Industry is required")
+    .max(255, "Industry must be at most 255 characters"),
   company_size: Yup.string()
     .nullable()
     .notRequired()
@@ -216,7 +220,7 @@ const CreateEmployerProfile = () => {
               {/* Company Description */}
               <div>
                 <label className="block text-sm font-bold text-gray-600 mb-2">
-                  Company Description
+                  Company Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   {...register("company_description")}
@@ -232,7 +236,7 @@ const CreateEmployerProfile = () => {
               {/* Website URL */}
               <div>
                 <label className="block text-sm font-bold text-gray-600 mb-2">
-                  Website URL
+                  Website URL <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -254,7 +258,7 @@ const CreateEmployerProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-600 mb-2">
-                    Industry
+                    Industry <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
