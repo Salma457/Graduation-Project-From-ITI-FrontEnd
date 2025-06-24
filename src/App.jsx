@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-import store from './applicationStore';
+import store from './store';
 import './App.css';
 import viteLogo from '/vite.svg';
 
@@ -68,6 +68,8 @@ function App() {
   }, [user, dispatch]);
 
   return (
+    <Provider store={store}>
+      
       <Router>
         <Routes>
           {/* 🟩 Pages without layout */}
@@ -94,6 +96,9 @@ function App() {
             <Route path="/itian-profile" element={<ItianProfile />} />
             <Route path="/create-itian-profile" element={<CreateItianProfile />} />
             <Route path="/itian/mychat" element={<ChatApp />} />
+            <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+           <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+           <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           </Route>
 
           {/* 🟦 Employer layout */}
@@ -107,18 +112,19 @@ function App() {
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/employer-profile" element={<EmployerProfile />} />
             <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+            <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+            <Route path="/profile/:username" element={<ViewItianProfile />} />
+
           </Route>
 
 
           {/* 🟪 Public profiles (outside layout or custom later) */}
-          <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
-          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
-          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
-          <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
-          <Route path="/profile/:username" element={<ViewItianProfile />} />
+
 
         </Routes>
+        
       </Router>
+      </Provider>
   );
 }
 

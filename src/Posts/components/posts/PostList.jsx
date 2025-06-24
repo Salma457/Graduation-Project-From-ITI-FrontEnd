@@ -12,6 +12,7 @@ import ItianSidebarProfile from './ItianSidebarProfile';
 
 const PostList = () => {
   const dispatch = useDispatch();
+  // Guard against undefined state.itian
   const user = useSelector((state) => state.itian?.user ?? null);
 
   useEffect(() => {
@@ -124,15 +125,15 @@ const PostList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Left Sidebar - تم تقليل العرض هنا */}
-        <div className="hidden lg:block w-64 bg-white border-r border-gray-200 p-4 sticky top-0 h-screen overflow-y-auto">
+      {/* Responsive Sidebar: always visible, above on mobile, left on desktop */}
+      <div className="block lg:flex">
+        <div className="w-full mb-4 lg:w-64 lg:mb-0 lg:block bg-white border-r border-gray-200 p-4 sticky top-0 h-auto lg:h-screen overflow-y-auto">
           <div className="space-y-6">
             {user && <ItianSidebarProfile profile={user} />}
           </div>
         </div>
 
-        {/* Main Content - تم تعديل المساحة هنا */}
+        {/* Main Content */}
         <div className="flex-1 py-8 pl-2 pr-4 sm:pl-4 sm:pr-6 lg:pl-6 lg:pr-8">
           <div className="max-w-3xl mx-auto">
             {/* Header with Tabs */}

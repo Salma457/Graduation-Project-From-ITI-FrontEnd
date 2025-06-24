@@ -257,3 +257,72 @@
   color: #e35d5b;
   font-style: italic;
 }
+
+/* Responsive Design for Jobs Page */
+@media (max-width: 1024px) {
+  .jobs-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 800px) {
+  .jobs-page {
+    padding: 10px;
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+  .page-title {
+    font-size: 22px;
+  }
+  .search-bar {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .jobs-page {
+    padding: 4px;
+    min-width: 0;
+  }
+  .jobs-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .jobs-list-container {
+    padding: 0;
+  }
+  .no-jobs {
+    padding: 18px 6px;
+    font-size: 15px;
+  }
+  .no-jobs-icon {
+    font-size: 22px;
+  }
+  .pagination-container {
+    margin-top: 18px;
+  }
+  .pagination-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+    min-width: 24px;
+  }
+  .search-input {
+    font-size: 14px;
+    padding: 8px 0;
+  }
+  .search-button {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+}

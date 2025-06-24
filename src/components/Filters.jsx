@@ -42,7 +42,7 @@ const Filters = ({ currentFilters, onFilter }) => {
 
   const statuses = [
     { value: 'Open', label: 'Open' },
-    { value: 'Pending', label: 'Pending' },
+   
     { value: 'Closed', label: 'Closed' }
   ];
 
@@ -111,7 +111,7 @@ const Filters = ({ currentFilters, onFilter }) => {
         </div>
 
         <div className="filter-actions">
-          <button type="submit" className="apply-btn">
+          <button type="submit" className="apply-btnn">
             Apply
           </button>
           <button type="button" onClick={handleClear} className="clear-btn">

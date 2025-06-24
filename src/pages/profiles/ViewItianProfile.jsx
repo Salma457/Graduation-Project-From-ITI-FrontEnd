@@ -221,7 +221,7 @@ const ViewItianProfile = () => {
               <button
               onClick={() => {
                 if (profile) {
-                  navigate('/mychat', {
+                  navigate('/itian/mychat', {
                     state: {
                       user: profile.user_id, // استخدام user_id بدلاً من id
                       name: `${profile.first_name} ${profile.last_name}`,

@@ -131,17 +131,19 @@ const JobsPage = () => {
           
 
           <div className="jobs-list">
-            {jobs.length > 0 ? (
-              jobs.map((job) => (
-                <JobCard key={job.id} job={job} />
-              ))
+            {jobs.filter(job => ['open', 'closed'].includes((job.status || '').toLowerCase())).length > 0 ? (
+              jobs
+                .filter(job => ['open', 'closed'].includes((job.status || '').toLowerCase()))
+                .map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))
             ) : (
               <div className="no-jobs">
                 <div className="no-jobs-icon">😕</div>
                 <p>No jobs found</p>
                 <button
                   onClick={handleClearAll}
-                   className="clear-all-btn"
+                  className="clear-all-btn"
                 >
                   
                 </button>

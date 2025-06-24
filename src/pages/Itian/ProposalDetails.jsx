@@ -4,7 +4,7 @@ import axios from "axios";
 import Modal from "react-modal";
 import "../../css/ProposalDetails.css";
 
-import { Sparkles } from 'lucide-react'; // أو أي مكتبة الأيقونات التي تستخدمها
+import { Sparkles } from 'lucide-react';
 
 
 const ProposalDetails = () => {
@@ -23,7 +23,7 @@ const ProposalDetails = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
 
-  // ✅ نعملها كـ دالة مستقلة عشان نعيد استدعائها بعد التعديل
+
   const fetchProposal = async () => {
     try {
       const token = localStorage.getItem('access-token');

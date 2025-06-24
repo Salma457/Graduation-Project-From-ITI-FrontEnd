@@ -46,25 +46,21 @@ const handleContactSelect = (contact) => {
   }
 };
 
-// استبدل useEffect الخاص بـ contactId بهذا الكود
 useEffect(() => {
   const handleContactFromRoute = async () => {
     if (contactId && !contacts.some(c => c.contact_id === contactId)) {
-      // جلب معلومات المستخدم
       const { data: userData } = await supabase
         .from('users')
         .select('name, email')
         .eq('id', contactId)
         .single();
 
-      // جلب معلومات ITI Profile
       const { data: itiData } = await supabase
         .from('itian_profiles')
         .select('first_name, last_name, profile_picture')
         .eq('user_id', contactId)
         .single();
 
-      // جلب معلومات Employer Profile
       const { data: empData } = await supabase
         .from('employer_profiles')
         .select('company_name, company_logo')
