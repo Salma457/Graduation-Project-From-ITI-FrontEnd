@@ -11,6 +11,7 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
+    uuid:"",
     password_confirmation: "",
     role: "",
     certificate: null,

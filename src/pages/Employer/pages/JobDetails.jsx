@@ -3,33 +3,47 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
   MapPin, Clock, DollarSign, Calendar, FileText, 
   Award, Briefcase, ArrowLeft, Users, 
-  CheckCircle, AlertCircle, Building,Sparkles
+  CheckCircle, AlertCircle, Building, Sparkles
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchJobById } from '../jobPostSlice';
 
 const JobDetails = () => {
   const dispatch = useDispatch();
-  const { loading, error } = useSelector(state => state.jobPost);
   const { id } = useParams();
   const navigate = useNavigate();
+  const { loading, error, jobDetails } = useSelector(state => state.jobPost);
+  
+  // Debug logging
+  console.log('Redux State:', { loading, error, jobDetails });
+  
+  const job = jobDetails;
 
   useEffect(() => {
-    dispatch(fetchJobById(id));
+    if (id) {
+      console.log('Fetching job with ID:', id);
+      dispatch(fetchJobById(id))
+        .unwrap()
+        .then(data => {
+          console.log('Job fetched successfully:', data);
+        })
+        .catch(error => {
+          console.error('Failed to fetch job:', error);
+        });
+    }
   }, [dispatch, id]);
-
-  const job = useSelector(state => state.jobPost.jobDetails);
     
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'open': return 'from-red-500 to-red-600';
+      case 'open': return 'from-green-500 to-green-600';
       case 'closed': return 'from-gray-600 to-gray-700';
-      case 'draft': return 'from-red-300 to-red-400';
+      case 'draft': return 'from-yellow-400 to-yellow-500';
       default: return 'from-red-400 to-red-500';
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'Not specified';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -37,40 +51,65 @@ const JobDetails = () => {
     });
   };
 
+  // Enhanced loading state
   if (loading) {
     return (
- <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
-          <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-4">
+            <div className="w-20 h-20 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
+            <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
+          </div>
+          <p className="text-gray-800 text-xl font-medium animate-pulse">Loading job details...</p>
         </div>
-        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading job details...</p>
-    </div>
+      </div>
     );
   }
 
+  // Enhanced error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white border border-red-200 rounded-lg p-8 text-center max-w-md shadow-sm">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 text-lg font-medium">{error?.message || 'An error occurred'}</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Job</h2>
+          <p className="text-red-600 mb-4">{error?.message || 'An error occurred while fetching job details'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
+  // Enhanced not found state
   if (!job) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white border border-gray-200 rounded-lg p-8 text-center max-w-md shadow-sm">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-700 text-lg font-medium">Job not found.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Job Not Found</h2>
+          <p className="text-gray-700 mb-4">The job you're looking for doesn't exist or has been removed.</p>
+          <button
+            onClick={() => navigate('/employer/jobs')}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Back to Jobs
+          </button>
         </div>
       </div>
     );
   }
+
+  // Extract salary information with fallbacks
+  const salaryMin = job.salary_range?.min || job.salary_range_min || 'N/A';
+  const salaryMax = job.salary_range?.max || job.salary_range_max || 'N/A';
+  const currency = job.salary_range?.currency || job.currency || 'EGP';
+  const company = job.employer?.name || job.company || 'Company Name';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,29 +130,29 @@ const JobDetails = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <Building className="w-5 h-5 text-gray-500" />
-                    <span className="text-gray-600 font-medium">{job.company}</span>
+                    <span className="text-gray-600 font-medium">{company}</span>
                   </div>
                   
                   <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                    {job.job_title}
+                    {job.job_title || 'Job Title'}
                   </h1>
                   
                   <p className="text-gray-700 text-lg mb-6 leading-relaxed">
-                    {job.description}
+                    {job.description || 'No description available'}
                   </p>
                   
                   <div className="flex flex-wrap gap-3">
                     <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-2">
                       <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 font-medium">{job.job_location}</span>
+                      <span className="text-gray-700 font-medium">{job.job_location || 'Location not specified'}</span>
                     </div>
                     <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-2">
                       <Briefcase className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 font-medium">{job.job_type}</span>
+                      <span className="text-gray-700 font-medium">{job.job_type || 'Type not specified'}</span>
                     </div>
                     <div className={`flex items-center gap-2 bg-gradient-to-r ${getStatusColor(job.status)} rounded-full px-4 py-2 shadow-lg`}>
                       <CheckCircle className="w-4 h-4 text-white" />
-                      <span className="text-white font-medium">{job.status}</span>
+                      <span className="text-white font-medium capitalize">{job.status || 'Status unknown'}</span>
                     </div>
                   </div>
                 </div>
@@ -125,9 +164,12 @@ const JobDetails = () => {
                     <h3 className="text-lg font-semibold text-red-900">Salary Range</h3>
                   </div>
                   <p className="text-2xl font-bold text-red-900 mb-1">
-                    {job.salary_range?.min || job.salary_range_min} - {job.salary_range?.max || job.salary_range_max}
+                    {salaryMin === 'N/A' && salaryMax === 'N/A' ? 
+                      'Not specified' : 
+                      `${Number(salaryMin).toLocaleString()} - ${Number(salaryMax).toLocaleString()}`
+                    }
                   </p>
-                  <p className="text-red-700 text-sm font-medium">{job.currency}</p>
+                  <p className="text-red-700 text-sm font-medium">{currency}</p>
                 </div>
               </div>
             </div>
@@ -145,7 +187,9 @@ const JobDetails = () => {
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Requirements</h2>
               </div>
-              <p className="text-gray-700 leading-relaxed">{job.requirements}</p>
+              <p className="text-gray-700 leading-relaxed">
+                {job.requirements || 'No specific requirements listed'}
+              </p>
             </div>
           </div>
 
@@ -158,7 +202,9 @@ const JobDetails = () => {
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Qualifications</h2>
               </div>
-              <p className="text-gray-700 leading-relaxed">{job.qualifications}</p>
+              <p className="text-gray-700 leading-relaxed">
+                {job.qualifications || 'No specific qualifications listed'}
+              </p>
             </div>
           </div>
         </div>
@@ -181,7 +227,7 @@ const JobDetails = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">Posted Date</p>
                   <p className="text-gray-900 font-semibold">
-                    {job.posted_date ? formatDate(job.posted_date) : 'Not specified'}
+                    {formatDate(job.posted_date)}
                   </p>
                 </div>
               </div>
@@ -193,9 +239,27 @@ const JobDetails = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">Application Deadline</p>
                   <p className="text-gray-900 font-semibold">
-                    {job.application_deadline ? formatDate(job.application_deadline) : 'Not specified'}
+                    {formatDate(job.application_deadline)}
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Stats */}
+        <div className="bg-white border border-red-200 rounded-lg shadow-sm mb-8">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <FileText className="w-6 h-6 text-indigo-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">Job Statistics</h2>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-gray-900">{job.views_count || 0}</p>
+                <p className="text-sm text-gray-600">Views</p>
               </div>
             </div>
           </div>

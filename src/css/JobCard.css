@@ -131,6 +131,8 @@
 
 .view-more-btn:hover {
   background-color: #c04a48;
+    color: white;
+
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(227, 93, 91, 0.2);
 }

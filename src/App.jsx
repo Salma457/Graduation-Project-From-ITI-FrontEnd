@@ -27,7 +27,6 @@ import TrashPage from './pages/Employer/pages/TrashPage';
 import JobDetails from './pages/Employer/pages/JobDetails';
 import JobApplications from './pages/Employer/pages/JobApplications';
 import ChatApp from './pages/Employer/pages/ChatApp';
-
 // Admin
 import adminRoutes from './pages/admin/adminRoutes.jsx';
 
@@ -52,7 +51,9 @@ import ItianProfile from './pages/profiles/ItianProfile.jsx';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
 
+// import useAuthInit from './hooks/useAuthInit';
 function App() {
+  // useAuthInit();
   const user = useSelector((state) => state.user.user);
   const dispatch = useDispatch();
 
@@ -116,8 +117,9 @@ function App() {
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
           <Route path="/profile/:username" element={<ViewItianProfile />} />
         </Routes>
+        
       </Router>
-    </Provider>
+      </Provider>
   );
 }
 

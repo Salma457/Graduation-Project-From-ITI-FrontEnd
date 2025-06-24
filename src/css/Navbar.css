@@ -52,6 +52,7 @@
 
 .nav-link:hover {
   opacity: 0.9;
+  color:white;
 }
 
 .nav-icon {

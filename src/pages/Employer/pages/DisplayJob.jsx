@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchEmployerJobs, editJob, deleteJob } from '../jobPostSlice';
+import { fetchEmployerData, editJob, deleteJob } from '../jobPostSlice'; // Changed from fetchEmployerJobs
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
-import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, ChevronLeft, ChevronRight, Building2, MapPin, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../style/jobList.css';
 
 const JobList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const jobPostState = useSelector(state => state.jobPost || {});
-  const { jobs = [], loading = false, error = null } = jobPostState;
+const jobPostState = useSelector(state => state.jobPost) || {};
+const {
+  jobs = [],
+  loading = false,
+  error = null,
+  employerData = null
+} = jobPostState;
+
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -23,7 +29,7 @@ const JobList = () => {
   const jobsPerPage = 5;
 
   useEffect(() => {
-    dispatch(fetchEmployerJobs());
+    dispatch(fetchEmployerData()); // Changed to fetch both jobs and employer data
   }, [dispatch]);
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
@@ -90,13 +96,9 @@ const JobList = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    try {
       await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
       setModalIsOpen(false);
-      dispatch(fetchEmployerJobs());
-    } catch (error) {
-      Swal.fire('Error!', 'Failed to update job.', 'error');
-    }
+      dispatch(fetchEmployerData()); // Changed to refetch both jobs and employer data
   };
 
   const handleDelete = (jobId) => {
@@ -130,6 +132,10 @@ const JobList = () => {
 
   const getJobInitials = (title) => {
     return title ? title.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'JB';
+  };
+
+  const getCompanyInitials = (name) => {
+    return name ? name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'CO';
   };
 
   // Pagination component
@@ -277,6 +283,115 @@ const JobList = () => {
 
 return (
   <div className="list-container">
+    {/* Company Profile Section */}
+    {employerData && (
+      <div className="company-profile-section" style={{
+        background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+        color: 'white',
+        padding: '32px',
+        borderRadius: '12px',
+        marginBottom: '32px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '16px',
+            background: 'rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            backdropFilter: 'blur(10px)'
+          }}>
+            {employerData.logo_url ? (
+              <img 
+                src={employerData.logo_url} 
+                alt="Company Logo" 
+                style={{ width: '100%', height: '100%', borderRadius: '16px', objectFit: 'cover' }}
+              />
+            ) : (
+              getCompanyInitials(employerData.company_name || employerData.name)
+            )}
+          </div>
+          
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 'bold' }}>
+              {employerData.company_name || employerData.name || 'Company Name'}
+            </h2>
+            <p style={{ margin: '0 0 16px 0', fontSize: '16px', opacity: 0.9 }}>
+              {employerData.company_description || employerData.description || 'No description available'}
+            </p>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center' }}>
+              {employerData.industry && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building2 size={16} />
+                  <span>{employerData.industry}</span>
+                </div>
+              )}
+              
+              {employerData.location && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MapPin size={16} />
+                  <span>{employerData.location}</span>
+                </div>
+              )}
+              
+              {employerData.founded_year && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calendar size={16} />
+                  <span>Founded {employerData.founded_year}</span>
+                </div>
+              )}
+              
+              {employerData.company_size && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={16} />
+                  <span>{employerData.company_size} employees</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional company info */}
+        {(employerData.website || employerData.email || employerData.phone) && (
+          <div style={{ 
+            marginTop: '24px', 
+            paddingTop: '24px', 
+            borderTop: '1px solid rgba(255,255,255,0.2)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '24px'
+          }}>
+            {employerData.website && (
+              <a 
+                href={employerData.website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: 'white', textDecoration: 'none', opacity: 0.9 }}
+              >
+                🌐 {employerData.website}
+              </a>
+            )}
+            {employerData.email && (
+              <span style={{ opacity: 0.9 }}>
+                ✉️ {employerData.email}
+              </span>
+            )}
+            {employerData.phone && (
+              <span style={{ opacity: 0.9 }}>
+                📞 {employerData.phone}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+
     <div className="list-header">
       <h1 className="list-title">Job Listings</h1>
       <div className="list-count">
@@ -495,7 +610,7 @@ return (
                   <div className="list-meta-item">
                     <span className="list-meta-label">Company:</span>
                     <span className="list-meta-value">
-                      {job.company_name || "Company"}
+                      {employerData?.company_name || employerData?.name || "Company"}
                     </span>
                   </div>
                   <div className="list-meta-item">
