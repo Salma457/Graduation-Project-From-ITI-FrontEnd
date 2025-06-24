@@ -283,115 +283,6 @@ const {
 
 return (
   <div className="list-container">
-    {/* Company Profile Section */}
-    {employerData && (
-      <div className="company-profile-section" style={{
-        background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-        color: 'white',
-        padding: '32px',
-        borderRadius: '12px',
-        marginBottom: '32px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '16px',
-            background: 'rgba(255,255,255,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            backdropFilter: 'blur(10px)'
-          }}>
-            {employerData.logo_url ? (
-              <img 
-                src={employerData.logo_url} 
-                alt="Company Logo" 
-                style={{ width: '100%', height: '100%', borderRadius: '16px', objectFit: 'cover' }}
-              />
-            ) : (
-              getCompanyInitials(employerData.company_name || employerData.name)
-            )}
-          </div>
-          
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 'bold' }}>
-              {employerData.company_name || employerData.name || 'Company Name'}
-            </h2>
-            <p style={{ margin: '0 0 16px 0', fontSize: '16px', opacity: 0.9 }}>
-              {employerData.company_description || employerData.description || 'No description available'}
-            </p>
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center' }}>
-              {employerData.industry && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Building2 size={16} />
-                  <span>{employerData.industry}</span>
-                </div>
-              )}
-              
-              {employerData.location && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <MapPin size={16} />
-                  <span>{employerData.location}</span>
-                </div>
-              )}
-              
-              {employerData.founded_year && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Calendar size={16} />
-                  <span>Founded {employerData.founded_year}</span>
-                </div>
-              )}
-              
-              {employerData.company_size && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Users size={16} />
-                  <span>{employerData.company_size} employees</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Additional company info */}
-        {(employerData.website || employerData.email || employerData.phone) && (
-          <div style={{ 
-            marginTop: '24px', 
-            paddingTop: '24px', 
-            borderTop: '1px solid rgba(255,255,255,0.2)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '24px'
-          }}>
-            {employerData.website && (
-              <a 
-                href={employerData.website} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ color: 'white', textDecoration: 'none', opacity: 0.9 }}
-              >
-                🌐 {employerData.website}
-              </a>
-            )}
-            {employerData.email && (
-              <span style={{ opacity: 0.9 }}>
-                ✉️ {employerData.email}
-              </span>
-            )}
-            {employerData.phone && (
-              <span style={{ opacity: 0.9 }}>
-                📞 {employerData.phone}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    )}
-
     <div className="list-header">
       <h1 className="list-title">Job Listings</h1>
       <div className="list-count">
@@ -608,14 +499,12 @@ return (
               <div className="list-card-details">
                 <div className="list-meta">
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Company:</span>
-                    <span className="list-meta-value">
-                      {employerData?.company_name || employerData?.name || "Company"}
-                    </span>
+                    <span className="list-meta-label">Company Type:</span>
+                    <span className="list-meta-value">{job.company_name || "IT Industry"}</span>
                   </div>
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Job Type:</span>
-                    <span className="list-meta-value">{job.job_type || "Full-time"}</span>
+                    <span className="list-meta-label">Year founded:</span>
+                    <span className="list-meta-value">{job.job_type || "2019"}</span>
                   </div>
                 </div>
                 
