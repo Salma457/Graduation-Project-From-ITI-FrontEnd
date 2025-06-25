@@ -11,6 +11,8 @@ import employerProfileReducer from './store/employerProfileSlice';
 import itianReducer from './Posts/store/itianSlice.js';
 import userReducer from './store/userSlice';
 import applicationReducer from './applicationSlice.js'
+
+// import reportsReducer from './store/reportsSlice';
 const store = configureStore({
   reducer: {
     user: userReducer,
@@ -23,6 +25,7 @@ const store = configureStore({
     itianProfile: itianProfileReducer,
     employerProfile: employerProfileReducer,
     itian: itianReducer,
+    // reports: reportsReducer,
     [chatApi.reducerPath]: chatApi.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer,
   },

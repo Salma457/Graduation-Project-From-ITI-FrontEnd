@@ -1,22 +1,22 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaBell, FaUser, FaBriefcase, FaFileAlt, FaBars, FaTimes, FaSignOutAlt } from "react-icons/fa";
+import { FaBell, FaUser, FaBriefcase, FaFileAlt, FaBars, FaTimes, FaSignOutAlt, FaExclamationTriangle } from "react-icons/fa";
 import "../css/Navbar.css";
 
 function ItianNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [jobsDropdownOpen, setJobsDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+  const toggleJobsDropdown = () => setJobsDropdownOpen(!jobsDropdownOpen);
   const toggleNotifications = () => setNotificationOpen(!notificationOpen);
 
   const handleLogout = () => {
-    // Remove the access token from localStorage
     localStorage.removeItem("access-token");
-    // You may want to redirect to login page after logout
-    window.location.href = "/login"; // or use react-router's navigate if you prefer
+    window.location.href = "/login";
   };
 
   return (
@@ -34,7 +34,7 @@ function ItianNavbar() {
             <FaUser className="nav-icon" /> My Profile
           </Link>
 
-          <div className={`dropdown ${dropdownOpen ? "open" : ""}`} onClick={toggleDropdown}>
+          <div className={`dropdown ${jobsDropdownOpen ? "open" : ""}`} onClick={toggleJobsDropdown}>
             <button className="dropbtn">
               <FaBriefcase className="nav-icon" /> Jobs
             </button>
@@ -47,7 +47,18 @@ function ItianNavbar() {
           <Link to="/posts" className="nav-link">
             <FaFileAlt className="nav-icon" /> Posts
           </Link>
-          
+
+          {/* New Reports Dropdown */}
+          <div className={`dropdown ${dropdownOpen ? "open" : ""}`} onClick={toggleDropdown}>
+            <button className="dropbtn">
+              <FaExclamationTriangle className="nav-icon" /> Reports
+            </button>
+            <div className="dropdown-content">
+              <Link to="/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
+              <Link to="/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
+            </div>
+          </div>
+
           <div className="notification-wrapper">
             <div className="notification-icon" onClick={toggleNotifications}>
               <FaBell />

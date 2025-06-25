@@ -51,6 +51,14 @@ import ItianProfile from './pages/profiles/ItianProfile.jsx';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
 
+// Report Page
+
+// import ReportsPage from './pages/ReportsPage.jsx';          // للمستخدم العادي (ITian/Employer)
+import CreateReportPage from './pages/CreateReportPage'; // لإنشاء التقارير
+import AdminReportPage from './pages/AdminReportPage';
+import MyReportsPage from './pages/MyReportsPage.jsx'; // لعرض التقارير الخاصة بالمستخدم
+
+
 // import useAuthInit from './hooks/useAuthInit';
 function App() {
   // useAuthInit();
@@ -117,6 +125,15 @@ function App() {
           <Route path="/itian-profile" element={<ItianProfile />} />
           <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+          
+          {/* <Route path="/reports" element={<ReportsPage />} /> */}
+         <Route path="/reports/create" element={<CreateReportPage />} />
+        
+        {/* For Admin */}
+        <Route path="/admin/reports" element={<AdminReportPage />} />
+        <Route path="/my-reports" element={<MyReportsPage />} />
+
+          {/* <Route path="/reportss" element={<ReportsPage />} /> */}
         </Routes>
       </Router>
   );

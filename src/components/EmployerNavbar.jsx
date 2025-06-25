@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt } from "react-icons/fa";
+import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
 import "../css/Navbar.css";
 
 function EmployerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [reportsDropdownOpen, setReportsDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+  const toggleReportsDropdown = () => setReportsDropdownOpen(!reportsDropdownOpen);
   const toggleNotifications = () => setNotificationOpen(!notificationOpen);
 
   const handleLogout = () => {
@@ -35,6 +37,16 @@ function EmployerNavbar() {
             <div className="dropdown-content">
               <Link to="/employer/post-job"><FaFileAlt className="dropdown-icon" /> Post New Job</Link>
               <Link to="/employer/jobs"><FaFileAlt className="dropdown-icon" /> My Jobs</Link>
+            </div>
+          </div>
+
+          <div className={`dropdown ${reportsDropdownOpen ? "open" : ""}`} onClick={toggleReportsDropdown}>
+            <button className="dropbtn">
+              <FaChartBar className="nav-icon" /> Reports
+            </button>
+            <div className="dropdown-content">
+              <Link to="/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
+              <Link to="/reports/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
             </div>
           </div>
 
