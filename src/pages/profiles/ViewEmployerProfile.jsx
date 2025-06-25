@@ -235,12 +235,6 @@ const ViewEmployerProfile = () => {
                   <span className="text-gray-700">{profile.location}</span>
                 </div>
               )}
-              {profile.company_size && (
-                <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
-                  <Users className="text-[#d0443c] mr-2" size={16} />
-                  <span className="text-gray-700">{profile.company_size}</span>
-                </div>
-              )}
               {profile.username && (
                 <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                   <User className="text-[#d0443c] mr-2" size={16} />
@@ -308,63 +302,6 @@ const ViewEmployerProfile = () => {
                         {profile.website_url}
                       </a>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Company Details Card */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div 
-              className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
-              onClick={() => toggleSection('company')}
-            >
-              <h3 className="text-xl font-bold text-gray-900">
-                Company Details
-              </h3>
-              {expandedSections.company ? <ChevronUp /> : <ChevronDown />}
-            </div>
-            
-            {expandedSections.company && (
-              <div className="px-6 pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div className="flex items-center">
-                    <Building2 className="text-[#d0443c] mr-3" size={20} />
-                    <div>
-                      <p className="text-gray-500 text-sm">Industry</p>
-                      <p className="text-gray-900">{profile.industry || "Not specified"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="text-[#d0443c] mr-3" size={20} />
-                    <div>
-                      <p className="text-gray-500 text-sm">Company Size</p>
-                      <p className="text-gray-900">{profile.company_size || "Not specified"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <MapPin className="text-[#d0443c] mr-3" size={20} />
-                    <div>
-                      <p className="text-gray-500 text-sm">Location</p>
-                      <p className="text-gray-900">{profile.location || "Not specified"}</p>
-                    </div>
-                  </div>
-                  {profile.username && (
-                    <div className="flex items-center">
-                      <User className="text-[#d0443c] mr-3" size={20} />
-                      <div>
-                        <p className="text-gray-500 text-sm">Username</p>
-                        <p className="text-gray-900">@{profile.username}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {profile.company_description && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">About the Company</h4>
-                    <p className="text-gray-700 leading-relaxed">{profile.company_description}</p>
                   </div>
                 )}
               </div>

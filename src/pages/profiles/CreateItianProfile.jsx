@@ -105,6 +105,18 @@ const schema = Yup.object().shape({
       })
     )
     .min(1, "At least one project is required"),
+  cv: Yup.mixed()
+    .test('fileType', 'CV must be a PDF, DOC, or DOCX file', (value) => {
+      if (!value || value.length === 0) return true; // allow empty (nullable)
+      const file = value[0];
+      if (!file) return true;
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+      return allowedTypes.includes(file.type);
+    }),
 });
 
 const CreateItianProfile = () => {
@@ -141,6 +153,7 @@ const CreateItianProfile = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(""); // إضافة حالة خطأ للصورة
 
   // Check for token on mount
   useEffect(() => {
@@ -163,13 +176,43 @@ const CreateItianProfile = () => {
     }
   }, [profilePictureFile]);
 
+  // التحقق من الصورة عند التغيير
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validImageTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/jpg',
+      ];
+      if (!validImageTypes.includes(file.type)) {
+        setImageError("The profile picture field must be an image (jpg, png, gif, webp).");
+        return;
+      }
+      setImageError("");
+    } else {
+      setImageError("");
+    }
+  };
+
   const onSubmit = async (data) => {
-    setLoading(true);
     setError("");
+    if (imageError) {
+      return;
+    }
+    setLoading(true);
 
     const token = localStorage.getItem("access-token");
     if (!token) {
       setError("Authentication required. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    // Check for client-side validation errors before sending
+    if (Object.keys(errors).length > 0) {
       setLoading(false);
       return;
     }
@@ -487,6 +530,7 @@ const CreateItianProfile = () => {
                 <input
                   type="file"
                   {...register("profile_picture")}
+                  onChange={handleProfilePictureChange}
                   style={{
                     width: "100%",
                     padding: "0.75rem",
@@ -496,6 +540,9 @@ const CreateItianProfile = () => {
                     transition: "all 0.3s ease",
                   }}
                 />
+                {imageError && (
+                  <p style={{ color: "#E63946", fontSize: "0.875rem", marginTop: "0.25rem" }}>{imageError}</p>
+                )}
               </div>
               <div>
                 <label
@@ -938,6 +985,11 @@ const CreateItianProfile = () => {
                 transition: "all 0.3s ease",
               }}
             />
+            {errors.cv && (
+              <p style={{ color: "#E63946", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+                {errors.cv.message}
+              </p>
+            )}
           </div>
 
           <div

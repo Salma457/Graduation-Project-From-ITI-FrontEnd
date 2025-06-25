@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { setRole, setUser } from "../../store/userSlice";
+import { setRole } from "../../store/userSlice";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -64,14 +64,14 @@ const schema = Yup.object().shape({
     .max(20),
   skills: Yup.array().of(
     Yup.object().shape({
+      id: Yup.number().nullable(),
       skill_name: Yup.string().required("Skill name is required").max(100),
     })
   ),
   projects: Yup.array().of(
     Yup.object().shape({
-      project_title: Yup.string()
-        .required("Project title is required")
-        .max(255),
+      id: Yup.number().nullable(),
+      project_title: Yup.string().required("Project title is required").max(255),
       description: Yup.string().nullable(),
       project_link: Yup.string().url("Invalid URL").nullable(),
     })
@@ -87,6 +87,8 @@ const ItianProfile = () => {
   const [editProfile, setEditProfile] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [previewCv, setPreviewCv] = useState(null);
+  const [cvError, setCvError] = useState("");
+  const [imageError, setImageError] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     contact: true,
     professional: true,
@@ -153,12 +155,9 @@ const ItianProfile = () => {
       } else {
         const profileData = response.data;
         setProfile(profileData);
-        dispatch(setUser({ ...profileData, role: 'itian' }));
-
         reset(profileData);
         setPreviewImage(profileData.profile_picture_url || null);
         setPreviewCv(profileData.cv_url || null);
-        
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -184,6 +183,43 @@ const ItianProfile = () => {
     fetchProfileData();
   }, []);
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validImageTypes.includes(file.type)) {
+        setImageError("يجب أن تكون الصورة من نوع JPEG, PNG, أو GIF");
+        setPreviewImage(null);
+        setValue("profile_picture", null);
+        return;
+      }
+      setImageError("");
+      setPreviewImage(URL.createObjectURL(file));
+      setValue("profile_picture", file);
+    } else {
+      setPreviewImage(profile?.profile_picture_url || null);
+      setValue("profile_picture", null);
+    }
+  };
+
+  const handleCvChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        setCvError("CV must be a PDF file.");
+        setValue("cv", null);
+        setPreviewCv(null);
+        return;
+      }
+      setCvError("");
+      setPreviewCv(URL.createObjectURL(file));
+      setValue("cv", file);
+    } else {
+      setPreviewCv(profile?.cv_url || null);
+      setValue("cv", null);
+    }
+  };
+
   const onSubmit = async (data) => {
     setLoading(true);
     setError("");
@@ -204,11 +240,8 @@ const ItianProfile = () => {
       }
     }
 
-    if (data.profile_picture && data.profile_picture[0]) {
-      formData.append("profile_picture", data.profile_picture[0]);
-    }
-    if (data.cv && data.cv[0]) {
-      formData.append("cv", data.cv[0]);
+    if (data.profile_picture) {
+      formData.append("profile_picture", data.profile_picture);
     }
 
     data.skills.forEach((skill, index) => {
@@ -238,6 +271,35 @@ const ItianProfile = () => {
           );
       }
     });
+    if (data.cv) {
+      formData.append("cv", data.cv);
+    }
+
+    if (Array.isArray(data.skills)) {
+      data.skills.forEach((skill, index) => {
+        if (skill.skill_name && skill.skill_name.trim() !== "") {
+          if (skill.id) {
+            formData.append(`skills[${index}][id]`, skill.id);
+          }
+          formData.append(`skills[${index}][skill_name]`, skill.skill_name.trim());
+        }
+      });
+    }
+
+    if (Array.isArray(data.projects)) {
+      data.projects.forEach((project, index) => {
+        if (project.project_title && project.project_title.trim() !== "") {
+          if (project.id) {
+            formData.append(`projects[${index}][id]`, project.id);
+          }
+          formData.append(`projects[${index}][project_title]`, project.project_title.trim());
+          if (project.description)
+            formData.append(`projects[${index}][description]`, project.description);
+          if (project.project_link)
+            formData.append(`projects[${index}][project_link]`, project.project_link);
+        }
+      });
+    }
 
     try {
       const token = localStorage.getItem("access-token");
@@ -247,8 +309,7 @@ const ItianProfile = () => {
         return;
       }
 
-      const user_id = profile.user_id;
-
+      const user_id = profile?.user_id;
       const response = await axios.post(
         `${BASE_URL}/api/itian-profiles/${user_id}/update`,
         formData,
@@ -262,23 +323,15 @@ const ItianProfile = () => {
 
       if (response.data.message === "Profile updated successfully") {
         setProfile(response.data.data);
-        dispatch(setUser(response.data.user));
         setPreviewImage(response.data.data.profile_picture_url || null);
         setPreviewCv(response.data.data.cv_url || null);
         setError("");
+        reset(response.data.data);
       } else {
         setError(response.data.message || "Failed to update profile.");
       }
     } catch (err) {
-      console.error("Update error:", err.response?.data || err.message);
-      setError(
-        `Failed to update profile. ${
-          err.response?.data?.message || err.message
-        }`
-      );
-      if (err.response?.data?.errors) {
-        console.log("Validation errors:", err.response.data.errors);
-      }
+      setError(`Failed to update profile. ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -287,30 +340,10 @@ const ItianProfile = () => {
   const handleCancel = () => {
     setEditProfile(false);
     reset(profile);
-    setPreviewImage(profile.profile_picture_url || null);
-    setPreviewCv(profile.cv_url || null);
-  };
-
-  const handleProfilePictureChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-      setValue("profile_picture", file);
-    } else {
-      setPreviewImage(profile.profile_picture_url || null);
-      setValue("profile_picture", null);
-    }
-  };
-
-  const handleCvChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewCv(URL.createObjectURL(file));
-      setValue("cv", file);
-    } else {
-      setPreviewCv(profile.cv_url || null);
-      setValue("cv", null);
-    }
+    setPreviewImage(profile?.profile_picture_url || null);
+    setPreviewCv(profile?.cv_url || null);
+    setImageError("");
+    setCvError("");
   };
 
   const toggleSection = (section) => {
@@ -361,14 +394,11 @@ const ItianProfile = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {profile ? (
           <>
-            {/* Profile Card */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               <div className="relative">
-                {/* Cover Photo */}
                 <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#b53c35]"></div>
 
                 {/* Profile Picture */}
@@ -393,16 +423,21 @@ const ItianProfile = () => {
                         <input
                           type="file"
                           className="hidden"
-                          {...register("profile_picture")}
                           onChange={handleProfilePictureChange}
+                          accept="image/*"
                         />
                       </label>
                     )}
                   </div>
                 </div>
+                {editProfile && imageError && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-20 w-full text-center">
+                    <p className="text-[#d0443c] text-sm bg-white p-1 rounded shadow">
+                      {imageError}
+                    </p>
+                  </div>
+                )}
               </div>
-
-              {/* Profile Info */}
               <div className="pt-20 px-6 pb-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -445,7 +480,6 @@ const ItianProfile = () => {
                         )}
                       </div>
                     )}
-
                     {editProfile ? (
                       <textarea
                         {...register("bio")}
@@ -480,9 +514,16 @@ const ItianProfile = () => {
                       </>
                     )}
                   </div>
+                  {!editProfile && (
+                    <button
+                      onClick={() => setEditProfile(true)}
+                      className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
+                    >
+                      <Edit size={18} />
+                      <span>Edit Profile</span>
+                    </button>
+                  )}
                 </div>
-
-                {/* ITI Info */}
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                     <Briefcase className="text-[#d0443c] mr-2" size={16} />
@@ -507,22 +548,16 @@ const ItianProfile = () => {
                 </div>
               </div>
             </div>
-
-            {/* Edit Form or Profile Display */}
             {editProfile ? (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Contact Information Card */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection("contact")}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Contact Information
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
                     {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
                   </div>
-
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -566,19 +601,15 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("portfolio_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                            className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
                         {errors.portfolio_url && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.portfolio_url.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.portfolio_url.message}</p>
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-600 font-medium mb-2">
-                          LinkedIn Profile
-                        </label>
+                        <label className="block text-gray-700 font-medium mb-2">LinkedIn Profile</label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Linkedin size={16} className="text-gray-400" />
@@ -586,19 +617,15 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("linkedin_profile_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-blue-500"
+                            className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
                         {errors.linkedin_profile_url && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.linkedin_profile_url.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.linkedin_profile_url.message}</p>
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-600 font-medium mb-2">
-                          GitHub Profile
-                        </label>
+                        <label className="block text-gray-700 font-medium mb-2">GitHub Profile</label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Github size={16} className="text-gray-400" />
@@ -606,20 +633,16 @@ const ItianProfile = () => {
                           <input
                             type="text"
                             {...register("github_profile_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-blue-500"
+                            className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                           />
                         </div>
                         {errors.github_profile_url && (
-                          <p className="text-[#d0443c] text-sm">
-                            {errors.github_profile_url.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.github_profile_url.message}</p>
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-600 font-medium mb-2">
-                          CV Upload
-                        </label>
-                        <div class="flex items-center gap-4">
+                        <label className="block text-gray-700 font-medium mb-2">CV Upload</label>
+                        <div className="flex items-center gap-4">
                           {previewCv && (
                             <a
                               href={previewCv}
@@ -638,39 +661,28 @@ const ItianProfile = () => {
                               </div>
                               <input
                                 type="file"
-                                {...register("cv")}
+                                accept="application/pdf"
                                 onChange={handleCvChange}
                                 className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] file:hidden"
                               />
                             </div>
                           </label>
                         </div>
-                        {errors.cv && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.cv.message}
-                          </p>
+                        {(errors.cv || cvError) && (
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.cv?.message || cvError}</p>
                         )}
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Professional Details Card */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection("professional")}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Professional Details
-                    </h3>
-                    {expandedSections.professional ? (
-                      <ChevronUp />
-                    ) : (
-                      <ChevronDown />
-                    )}
+                    <h3 className="text-xl font-bold text-gray-900">Professional Details</h3>
+                    {expandedSections.professional ? <ChevronUp /> : <ChevronDown />}
                   </div>
-
                   {expandedSections.professional && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -683,9 +695,7 @@ const ItianProfile = () => {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
                         {errors.iti_track && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.iti_track.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.iti_track.message}</p>
                         )}
                       </div>
                       <div>
@@ -698,9 +708,7 @@ const ItianProfile = () => {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
                         {errors.graduation_year && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.graduation_year.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.graduation_year.message}</p>
                         )}
                       </div>
                       <div>
@@ -713,9 +721,7 @@ const ItianProfile = () => {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
                         {errors.experience_years && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.experience_years.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.experience_years.message}</p>
                         )}
                       </div>
                       <div>
@@ -728,9 +734,7 @@ const ItianProfile = () => {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
                         {errors.current_job_title && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.current_job_title.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.current_job_title.message}</p>
                         )}
                       </div>
                       <div>
@@ -743,9 +747,7 @@ const ItianProfile = () => {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
                         {errors.current_company && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.current_company.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.current_company.message}</p>
                         )}
                       </div>
                       <div>
@@ -759,9 +761,7 @@ const ItianProfile = () => {
                           placeholder="e.g., Cairo, Remote, Alexandria"
                         />
                         {errors.preferred_job_locations && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.preferred_job_locations.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.preferred_job_locations.message}</p>
                         )}
                       </div>
                       <div>
@@ -778,16 +778,12 @@ const ItianProfile = () => {
                           </option>
                         </select>
                         {errors.is_open_to_work && (
-                          <p className="text-[#d0443c] text-sm mt-1">
-                            {errors.is_open_to_work.message}
-                          </p>
+                          <p className="text-[#d0443c] text-sm mt-1">{errors.is_open_to_work.message}</p>
                         )}
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Skills Card */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
@@ -796,7 +792,6 @@ const ItianProfile = () => {
                     <h3 className="text-xl font-bold text-gray-900">Skills</h3>
                     {expandedSections.skills ? <ChevronUp /> : <ChevronDown />}
                   </div>
-
                   {expandedSections.skills && (
                     <div className="px-6 pb-6">
                       <div className="space-y-4">
@@ -831,23 +826,14 @@ const ItianProfile = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Projects Card */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection("projects")}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Projects
-                    </h3>
-                    {expandedSections.projects ? (
-                      <ChevronUp />
-                    ) : (
-                      <ChevronDown />
-                    )}
+                    <h3 className="text-xl font-bold text-gray-900">Projects</h3>
+                    {expandedSections.projects ? <ChevronUp /> : <ChevronDown />}
                   </div>
-
                   {expandedSections.projects && (
                     <div className="px-6 pb-6">
                       <div className="space-y-6">
@@ -883,10 +869,7 @@ const ItianProfile = () => {
                                 />
                                 {errors.projects?.[index]?.project_title && (
                                   <p className="text-[#d0443c] text-sm mt-1">
-                                    {
-                                      errors.projects[index].project_title
-                                        .message
-                                    }
+                                    {errors.projects[index].project_title.message}
                                   </p>
                                 )}
                               </div>
@@ -909,10 +892,7 @@ const ItianProfile = () => {
                                 </div>
                                 {errors.projects?.[index]?.project_link && (
                                   <p className="text-[#d0443c] text-sm mt-1">
-                                    {
-                                      errors.projects[index].project_link
-                                        .message
-                                    }
+                                    {errors.projects[index].project_link.message}
                                   </p>
                                 )}
                               </div>
@@ -947,8 +927,6 @@ const ItianProfile = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Form Actions */}
                 <div className="flex justify-end gap-4">
                   <button
                     type="button"
@@ -966,20 +944,15 @@ const ItianProfile = () => {
                 </div>
               </form>
             ) : (
-              /* Profile View (when not editing) */
               <div className="space-y-6">
-                {/* Contact Information Card */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection("contact")}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Contact Information
-                    </h3>
+                    <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
                     {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
                   </div>
-
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex items-center">
@@ -1067,23 +1040,14 @@ const ItianProfile = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Professional Details Card */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                     onClick={() => toggleSection("professional")}
                   >
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Professional Details
-                    </h3>
-                    {expandedSections.professional ? (
-                      <ChevronUp />
-                    ) : (
-                      <ChevronDown />
-                    )}
+                    <h3 className="text-xl font-bold text-gray-900">Professional Details</h3>
+                    {expandedSections.professional ? <ChevronUp /> : <ChevronDown />}
                   </div>
-
                   {expandedSections.professional && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex items-center">
@@ -1155,24 +1119,15 @@ const ItianProfile = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Skills Card */}
                 {profile.skills?.length > 0 && (
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div
                       className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                       onClick={() => toggleSection("skills")}
                     >
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Skills
-                      </h3>
-                      {expandedSections.skills ? (
-                        <ChevronUp />
-                      ) : (
-                        <ChevronDown />
-                      )}
+                      <h3 className="text-xl font-bold text-gray-900">Skills</h3>
+                      {expandedSections.skills ? <ChevronUp /> : <ChevronDown />}
                     </div>
-
                     {expandedSections.skills && (
                       <div className="px-6 pb-6">
                         <div className="flex flex-wrap gap-3">
@@ -1189,24 +1144,15 @@ const ItianProfile = () => {
                     )}
                   </div>
                 )}
-
-                {/* Projects Card */}
                 {profile.projects?.length > 0 && (
                   <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div
                       className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
                       onClick={() => toggleSection("projects")}
                     >
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Projects
-                      </h3>
-                      {expandedSections.projects ? (
-                        <ChevronUp />
-                      ) : (
-                        <ChevronDown />
-                      )}
+                      <h3 className="text-xl font-bold text-gray-900">Projects</h3>
+                      {expandedSections.projects ? <ChevronUp /> : <ChevronDown />}
                     </div>
-
                     {expandedSections.projects && (
                       <div className="px-6 pb-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1215,14 +1161,8 @@ const ItianProfile = () => {
                               key={project.id}
                               className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition"
                             >
-                              <h4 className="text-lg font-bold text-gray-900 mb-2">
-                                {project.project_title}
-                              </h4>
-                              {project.description && (
-                                <p className="text-gray-600 mb-4">
-                                  {project.description}
-                                </p>
-                              )}
+                              <h4 className="text-lg font-bold text-gray-900 mb-2">{project.project_title}</h4>
+                              {project.description && <p className="text-gray-600 mb-4">{project.description}</p>}
                               {project.project_link && (
                                 <a
                                   href={project.project_link}
