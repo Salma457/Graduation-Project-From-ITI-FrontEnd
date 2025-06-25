@@ -24,6 +24,10 @@ const PostList = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editPost, setEditPost] = useState(null); // لتعديل بوست
+const [deletePostId, setDeletePostId] = useState(null); // لحذف بوست
+const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض الريأكشنز
+
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
