@@ -27,17 +27,14 @@ const JobList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
 
-  // Function to check and update expired jobs
   const checkAndUpdateExpiredJobs = async () => {
     const currentDate = new Date();
     const jobsArray = Array.isArray(jobs) ? jobs : [];
     
     for (const job of jobsArray) {
-      // Check if job has application_deadline and is currently Open
       if (job.application_deadline && job.status === 'Open') {
         const deadlineDate = new Date(job.application_deadline);
         
-        // If current date is past the deadline, update status to Closed
         if (currentDate > deadlineDate) {
           try {
             await dispatch(editJob({ 
@@ -57,14 +54,12 @@ const JobList = () => {
     dispatch(fetchEmployerData());
   }, [dispatch]);
 
-  // Check for expired jobs when component mounts and jobs data changes
   useEffect(() => {
     if (jobs.length > 0) {
       checkAndUpdateExpiredJobs();
     }
   }, [jobs, dispatch]);
 
-  // Set up interval to check for expired jobs periodically (every 5 minutes)
   useEffect(() => {
     const interval = setInterval(() => {
       if (jobs.length > 0) {
@@ -77,7 +72,6 @@ const JobList = () => {
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
 
-  // Helper function to check if job is expired
   const isJobExpired = (job) => {
     if (!job.application_deadline) return false;
     const currentDate = new Date();
@@ -85,11 +79,8 @@ const JobList = () => {
     return currentDate > deadlineDate;
   };
 
-  // Only show jobs that are NOT trashed (deleted_at is null)
-  const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
-    // Filter by status
+    const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
     const statusMatch = filter === 'all' || job.status === filter;
-    // Filter by search term
     const searchMatch = job.job_title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (job.company_name && job.company_name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -108,13 +99,11 @@ const JobList = () => {
     }
   });
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
   const startIndex = (currentPage - 1) * jobsPerPage;
   const endIndex = startIndex + jobsPerPage;
   const currentJobs = filteredJobs.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchTerm, sortBy]);
@@ -594,7 +583,9 @@ return (
                     <span className="list-meta-value">{job.job_type || "2019"}</span>
                   </div>
                 </div>
-                
+                <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">
+                  {job.applications_count ?? 0} Application{job.applications_count === 1 ? '' : 's'}
+                </span>
                 <div className="list-status-badge">
                   <span className={`list-status-badge ${job.status?.toLowerCase() || 'open'}`}>
                     {job.status || 'Open'}

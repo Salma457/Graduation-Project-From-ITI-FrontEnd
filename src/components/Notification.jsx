@@ -7,9 +7,10 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 const Notifications = () => {
 
-const user = useSelector((state) => state.user.user);
-const role = useSelector((state) => state.user.role);
+  const user = useSelector((state) => state.user.user);
+  const role = useSelector((state) => state.user.role);
   const [deleteAllNotifications] = useDeleteAllNotificationsMutation(); // 👈 خليه فوق الشرط
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const { data: notifications, isLoading, error, refetch } = useGetNotificationsQuery();
@@ -62,11 +63,11 @@ const role = useSelector((state) => state.user.role);
   }, [refetch]);
 
   // Setup real-time notifications with stable userId
-  const { cleanup, isConnected } = useSupabaseNotifications(handleNewNotification, userId);
+  const {isConnected } = useSupabaseNotifications(handleNewNotification, userId);
 
   if (!user || !role) {
   console.log('⏳ Waiting for user data...');
-  return null; // ممكن تحط لودر هنا لو حابة
+  return null; 
   }
 
   if (!['itian', 'employer'].includes(role)) {
@@ -74,10 +75,7 @@ const role = useSelector((state) => state.user.role);
     return null;
   }
 
-  // State for delete confirmation
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Function to delete all notifications
  const handleDeleteAllNotifications = async () => {
   try {
     await deleteAllNotifications().unwrap();

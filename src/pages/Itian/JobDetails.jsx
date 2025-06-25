@@ -8,7 +8,7 @@ import { Sparkles } from 'lucide-react';
 Modal.setAppElement('#root');
 import Confetti from 'react-confetti';
 
-const JobDetailsPublic = ({ jobId }) => {
+const JobDetailsPublic = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [job, setJob] = useState(null);
@@ -54,7 +54,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/jobs/${id}`);
+        const res = await axios.get(`http://localhost:8000/api/public/jobs/${id}`);
         setJob(res.data.data);
 
         const token = localStorage.getItem('access-token');

@@ -29,11 +29,12 @@ const useAuthInit = () => {
           return;
         }
       } catch (err) {
-        // تجاهل الخطأ لأن ممكن ما يكونش إيمبلوير
+        if (err.response?.status !== 404) {
+          console.error("Error fetching employer profile:", err);
+        }
       }
 
       try {
-        // لو مش إيمبلوير، نجرب نجيب بيانات الـ itian
         const itianRes = await axios.get('http://localhost:8000/api/itian-profile', config);
         const itianUser = itianRes.data.user || itianRes.data;
         if (itianUser) {
@@ -43,7 +44,9 @@ const useAuthInit = () => {
           return;
         }
       } catch (err) {
-        // تجاهل الخطأ لو برضه مش موجود
+        if (err.response?.status !== 404) {
+          console.error("Error fetching itian profile:", err);
+        }
       }
 
       console.warn("❌ No valid profile found for current user.");

@@ -3,12 +3,89 @@ import { MessageCircle, Send, User, Clock, Search, Menu, Sparkles, Smile } from 
 import { supabase } from '../../../supabaseClient';
 import { useLocation } from 'react-router-dom';
 
+// Fixed: Moved Avatar component OUTSIDE main ChatApp function
+const Avatar = ({ src, name, size = 12, className = "" }) => {
+  const [imageState, setImageState] = useState({
+    loading: !!src,
+    error: false,
+    loaded: false
+  });
+
+  useEffect(() => {
+    if (src) {
+      setImageState({ loading: true, error: false, loaded: false });
+    } else {
+      setImageState({ loading: false, error: false, loaded: false });
+    }
+  }, [src]);
+
+  const handleLoad = () => {
+    setImageState({ loading: false, error: false, loaded: true });
+  };
+
+  const handleError = (e) => {
+    setImageState({ loading: false, error: true, loaded: false });
+  };
+
+  const sizeClasses = {
+    8: 'w-8 h-8',
+    10: 'w-10 h-10',
+    12: 'w-12 h-12',
+    16: 'w-16 h-16',
+    20: 'w-20 h-20'
+  };
+
+  const iconSizes = {
+    8: 12,
+    10: 16,
+    12: 20,
+    16: 24,
+    20: 32
+  };
+
+  return (
+    <div className={`${sizeClasses[size] || `w-${size} h-${size}`} rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300 overflow-hidden relative ${className}`}
+         style={{ 
+           background: (!src || imageState.error) ? "linear-gradient(to right, #d0443c, #b33a34)" : "#ffffff",
+           border: (!src || imageState.error) ? "none" : "2px solid #ef4444"
+         }}>
+      
+      {/* Loading spinner */}
+      {imageState.loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75">
+          <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+      
+      {/* Image */}
+      {src && !imageState.error && (
+        <img 
+          src={src} 
+          alt={name || 'Profile'}
+          className={`w-full h-full object-cover rounded-full transition-opacity duration-300 ${
+            imageState.loaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={handleLoad}
+          onError={handleError}
+          loading="lazy"
+        />
+      )}
+      
+      {/* Fallback icon */}
+      {(!src || imageState.error) && !imageState.loading && (
+        <User 
+          size={iconSizes[size] || 20} 
+          className="text-white" 
+        />
+      )}
+    </div>
+  );
+};
+
 const ChatApp = () => {
   const userId = parseInt(localStorage.getItem('user-id'));
   const location = useLocation();
   
-  // Fix: Properly destructure the state parameters
-
   // State declarations
   const [contacts, setContacts] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -27,100 +104,160 @@ const ChatApp = () => {
   const contactId = location.state?.user;
   const contactName = location.state?.name;
 
+  // Helper function to test if an image URL is accessible
+  const testImageUrl = async (url) => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+      setTimeout(() => resolve(false), 5000);
+    });
+  };
 
-useEffect(() => {
-  if (window.resetMessageNotifications) {
-    window.resetMessageNotifications();
-  }
-}, []);
-
-const handleContactSelect = (contact) => {
-  setSelectedContact(contact);
-  setUnreadMessages(prev => ({ ...prev, [contact.contact_id]: 0 }));
-  fetchMessages(contact.contact_id);
-  markMessagesAsRead(contact.contact_id);
-  setIsMobileMenuOpen(false);
-  
-  if (window.resetMessageNotifications) {
-    window.resetMessageNotifications();
-  }
-};
-
-useEffect(() => {
-  const handleContactFromRoute = async () => {
-    if (contactId && !contacts.some(c => c.contact_id === contactId)) {
-      const { data: userData } = await supabase
+  // Helper function to safely fetch user profile data
+  const fetchUserProfile = async (userId) => {
+    try {
+      // Try to get basic user data first
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('name, email')
-        .eq('id', contactId)
-        .single();
+        .eq('id', userId)
+        .maybeSingle();
 
-      const { data: itiData } = await supabase
-        .from('itian_profiles')
-        .select('first_name, last_name, profile_picture')
-        .eq('user_id', contactId)
-        .single();
-
-      const { data: empData } = await supabase
-        .from('employer_profiles')
-        .select('company_name, company_logo')
-        .eq('user_id', contactId)
-        .single();
-
-      let displayName = contactName || `User ${contactId}`;
+      let displayName = `User ${userId}`;
       let displayImage = null;
 
-      if (itiData && !itiError) {
-        displayName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
-
-        if (itiData.profile_picture) {
-          const { data: publicUrlData } = supabase.storage
-            .from('profile_pictures') 
-            .getPublicUrl(itiData.profile_picture.replace('profile_pictures/', '')); // إزالة الجزء الزايد
-
-          displayImage = publicUrlData?.publicUrl;
-        }
-      }
-      else if (empData) {
-        displayName = empData.company_name || displayName;
-        displayImage = empData.company_logo;
-      } else if (userData) {
+      if (userData && !userError) {
         displayName = userData.name || userData.email || displayName;
       }
 
-      const tempContact = {
-        id: `temp-${Date.now()}`,
-        contact_id: contactId,
-        contact_name: displayName,
-        contact_avatar: displayImage,
-        body: "Start a conversation...",
-        created_at: new Date().toISOString(),
-        from_id: contactId
-      };
+      // Try ITI profile with enhanced image handling
+      try {
+        const { data: itiData, error: itiError } = await supabase
+          .from('itian_profiles')
+          .select('first_name, last_name, profile_picture')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      setContacts(prev => [tempContact, ...prev]);
-      setSelectedContact(tempContact);
-      fetchMessages(contactId);
-      
-      if (window.resetMessageNotifications) {
-        window.resetMessageNotifications();
-      }
-    } else if (contactId) {
-      const existingContact = contacts.find(c => c.contact_id === contactId);
-      if (existingContact) {
-        setSelectedContact(existingContact);
-        fetchMessages(contactId);
-        markMessagesAsRead(contactId);
-        
-        if (window.resetMessageNotifications) {
-          window.resetMessageNotifications();
+        if (itiData && !itiError) {
+          const fullName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
+          if (fullName) {
+            displayName = fullName;
+          }
+          
+          if (itiData.profile_picture) {
+            displayImage = await processProfilePicture(itiData.profile_picture);
+          }
+          
+          return { displayName, displayImage, profileType: 'iti' };
         }
-      }
+      } catch (itiError) {}
+      // Try employer profile with enhanced image handling
+      try {
+        const { data: empData, error: empError } = await supabase
+          .from('employer_profiles')
+          .select('company_name, company_logo')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (empData && !empError) {
+          displayName = empData.company_name || displayName;
+          if (empData.company_logo) {
+            displayImage = await processProfilePicture(empData.company_logo, 'company_logos');
+          }
+          return { displayName, displayImage, profileType: 'employer' };
+        }
+      } catch (empError) {}
+
+      const finalResult = { displayName, displayImage, profileType: 'basic' };
+      return finalResult;
+    } catch (error) {
+      return { 
+        displayName: `User ${userId}`, 
+        displayImage: null, 
+        profileType: 'error' 
+      };
     }
   };
 
-  handleContactFromRoute();
-}, [contactId, contactName, location.key]);
+const processProfilePicture = (picturePath) => {
+  if (!picturePath) return null;
+
+  // Laravel serves files from /storage/ after running `php artisan storage:link`
+  return `${import.meta.env.VITE_APP_URL}/storage/${picturePath}`;
+};
+
+
+
+  useEffect(() => {
+    if (window.resetMessageNotifications) {
+      window.resetMessageNotifications();
+    }
+  }, []);
+
+  const handleContactSelect = (contact) => {
+    setSelectedContact(contact);
+    setUnreadMessages(prev => ({ ...prev, [contact.contact_id]: 0 }));
+    fetchMessages(contact.contact_id);
+    markMessagesAsRead(contact.contact_id);
+    setIsMobileMenuOpen(false);
+
+    if (window.resetMessageNotifications) {
+      window.resetMessageNotifications();
+    }
+  };
+
+  useEffect(() => {
+    const handleContactFromRoute = async () => {
+      if (contactId && !contacts.some(c => c.contact_id === contactId)) {
+        try {
+          const profileResult = await fetchUserProfile(contactId);
+          const tempContact = {
+            id: `temp-${Date.now()}`,
+            contact_id: contactId,
+            contact_name: profileResult.displayName,
+            contact_avatar: profileResult.displayImage,
+            body: "Start a conversation...",
+            created_at: new Date().toISOString(),
+            from_id: contactId
+          };
+          setContacts(prev => [tempContact, ...prev]);
+          setSelectedContact(tempContact);
+          fetchMessages(contactId);
+          if (window.resetMessageNotifications) {
+            window.resetMessageNotifications();
+          }
+        } catch (error) {
+          const basicContact = {
+            id: `temp-${Date.now()}`,
+            contact_id: contactId,
+            contact_name: contactName || `User ${contactId}`,
+            contact_avatar: null,
+            body: "Start a conversation...",
+            created_at: new Date().toISOString(),
+            from_id: contactId
+          };
+          setContacts(prev => [basicContact, ...prev]);
+          setSelectedContact(basicContact);
+          fetchMessages(contactId);
+        }
+      } else if (contactId) {
+        const existingContact = contacts.find(c => c.contact_id === contactId);
+        if (existingContact) {
+          setSelectedContact(existingContact);
+          fetchMessages(contactId);
+          markMessagesAsRead(contactId);
+          if (window.resetMessageNotifications) {
+            window.resetMessageNotifications();
+          }
+        }
+      }
+    };
+
+    handleContactFromRoute();
+    // eslint-disable-next-line
+  }, [contactId, contactName, location.key]);
 
   useEffect(() => {
     if (!userId) return;
@@ -165,7 +302,7 @@ useEffect(() => {
     return onlineUsers.includes(userId);
   }, [onlineUsers]);
 
-  // Emoji categories
+  // Emoji categories (unchanged)
   const emojiCategories = {
     'Smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐'],
     'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
@@ -191,7 +328,6 @@ useEffect(() => {
         setShowEmojiPicker(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -206,17 +342,13 @@ useEffect(() => {
   const initializeUnreadCounts = async (contactsList) => {
     const counts = {};
     const hasReadAtColumn = await checkColumnExists();
-    
     if (!hasReadAtColumn) {
-      // If column doesn't exist, initialize all counts to 0
       contactsList.forEach(contact => {
         counts[contact.contact_id] = 0;
       });
       setUnreadCounts(counts);
       return;
     }
-
-    // If column exists, count unread messages per contact
     for (const contact of contactsList) {
       try {
         const { count, error } = await supabase
@@ -225,41 +357,33 @@ useEffect(() => {
           .eq('from_id', contact.contact_id)
           .eq('to_id', userId)
           .is('read_at', null);
-        
         counts[contact.contact_id] = error ? 0 : count;
-      } catch (err) {
+      } catch (error) {
         counts[contact.contact_id] = 0;
       }
     }
-    
     setUnreadCounts(counts);
   };
 
   const checkColumnExists = async () => {
     try {
-      // Try a query that would fail if column doesn't exist
       const { error } = await supabase
         .from('ch_messages')
         .select('read_at')
-        .limit(0); // Empty query just to test column existence
-      
-      return !error; // If no error, column exists
-    } catch (err) {
+        .limit(0);
+      return !error;
+    } catch (error) {
       return false;
     }
   };
 
-  // Mark messages as read when opening a chat
   const markMessagesAsRead = async (contactId) => {
     try {
-      // First check if column exists
       const { error: testError } = await supabase
         .from('ch_messages')
         .select('read_at')
         .limit(0);
-      
       if (!testError) {
-        // Column exists - update in database
         await supabase
           .from('ch_messages')
           .update({ read_at: new Date().toISOString() })
@@ -267,111 +391,72 @@ useEffect(() => {
           .eq('to_id', userId)
           .is('read_at', null);
       }
-      
-      // Update local state
       setUnreadCounts(prev => ({ ...prev, [contactId]: 0 }));
-    } catch (error) {
-      console.error('Error marking messages as read:', error);
-    }
+    } catch (error) {}
   };
 
-
-const fetchContacts = useCallback(async () => {
-  try {
-    setLoading(true);
-    
-    const numericUserId = parseInt(userId, 10);
-    if (isNaN(numericUserId)) {
-      throw new Error('Invalid user ID format');
-    }
-
-    const response = await fetch('https://obrhuhasrppixjwkznri.supabase.co/functions/v1/last_conversations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ current_user_id: numericUserId }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch contacts');
-    }
-
-    const data = await response.json();
-    
-    const transformedContacts = await Promise.all(data.map(async (msg) => {
-      const contactId = msg.from_id === numericUserId ? msg.to_id : msg.from_id;
-      
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('name, email')
-        .eq('id', contactId)
-        .single();
-
-      const { data: itiData, error: itiError } = await supabase
-        .from('itian_profiles')
-        .select('first_name, last_name, profile_picture')
-        .eq('user_id', contactId)
-        .single();
-
-      const { data: empData, error: empError } = await supabase
-        .from('employer_profiles')
-        .select('company_name, company_logo')
-        .eq('user_id', contactId)
-        .single();
-
-      let displayName = `User ${contactId}`; 
-      let displayImage = null;
-
-      if (itiData && !itiError) {
-        displayName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
-        displayImage = itiData.profile_picture;
-      } else if (empData && !empError) {
-        displayName = empData.company_name || displayName;
-        displayImage = empData.company_logo;
-      } else if (userData && !userError) {
-        displayName = userData.name || userData.email || displayName;
+  const fetchContacts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const numericUserId = parseInt(userId, 10);
+      if (isNaN(numericUserId)) {
+        throw new Error('Invalid user ID format');
       }
-
-      return {
-        id: msg.id,
-        contact_id: contactId,
-        contact_name: displayName,
-        contact_avatar: displayImage,
-        body: msg.body,
-        created_at: msg.created_at,
-        from_id: msg.from_id,
-      };
-    }));
-
-    setContacts(transformedContacts);
-    await initializeUnreadCounts(transformedContacts);
-  } catch (err) {
-    console.error('Error fetching contacts:', err);
-  } finally {
-    setLoading(false);
-  }
-}, [userId]);
+      const response = await fetch('https://obrhuhasrppixjwkznri.supabase.co/functions/v1/last_conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_user_id: numericUserId }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch contacts');
+      }
+      const data = await response.json();
+      const transformedContacts = await Promise.all(data.map(async (msg) => {
+        const contactId = msg.from_id === numericUserId ? msg.to_id : msg.from_id;
+        const profileResult = await fetchUserProfile(contactId);
+        const transformedContact = {
+          id: msg.id,
+          contact_id: contactId,
+          contact_name: profileResult.displayName,
+          contact_avatar: profileResult.displayImage,
+          body: msg.body,
+          created_at: msg.created_at,
+          from_id: msg.from_id,
+        };
+        return transformedContact;
+      }));
+      setContacts(transformedContacts);
+      await initializeUnreadCounts(transformedContacts);
+    } catch (err) {
+      // error fetching contacts
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
-  fetchContacts();
-}, [fetchContacts]); 
+    fetchContacts();
+  }, [fetchContacts]); 
 
   const fetchMessages = async (contactId) => {
-    const { data, error } = await supabase
-      .from('ch_messages')
-      .select('*')
-      .or(`and(from_id.eq.${userId},to_id.eq.${contactId}),and(from_id.eq.${contactId},to_id.eq.${userId})`)
-      .order('created_at', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('ch_messages')
+        .select('*')
+        .or(`and(from_id.eq.${userId},to_id.eq.${contactId}),and(from_id.eq.${contactId},to_id.eq.${userId})`)
+        .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error(error);
+      if (error) {
+        setMessages([]);
+      } else {
+        setMessages(data || []);
+      }
+    } catch (error) {
       setMessages([]);
-    } else {
-      setMessages(data || []);
     }
   };
 
-  // Send message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedContact) return;
 
@@ -389,13 +474,8 @@ const fetchContacts = useCallback(async () => {
         .insert([messageData])
         .select();
 
-      if (error) {
-        console.error('Error sending message:', error);
-      } else if (data && data.length > 0) {
-        // Add new message to message list
+      if (!error && data && data.length > 0) {
         setMessages((prev) => [...prev, data[0]]);
-
-        // Update last message content and time in contacts list
         setContacts((prev) =>
           prev.map((contact) =>
             contact.contact_id === selectedContact.contact_id
@@ -403,116 +483,74 @@ const fetchContacts = useCallback(async () => {
                   ...contact,
                   body: trimmedMessage,
                   created_at: data[0].created_at,
-                  id: contact.id.toString().startsWith('temp-') ? data[0].id : contact.id, // Update temp ID with real ID
+                  id: contact.id.toString().startsWith('temp-') ? data[0].id : contact.id,
                 }
               : contact
           )
         );
-
-        // Clear input after success
         setNewMessage('');
       }
-    } catch (err) {
-      console.error('Error sending message:', err);
-    }
+    } catch (err) {}
   };
 
-useEffect(() => {
-  if (!userId) return;
-
-  const channel = supabase
-    .channel('public:ch_messages')
-    .on(
-      'postgres_changes',
-      { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'ch_messages',
-        filter: `to_id=eq.${userId}`
-      },
-      async (payload) => {
-        if (selectedContact && payload.new.from_id === selectedContact.contact_id) {
-          setMessages(prev => [...prev, payload.new]);
-        } else {
-          setUnreadCounts(prev => ({
-            ...prev,
-            [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
-          }));
-        }
-        
-        // جلب معلومات المرسل للرسالة الجديدة
-        const senderId = payload.new.from_id;
-        
-        // جلب معلومات المستخدم
-        const { data: userData } = await supabase
-          .from('users')
-          .select('name, email')
-          .eq('id', senderId)
-          .single();
-
-        // جلب معلومات ITI Profile
-        const { data: itiData } = await supabase
-          .from('itian_profiles')
-          .select('first_name, last_name, profile_picture')
-          .eq('user_id', senderId)
-          .single();
-
-        // جلب معلومات Employer Profile
-        const { data: empData } = await supabase
-          .from('employer_profiles')
-          .select('company_name, company_logo')
-          .eq('user_id', senderId)
-          .single();
-
-        // تحديد الاسم والصورة
-        let senderName = `User ${senderId}`;
-        let senderAvatar = null;
-
-        if (itiData) {
-          senderName = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
-          senderAvatar = itiData.profile_picture;
-        } else if (empData) {
-          senderName = empData.company_name || senderName;
-          senderAvatar = empData.company_logo;
-        } else if (userData) {
-          senderName = userData.name || userData.email || senderName;
-        }
-        
-        setContacts(prev => {
-          const existingContactIndex = prev.findIndex(
-            contact => contact.contact_id === senderId
-          );
-          
-          if (existingContactIndex !== -1) {
-            const updatedContacts = [...prev];
-            updatedContacts[existingContactIndex] = {
-              ...updatedContacts[existingContactIndex],
-              body: payload.new.body,
-              created_at: payload.new.created_at
-            };
-            return updatedContacts;
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel('public:ch_messages')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'ch_messages',
+          filter: `to_id=eq.${userId}`
+        },
+        async (payload) => {
+          if (selectedContact && payload.new.from_id === selectedContact.contact_id) {
+            setMessages(prev => [...prev, payload.new]);
           } else {
-            return [{
-              id: payload.new.id,
-              contact_id: senderId,
-              contact_name: senderName,
-              contact_avatar: senderAvatar,
-              body: payload.new.body,
-              created_at: payload.new.created_at,
-              from_id: senderId
-            }, ...prev];
+            setUnreadCounts(prev => ({
+              ...prev,
+              [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
+            }));
           }
-        });
-      }
-    )
-    .subscribe();
+          const senderId = payload.new.from_id;
+          const profileResult = await fetchUserProfile(senderId);
+          setContacts(prev => {
+            const existingContactIndex = prev.findIndex(
+              contact => contact.contact_id === senderId
+            );
+            if (existingContactIndex !== -1) {
+              const updatedContacts = [...prev];
+              updatedContacts[existingContactIndex] = {
+                ...updatedContacts[existingContactIndex],
+                body: payload.new.body,
+                created_at: payload.new.created_at
+              };
+              return updatedContacts;
+            } else {
+              const newContact = {
+                id: payload.new.id,
+                contact_id: senderId,
+                contact_name: profileResult.displayName,
+                contact_avatar: profileResult.displayImage,
+                body: payload.new.body,
+                created_at: payload.new.created_at,
+                from_id: senderId
+              };
+              return [newContact, ...prev];
+            }
+          });
+        }
+      )
+      .subscribe();
 
-  return () => {
-    if (channel && typeof channel.unsubscribe === 'function') {
-      channel.unsubscribe();
-    }
-  };
-}, [userId, selectedContact]);
+    return () => {
+      if (channel && typeof channel.unsubscribe === 'function') {
+        channel.unsubscribe();
+      }
+    };
+  }, [userId, selectedContact]);
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { 
@@ -537,6 +575,7 @@ useEffect(() => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br via-red-100 ">
@@ -611,22 +650,36 @@ useEffect(() => {
 
                     className={`p-3 border-b border-red-100 relative cursor-pointer transition-all duration-200 hover:shadow-md ${
                       selectedContact?.contact_id === contact.contact_id 
-                        ? 'bg-gradient-to-r  shadow-inner border-l-4 border-l-red-500' 
+                        ? 'bg-gradient-to-r from-red-100 to-red-200 shadow-inner border-l-4 border-l-red-500' 
                         : 'hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-br rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300"style={{ background: "linear-gradient(to right, #d0443c, #b33a34)" }}>
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300 overflow-hidden"
+                             style={{ 
+                               background: contact.contact_avatar ? "#ffffff" : "linear-gradient(to right, #d0443c, #b33a34)",
+                               border: contact.contact_avatar ? "2px solid #ef4444" : "none"
+                             }}>
                           {contact.contact_avatar ? (
                             <img 
                               src={contact.contact_avatar} 
                               alt={contact.contact_name}
-                              className="w-full h-full rounded-full object-cover"
+                              className="w-full h-full object-cover rounded-full"
+                              onError={(e) => {
+                                console.log('Sidebar image failed to load:', contact.contact_avatar);
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
                             />
-                          ) : (
-                            <User size={20} className="text-white" />
-                          )}
+                          ) : null}
+                          <User 
+                            size={20} 
+                            className="text-white" 
+                            style={{ 
+                              display: contact.contact_avatar ? 'none' : 'flex' 
+                            }} 
+                          />
                         </div>
                         {isOnline(contact.contact_id) && (
                           <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
@@ -676,18 +729,36 @@ useEffect(() => {
                       <Menu size={24} />
                     </button>
                     <div className="relative">
-                       <div className="w-10 h-10 rounded-full overflow-hidden shadow ring-2 ring-red-300">
-                          {selectedContact?.contact_avatar ? (
-                            <img 
-                              src={selectedContact.contact_avatar}
-                              alt={selectedContact.contact_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <User size={24} className="text-red-700 w-full h-full" />
-                          )}
-                        </div>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg ring-2 ring-red-300 overflow-hidden"
+                          style={{ 
+                            background: selectedContact?.contact_avatar ? "#ffffff" : "linear-gradient(to right, #d0443c, #b33a34)",
+                            border: selectedContact?.contact_avatar ? "2px solid #ef4444" : "none"
+                          }}>
+                        {selectedContact?.contact_avatar ? (
+                          <img 
+                            src={selectedContact.contact_avatar} 
+                            alt={selectedContact.contact_name}
+                            className="w-full h-full object-cover rounded-full"
+                            onError={(e) => {
+                              console.log('Header image failed to load:', selectedContact.contact_avatar);
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <User 
+                          size={20} 
+                          className="text-white" 
+                          style={{ 
+                            display: selectedContact?.contact_avatar ? 'none' : 'flex' 
+                          }} 
+                        />
                       </div>
+                      {selectedContact && isOnline(selectedContact.contact_id) && (
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+                      )}
+                    </div>
+
                     <div>
                       <h3 className="font-semibold text-white drop-shadow-md">
                         {selectedContact ? selectedContact.contact_name : "Select a chat"}
@@ -709,6 +780,13 @@ useEffect(() => {
                       )}
                     </div>
                   </div>
+                  
+                  {/* Debug Info - Remove this after testing */}
+                  {selectedContact?.contact_avatar && (
+                    <div className="text-xs text-white bg-black bg-opacity-50 p-1 rounded">
+                      Image URL: {selectedContact.contact_avatar.substring(0, 50)}...
+                    </div>
+                  )}
                 </div>
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">

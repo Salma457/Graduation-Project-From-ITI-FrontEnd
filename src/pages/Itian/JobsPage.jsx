@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import JobCard from "../../components/JobCard";
 import Filters from "../../components/Filters";
-import axios from "axios";
+// import axios from "axios";
 import "../../css/JobsPage.css";
 import "../../css/Pagination.css";
 import { Sparkles, Search } from 'lucide-react'; 
@@ -14,13 +14,7 @@ import {
   setPagination,
   clearAll,
 } from '../../applicationSlice';
-
-const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+import { useLocation } from "react-router-dom";
 
 const JobsPage = () => {
   const dispatch = useDispatch();
@@ -34,19 +28,32 @@ const JobsPage = () => {
     pagination,
   } = useSelector((state) => state.application);
 
-  console.log("Jobs:", jobs);
-  console.log("Loading:", loading);
-  console.log("Pagination:", pagination);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const employerIdFromURL = queryParams.get('employer_id');
 
+  // 💡 ضيف employer_id للفلتر قبل ما تبعت الريكوست
   useEffect(() => {
+    const mergedFilters = {
+      ...filters,
+      employer_id: employerIdFromURL || ''
+    };
+
     dispatch(fetchJobs({
       page: pagination.currentPage,
       perPage: pagination.perPage,
       search: submittedSearch,
-      filters,
+      filters: mergedFilters,
       sort: '-posted_date'
     }));
-  }, [pagination.currentPage, pagination.perPage, filters, submittedSearch, dispatch]);
+  }, [
+    pagination.currentPage,
+    pagination.perPage,
+    filters,
+    submittedSearch,
+    dispatch,
+    employerIdFromURL
+  ]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -80,6 +87,7 @@ const JobsPage = () => {
         job_location: '',
         min_salary: '',
         max_salary: '',
+        employer_id: employerIdFromURL || ''
       },
       sort: '-posted_date'
     }));
@@ -147,7 +155,7 @@ const JobsPage = () => {
                   onClick={handleClearAll}
                   className="clear-all-btn"
                 >
-                  
+                  Clear Filters
                 </button>
               </div>
             ) : (

@@ -203,6 +203,21 @@ const ViewEmployerProfile = () => {
                   <p className="text-gray-600 mt-1">{profile.industry}</p>
                 )}
                 <p className="text-gray-600 mt-2">{profile.company_description || "No company description provided"}</p>
+                <div className="mt-4 flex gap-4">
+                <button
+                  onClick={() => navigate(`/itian/mychat`, { state: { receiverId: profile.user_id } })}
+                  className="px-5 py-2 bg-[#d0443c] text-white rounded-lg hover:bg-[#a0302c] transition"
+                >
+                  Message Employer
+                </button>
+
+                <button
+                  onClick={() => navigate(`/jobs?employer_id=${profile.user_id}`)}
+                  className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+                >
+                  View Jobs
+                </button>
+              </div>
               </div>
             </div>
 

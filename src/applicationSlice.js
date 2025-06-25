@@ -39,6 +39,10 @@ export const fetchJobs = createAsyncThunk(
       if (filters.max_salary && !isNaN(parseFloat(filters.max_salary))) {
         params.max_salary = parseFloat(filters.max_salary);
       }
+      if (filters.employer_id) {
+        params.employer_id = filters.employer_id;
+      }
+
 
       console.log("Request params:", params);
       

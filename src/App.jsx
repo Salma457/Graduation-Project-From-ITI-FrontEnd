@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import store from './store';
+// import store from './applicationStore';
 import './App.css';
 import viteLogo from '/vite.svg';
 
@@ -52,6 +53,10 @@ import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
 
 import useAuthInit from './hooks/useAuthInit';
+
+// RAG Search
+import RagChat from './AI Chat/RagChat.jsx';
+
 function App() {
   useAuthInit();
   const user = useSelector((state) => state.user.user);
@@ -119,6 +124,15 @@ function App() {
 
 
          
+          {/* 🟪 Public profiles (outside layout or custom later) */}
+          <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
+          <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+          <Route path="/profile/:username" element={<ViewItianProfile />} />
+
+          {/* cahtAI route */}
+                  <Route path="/rag" element={<RagChat />} />
 
         </Routes>
         
