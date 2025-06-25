@@ -24,12 +24,9 @@ const PostList = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editPost, setEditPost] = useState(null); // لتعديل بوست
-const [deletePostId, setDeletePostId] = useState(null); // لحذف بوست
-const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض الريأكشنز
-
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [editingPost, setEditingPost] = useState(null);
 
   const observer = useRef();
 
@@ -106,6 +103,7 @@ const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض ال
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
     setIsModalOpen(false);
+    setEditingPost(null);
     toast.success('Post created successfully!');
   };
 
@@ -129,17 +127,14 @@ const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض ال
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Left Sidebar - تم تقليل العرض هنا */}
         <div className="hidden lg:block w-64 bg-white border-r border-gray-200 p-4 sticky top-0 h-screen overflow-y-auto">
           <div className="space-y-6">
             {user && <ItianSidebarProfile profile={user} />}
           </div>
         </div>
 
-        {/* Main Content - تم تعديل المساحة هنا */}
         <div className="flex-1 py-8 pl-2 pr-4 sm:pl-4 sm:pr-6 lg:pl-6 lg:pr-8">
           <div className="max-w-3xl mx-auto">
-            {/* Header with Tabs */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
                 {['all', 'my'].map((tab) => (
@@ -170,7 +165,6 @@ const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض ال
               </div>
             </div>
 
-            {/* Posts List */}
             {loading && page === 1 ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
@@ -210,6 +204,14 @@ const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض ال
                       post={post}
                       onDelete={handleDeletePost}
                       onUpdate={handleUpdatePost}
+                      onEditPost={(postToEdit) => {
+                        setEditingPost(postToEdit);
+                        setIsModalOpen(true);
+                      }}
+                      onShowReactions={() => {}}
+                      onConfirmDelete={(postToDelete) => {
+                        handleDeletePost(postToDelete.id);
+                      }}
                     />
                   </motion.div>
                 ))}
@@ -235,11 +237,13 @@ const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض ال
         </div>
       </div>
 
-      {/* Create Post Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => {
+          setEditingPost(null);
+          setIsModalOpen(true);
+        }}
         className="fixed bottom-8 right-8 z-20 bg-red-600 hover:bg-red-700 text-white p-4 rounded-full shadow-xl flex items-center justify-center"
       >
         <FiPlus className="text-xl" />
@@ -249,8 +253,12 @@ const [showReactionsFor, setShowReactionsFor] = useState(null); // لعرض ال
         {isModalOpen && (
           <CreatePostModal
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditingPost(null);
+            }}
             onPostCreated={handlePostCreated}
+            editingPost={editingPost}
           />
         )}
       </AnimatePresence>
