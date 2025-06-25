@@ -146,6 +146,7 @@ function App() {
         />
         <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
         <Route path="/profile/:username" element={<ViewItianProfile />} />
+        <Route path="/public-profile/:userId" element={<ViewItianProfile />} />
 
         {/* cahtAI route */}
         <Route path="/rag" element={<RagChat />} />

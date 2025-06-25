@@ -51,9 +51,14 @@ const PostCard = memo(
       0
     );
 
+    // تعديل: فتح بروفايل اليوزر الحالي أو العام حسب اليوزر
     const handleProfileClick = useCallback(() => {
-      navigate(`/itian-profile/${post.itian.user_id}`);
-    }, [navigate, post.itian.user_id]);
+      if (user?.user_id === post.itian?.user_id) {
+        navigate("/itian-profile");
+      } else {
+        navigate(`/public-profile/${post.itian.user_id}`);
+      }
+    }, [navigate, post.itian?.user_id, user?.user_id]);
 
     const handleReaction = useCallback(
       async (reactionType) => {
