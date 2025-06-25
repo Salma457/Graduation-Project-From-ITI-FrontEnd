@@ -42,7 +42,6 @@ function ItianNavbar() {
             <FaUser className="nav-icon" /> My Profile
           </Link>
           
-          {/* استخدام الكومبوننت الجديد للرسائل */}
           <Link to="/itian/mychat" className="nav-link">
             <MessageNotification iconClassName="nav-icon" /> Chat
           </Link>

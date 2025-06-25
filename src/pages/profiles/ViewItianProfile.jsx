@@ -248,7 +248,7 @@ const ViewItianProfile = () => {
                     const chatRoute =
                       role === 'employer' ? '/employer/mychat' :
                       role === 'itian' ? '/itian/mychat' :
-                      '/login'; // fallback
+                      '/login';
 
                     navigate(chatRoute, {
                       state: {

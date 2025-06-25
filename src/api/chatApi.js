@@ -89,6 +89,14 @@ export const chatApi = createApi({
         body: { active: isActive },
       }),
     }),
+    updateMessage: builder.mutation({
+      query: ({ id, body }) => ({
+      url: 'updateMessage',
+      method: 'POST',
+      body: { id, body },
+    }),
+      invalidatesTags: ['Message'],
+    }),
   })
 })
 
@@ -102,4 +110,6 @@ export const {
   useSearchUsersQuery,
   useDeleteConversationMutation,
   useSetActiveStatusMutation,
+  useUpdateMessageMutation,
+
 } = chatApi
