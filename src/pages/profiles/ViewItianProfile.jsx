@@ -240,13 +240,31 @@ const ViewItianProfile = () => {
                   <FileText size={18} />
                   <span>View Posts</span>
                 </button>
-                <button
-                  onClick={() => console.log("Chat Clicked")}
-                  className="flex items-center gap-2 bg-[#d0443c] text-white px-4 py-2 rounded-lg hover:bg-[#a0302c] transition shadow-md"
-                >
-                  <MessageSquare size={18} />
-                  <span>Chat</span>
-                </button>
+              <button
+                onClick={() => {
+                  if (profile) {
+                    const role = JSON.parse(localStorage.getItem('user'))?.role;
+
+                    const chatRoute =
+                      role === 'employer' ? '/employer/mychat' :
+                      role === 'itian' ? '/itian/mychat' :
+                      '/login'; // fallback
+
+                    navigate(chatRoute, {
+                      state: {
+                        user: profile.user_id,
+                        name: `${profile.first_name} ${profile.last_name}`,
+                        avatar: profile.profile_picture_url,
+                      },
+                    });
+                  }
+                }}
+                className="flex items-center gap-2 bg-[#d0443c] text-white px-4 py-2 rounded-lg hover:bg-[#a0302c] transition shadow-md"
+              >
+                <MessageSquare size={18} />
+                <span>Chat</span>
+              </button>
+
               </div>
             </div>
 

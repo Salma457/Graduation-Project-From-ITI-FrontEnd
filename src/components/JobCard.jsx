@@ -66,7 +66,16 @@ const JobCard = ({ job }) => {
     <div className="job-card">
       <div className="job-header">
         <h3>{job.job_title || 'Untitled Position'}</h3>
-        <p className="company">{job.employer?.name || "Company not specified"}</p>
+          {job.employer?.id && (
+            <p className="company">
+              <Link 
+                to={`/employer-profile/${job.employer.id}`} 
+                className="text-blue-600 hover:underline"
+              >
+                {job.employer.name}
+              </Link>
+            </p>
+          )}
       </div>
 
       <div className="job-details">

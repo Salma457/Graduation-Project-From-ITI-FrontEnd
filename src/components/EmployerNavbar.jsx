@@ -2,15 +2,15 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt } from "react-icons/fa";
 import "../css/Navbar.css";
+import Notifications from './Notification';
+import MessageNotification from './MessageNotification'; // الكومبوننت الجديد
 
 function EmployerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-  const toggleNotifications = () => setNotificationOpen(!notificationOpen);
 
   const handleLogout = () => {
     localStorage.removeItem("access-token");
@@ -28,33 +28,26 @@ function EmployerNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
+           <Link to="/employer-profile" className="nav-link">
+            <FaUser className="nav-icon" /> My Profile
+          </Link>
+          
+          <Link to="/employer/mychat" className="nav-link">
+            <MessageNotification iconClassName="nav-icon" /> Chat
+          </Link>
+          
           <div className={`dropdown ${dropdownOpen ? "open" : ""}`} onClick={toggleDropdown}>
             <button className="dropbtn">
               <FaBriefcase className="nav-icon" /> Jobs
             </button>
             <div className="dropdown-content">
-              <Link to="/employer/post-job"><FaFileAlt className="dropdown-icon" /> Post New Job</Link>
+              <Link to="/payment"><FaFileAlt className="dropdown-icon" /> Post New Job</Link>
               <Link to="/employer/jobs"><FaFileAlt className="dropdown-icon" /> My Jobs</Link>
             </div>
           </div>
 
-          <Link to="/employer-profile" className="nav-link">
-            <FaUser className="nav-icon" /> My Profile
-          </Link>
-          
           <div className="notification-wrapper">
-            <div className="notification-icon" onClick={toggleNotifications}>
-              <FaBell />
-              <span className="notification-badge">3</span>
-            </div>
-            {notificationOpen && (
-              <div className="notification-dropdown">
-                <div className="notification-item">New application received</div>
-                <div className="notification-item">Candidate accepted your offer</div>
-                <div className="notification-item">New message from candidate</div>
-                <Link to="/employer/notifications" className="view-all">View All Notifications</Link>
-              </div>
-            )}
+           <Notifications />
           </div>
 
           <button className="nav-link logout-btn" onClick={handleLogout}>

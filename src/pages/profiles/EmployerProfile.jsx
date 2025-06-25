@@ -5,6 +5,8 @@ import { setRole } from "../../store/userSlice";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
+import { useNavigate } from 'react-router-dom';
+
 import {
   Building,
   Mail,
@@ -52,6 +54,7 @@ const schema = Yup.object().shape({
 
 const EmployerProfile = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -237,10 +240,7 @@ const EmployerProfile = () => {
   };
 
   const handlePostJob = () => {
-    // Navigate to job posting page
-    console.log("Navigating to job posting page");
-    // You can replace this with your actual navigation logic
-    // navigate('/post-job');
+    navigate('/payment');
   };
 
   if (loading) {

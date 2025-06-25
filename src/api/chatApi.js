@@ -46,7 +46,7 @@ export const chatApi = createApi({
     }),
     createConversation: builder.mutation({
       query: ({ user_id, initial_message }) => ({
-        url: 'createConversation', // أو أي endpoint مخصص لإنشاء محادثة
+        url: 'createConversation', 
         method: 'POST',
         body: { 
           user_id: user_id,
@@ -56,7 +56,6 @@ export const chatApi = createApi({
       }),
       invalidatesTags: ['Contact'],
     }),
-    // الـ endpoint الجديد للحصول على معلومات اليوزر
     getUserInfo: builder.mutation({
       query: (userId) => ({
         url: 'idInfo',

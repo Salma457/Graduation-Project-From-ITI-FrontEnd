@@ -39,8 +39,11 @@ const Login = () => {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/login', formData);
       localStorage.setItem('access-token', response.data.access_token);
-      dispatch(setUser(response.data.user));
-      localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
+dispatch(setUser({
+  ...response.data.user,
+  role: response.data.user.role,
+}));
+     localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
       const userRole = response.data.user.role;
       if (userRole === 'employer') {
         try {

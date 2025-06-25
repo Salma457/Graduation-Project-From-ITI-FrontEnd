@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchEmployerJobs, editJob, deleteJob } from '../jobPostSlice';
+import { fetchEmployerData, editJob, deleteJob } from '../jobPostSlice';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
-import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, ChevronLeft, ChevronRight, Building2, MapPin, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../style/jobList.css';
 
 const JobList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const jobPostState = useSelector(state => state.jobPost || {});
-  const { jobs = [], loading = false, error = null } = jobPostState;
+  const jobPostState = useSelector(state => state.jobPost) || {};
+  const {
+    jobs = [],
+    loading = false,
+    error = null,
+  } = jobPostState;
+
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -22,17 +27,60 @@ const JobList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
 
+  const checkAndUpdateExpiredJobs = async () => {
+    const currentDate = new Date();
+    const jobsArray = Array.isArray(jobs) ? jobs : [];
+    
+    for (const job of jobsArray) {
+      if (job.application_deadline && job.status === 'Open') {
+        const deadlineDate = new Date(job.application_deadline);
+        
+        if (currentDate > deadlineDate) {
+          try {
+            await dispatch(editJob({ 
+              jobId: job.id, 
+              jobData: { ...job, status: 'Closed' } 
+            })).unwrap();
+            console.log(`Job ${job.id} automatically closed due to expired deadline`);
+          } catch (error) {
+            console.error(`Failed to auto-close job ${job.id}:`, error);
+          }
+        }
+      }
+    }
+  };
+
   useEffect(() => {
-    dispatch(fetchEmployerJobs());
+    dispatch(fetchEmployerData());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (jobs.length > 0) {
+      checkAndUpdateExpiredJobs();
+    }
+  }, [jobs, dispatch]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (jobs.length > 0) {
+        checkAndUpdateExpiredJobs();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [jobs, dispatch]);
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
 
-  // Only show jobs that are NOT trashed (deleted_at is null)
-  const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
-    // Filter by status
+  const isJobExpired = (job) => {
+    if (!job.application_deadline) return false;
+    const currentDate = new Date();
+    const deadlineDate = new Date(job.application_deadline);
+    return currentDate > deadlineDate;
+  };
+
+    const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
     const statusMatch = filter === 'all' || job.status === filter;
-    // Filter by search term
     const searchMatch = job.job_title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (job.company_name && job.company_name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -51,13 +99,11 @@ const JobList = () => {
     }
   });
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
   const startIndex = (currentPage - 1) * jobsPerPage;
   const endIndex = startIndex + jobsPerPage;
   const currentJobs = filteredJobs.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchTerm, sortBy]);
@@ -90,13 +136,9 @@ const JobList = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
-      setModalIsOpen(false);
-      dispatch(fetchEmployerJobs());
-    } catch (error) {
-      Swal.fire('Error!', 'Failed to update job.', 'error');
-    }
+    await dispatch(editJob({ jobId: editData.id, jobData: editData })).unwrap();
+    setModalIsOpen(false);
+    dispatch(fetchEmployerData());
   };
 
   const handleDelete = (jobId) => {
@@ -130,6 +172,38 @@ const JobList = () => {
 
   const getJobInitials = (title) => {
     return title ? title.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : 'JB';
+  };
+
+  // Function to format deadline and show expiry status
+  const formatDeadlineStatus = (job) => {
+    if (!job.application_deadline) return null;
+    
+    const currentDate = new Date();
+    const deadlineDate = new Date(job.application_deadline);
+    const isExpired = currentDate > deadlineDate;
+    
+    const formattedDate = deadlineDate.toLocaleDateString('en-GB');
+    
+    if (isExpired) {
+      return (
+        <div style={{ color: '#dc2626', fontSize: '12px', fontWeight: '500' }}>
+          Expired: {formattedDate}
+        </div>
+      );
+    } else {
+      const timeDiff = deadlineDate - currentDate;
+      const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+      
+      return (
+        <div style={{ 
+          color: daysLeft <= 3 ? '#dc2626' : '#059669', 
+          fontSize: '12px', 
+          fontWeight: '500' 
+        }}>
+          Deadline: {formattedDate} ({daysLeft} days left)
+        </div>
+      );
+    }
   };
 
   // Pagination component
@@ -469,7 +543,14 @@ return (
         
         <div className="list-grid">
           {currentJobs.map(job => (
-            <div className="list-card" key={job.id}>
+            <div 
+              className="list-card" 
+              key={job.id}
+              style={{
+                opacity: isJobExpired(job) ? 0.7 : 1,
+                borderLeft: isJobExpired(job) ? '4px solid #dc2626' : 'none'
+              }}
+            >
               <div className="list-card-header">
                 <div className="list-avatar">
                   <div className="list-avatar-circle">
@@ -482,6 +563,7 @@ return (
                   <div className="list-posted-time">
                     {formatTimeAgo(job.created_at || job.posted_date)}
                   </div>
+                  {formatDeadlineStatus(job)}
                 </div>
                 <div className="list-actions">
                   <button className="list-action-btn list-view-btn" onClick={() => navigate(`/employer/job/${job.id}`)}>
@@ -493,20 +575,21 @@ return (
               <div className="list-card-details">
                 <div className="list-meta">
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Company:</span>
-                    <span className="list-meta-value">
-                      {job.company_name || "Company"}
-                    </span>
+                    <span className="list-meta-label">Company Type:</span>
+                    <span className="list-meta-value">{job.company_name || "IT Industry"}</span>
                   </div>
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Job Type:</span>
-                    <span className="list-meta-value">{job.job_type || "Full-time"}</span>
+                    <span className="list-meta-label">Year founded:</span>
+                    <span className="list-meta-value">{job.job_type || "2019"}</span>
                   </div>
                 </div>
-                
+                <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full">
+                  {job.applications_count ?? 0} Application{job.applications_count === 1 ? '' : 's'}
+                </span>
                 <div className="list-status-badge">
                   <span className={`list-status-badge ${job.status?.toLowerCase() || 'open'}`}>
                     {job.status || 'Open'}
+                    {isJobExpired(job) && job.status === 'Open' && ' (Auto-Closing)'}
                   </span>
                 </div>
               </div>

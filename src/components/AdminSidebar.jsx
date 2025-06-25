@@ -34,6 +34,11 @@ const AdminSidebar = () => {
           <span className="admin-sidebar-icon">📊</span>
           <span>Reports</span>
         </Link>
+
+         <Link to="/admin/set-price" className="admin-sidebar-link">
+          <span className="admin-sidebar-icon">📊</span>
+          <span>Payment</span>
+        </Link>
       </nav>
     </aside>
   );
