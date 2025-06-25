@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
-import { fetchMyPosts, deletePost as apiDeletePost } from "../../services/api";
+import {
+  fetchMyPosts,
+  fetchPosts,
+  deletePost as apiDeletePost,
+} from "../../services/api";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import EditPostModal from "./EditPostModal";
@@ -16,6 +21,7 @@ import ItianSidebarProfile from "./ItianSidebarProfile";
 const MyPostsPage = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.itian.user);
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) {
@@ -50,24 +56,35 @@ const MyPostsPage = () => {
     },
   };
 
-  const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
-    try {
-      setLoading(true);
-      const data = await fetchMyPosts({ page: pageNumber });
-      const postsArray = Array.isArray(data.data) ? data.data : [];
-      if (reset) {
-        setPosts(postsArray);
-      } else {
-        setPosts((prev) => [...prev, ...postsArray]);
+  const loadPosts = useCallback(
+    async (reset = false, pageNumber = 1) => {
+      try {
+        setLoading(true);
+        // جلب userId من الكويري سترينج
+        const params = new URLSearchParams(location.search);
+        const userId = params.get("userId");
+        let data;
+        if (userId) {
+          data = await fetchPosts({ page: pageNumber, user_id: userId });
+        } else {
+          data = await fetchMyPosts({ page: pageNumber });
+        }
+        const postsArray = Array.isArray(data.data) ? data.data : [];
+        if (reset) {
+          setPosts(postsArray);
+        } else {
+          setPosts((prev) => [...prev, ...postsArray]);
+        }
+        setHasMore(data.current_page < data.last_page);
+      } catch (err) {
+        toast.error("Failed to load posts. Please try again.");
+        console.error("Error fetching posts:", err);
+      } finally {
+        setLoading(false);
       }
-      setHasMore(data.current_page < data.last_page);
-    } catch (err) {
-      toast.error("Failed to load posts. Please try again.");
-      console.error("Error fetching posts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [location.search]
+  );
 
   useEffect(() => {
     setPage(1);
