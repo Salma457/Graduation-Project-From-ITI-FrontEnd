@@ -20,7 +20,7 @@ import {
   FileText,
   Sparkles,
   Link,
-  Phone
+  Phone,
 } from "lucide-react";
 
 const ViewItianProfile = () => {
@@ -39,9 +39,9 @@ const ViewItianProfile = () => {
   const BASE_URL = "http://localhost:8000";
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
@@ -56,19 +56,22 @@ const ViewItianProfile = () => {
     setError("");
 
     try {
-      const token = localStorage.getItem('access-token');
+      const token = localStorage.getItem("access-token");
       if (!token) {
         setError("You must be logged in to view profiles.");
         setLoading(false);
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
-      const response = await axios.get(`${BASE_URL}/api/itian-profile/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `${BASE_URL}/api/itian-profile/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.status === 200 && response.data) {
         const profileData = response.data.data;
@@ -84,8 +87,10 @@ const ViewItianProfile = () => {
         const message = err.response.data?.message || err.message;
 
         if (status === 401 || status === 403) {
-          setError("You are not authorized to view this profile. Please log in.");
-          navigate('/login');
+          setError(
+            "You are not authorized to view this profile. Please log in."
+          );
+          navigate("/login");
         } else if (status === 404) {
           setError("Profile not found for this user ID.");
         } else if (status === 500) {
@@ -115,7 +120,9 @@ const ViewItianProfile = () => {
           <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-red-500 rounded-full animate-spin animation-delay-150"></div>
           <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-600 w-8 h-8 animate-pulse" />
         </div>
-        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading profile...</p>
+        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">
+          Loading profile...
+        </p>
       </div>
     );
   }
@@ -127,7 +134,7 @@ const ViewItianProfile = () => {
           <p className="text-red-500 text-lg mb-4">{error}</p>
           {error.includes("log in") ? (
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#a0302c] transition duration-300 shadow-md"
             >
               Go to Login
@@ -150,8 +157,12 @@ const ViewItianProfile = () => {
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md">
           <Sparkles className="h-12 w-12 text-[#d0443c] mx-auto mb-4" />
-          <p className="text-gray-700 text-lg mb-4">No profile data available.</p>
-          <p className="text-gray-600 mb-6">It seems this user does not have a public profile yet.</p>
+          <p className="text-gray-700 text-lg mb-4">
+            No profile data available.
+          </p>
+          <p className="text-gray-600 mb-6">
+            It seems this user does not have a public profile yet.
+          </p>
           <button
             onClick={() => navigate(-1)}
             className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#a0302c] transition duration-300 shadow-md"
@@ -172,23 +183,28 @@ const ViewItianProfile = () => {
           <div className="relative">
             {/* Cover Photo */}
             <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#a0302c]"></div>
-            
+
             {/* Profile Picture */}
             <div className="absolute -bottom-16 left-6">
               <div className="relative">
                 <div className="w-36 h-36 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
                   {profile.profile_picture_url ? (
-                    <img 
-                      src={profile.profile_picture_url} 
-                      alt="Profile" 
+                    <img
+                      src={profile.profile_picture_url}
+                      alt="Profile"
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
                       }}
                     />
                   ) : null}
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500" style={{ display: profile.profile_picture_url ? 'none' : 'flex' }}>
+                  <div
+                    className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500"
+                    style={{
+                      display: profile.profile_picture_url ? "none" : "flex",
+                    }}
+                  >
                     <User size={72} />
                   </div>
                 </div>
@@ -204,15 +220,21 @@ const ViewItianProfile = () => {
                   {profile.first_name} {profile.last_name}
                 </h2>
                 {profile.current_job_title && (
-                  <p className="text-gray-600 mt-1">{profile.current_job_title}</p>
+                  <p className="text-gray-600 mt-1">
+                    {profile.current_job_title}
+                  </p>
                 )}
-                <p className="text-gray-600 mt-2">{profile.bio || "No bio provided"}</p>
+                <p className="text-gray-600 mt-2">
+                  {profile.bio || "No bio provided"}
+                </p>
               </div>
-              
+
               {/* Action Buttons (positioned where Edit button would be) */}
               <div className="flex gap-4">
                 <button
-                  onClick={() => console.log("View Posts Clicked")}
+                  onClick={() =>
+                    navigate(`/my-posts?userId=${profile.user_id}`)
+                  }
                   className="flex items-center gap-2 bg-[#d0443c] text-white px-4 py-2 rounded-lg hover:bg-[#a0302c] transition shadow-md"
                 >
                   <FileText size={18} />
@@ -232,22 +254,30 @@ const ViewItianProfile = () => {
             <div className="mt-6 flex flex-wrap gap-4">
               <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                 <Briefcase className="text-[#d0443c] mr-2" size={16} />
-                <span className="text-gray-700">{profile.iti_track || "ITI Track"}</span>
+                <span className="text-gray-700">
+                  {profile.iti_track || "ITI Track"}
+                </span>
               </div>
               <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                 <Calendar className="text-[#d0443c] mr-2" size={16} />
-                <span className="text-gray-700">Graduated {profile.graduation_year || "Year"}</span>
+                <span className="text-gray-700">
+                  Graduated {profile.graduation_year || "Year"}
+                </span>
               </div>
               {profile.experience_years !== null && (
                 <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                   <Star className="text-[#d0443c] mr-2" size={16} />
-                  <span className="text-gray-700">{profile.experience_years} years experience</span>
+                  <span className="text-gray-700">
+                    {profile.experience_years} years experience
+                  </span>
                 </div>
               )}
               <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                 <Sparkles className="text-[#d0443c] mr-2" size={16} />
                 <span className="text-gray-700">
-                  {profile.is_open_to_work ? "Open to work" : "Not currently looking"}
+                  {profile.is_open_to_work
+                    ? "Open to work"
+                    : "Not currently looking"}
                 </span>
               </div>
             </div>
@@ -258,16 +288,16 @@ const ViewItianProfile = () => {
         <div className="space-y-6">
           {/* Contact Information Card */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div 
+            <div
               className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
-              onClick={() => toggleSection('contact')}
+              onClick={() => toggleSection("contact")}
             >
               <h3 className="text-xl font-bold text-gray-900">
                 Contact Information
               </h3>
               {expandedSections.contact ? <ChevronUp /> : <ChevronDown />}
             </div>
-            
+
             {expandedSections.contact && (
               <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 {profile.email && (
@@ -293,9 +323,9 @@ const ViewItianProfile = () => {
                     <Globe className="text-[#d0443c] mr-3" size={20} />
                     <div>
                       <p className="text-gray-500 text-sm">Portfolio</p>
-                      <a 
-                        href={profile.portfolio_url} 
-                        target="_blank" 
+                      <a
+                        href={profile.portfolio_url}
+                        target="_blank"
                         rel="noreferrer"
                         className="text-[#d0443c] hover:underline"
                       >
@@ -309,9 +339,9 @@ const ViewItianProfile = () => {
                     <Linkedin className="text-[#d0443c] mr-3" size={20} />
                     <div>
                       <p className="text-gray-500 text-sm">LinkedIn</p>
-                      <a 
-                        href={profile.linkedin_profile_url} 
-                        target="_blank" 
+                      <a
+                        href={profile.linkedin_profile_url}
+                        target="_blank"
                         rel="noreferrer"
                         className="text-[#d0443c] hover:underline"
                       >
@@ -325,9 +355,9 @@ const ViewItianProfile = () => {
                     <Github className="text-[#d0443c] mr-3" size={20} />
                     <div>
                       <p className="text-gray-500 text-sm">GitHub</p>
-                      <a 
-                        href={profile.github_profile_url} 
-                        target="_blank" 
+                      <a
+                        href={profile.github_profile_url}
+                        target="_blank"
                         rel="noreferrer"
                         className="text-[#d0443c] hover:underline"
                       >
@@ -341,9 +371,9 @@ const ViewItianProfile = () => {
                     <FileText className="text-[#d0443c] mr-3" size={20} />
                     <div>
                       <p className="text-gray-500 text-sm">CV</p>
-                      <a 
-                        href={profile.cv_url} 
-                        target="_blank" 
+                      <a
+                        href={profile.cv_url}
+                        target="_blank"
                         rel="noreferrer"
                         className="text-[#d0443c] hover:underline"
                       >
@@ -358,30 +388,34 @@ const ViewItianProfile = () => {
 
           {/* Professional Details Card */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div 
+            <div
               className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
-              onClick={() => toggleSection('professional')}
+              onClick={() => toggleSection("professional")}
             >
               <h3 className="text-xl font-bold text-gray-900">
                 Professional Details
               </h3>
               {expandedSections.professional ? <ChevronUp /> : <ChevronDown />}
             </div>
-            
+
             {expandedSections.professional && (
               <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-center">
                   <Briefcase className="text-[#d0443c] mr-3" size={20} />
                   <div>
                     <p className="text-gray-500 text-sm">ITI Track</p>
-                    <p className="text-gray-900">{profile.iti_track || "Not provided"}</p>
+                    <p className="text-gray-900">
+                      {profile.iti_track || "Not provided"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <Calendar className="text-[#d0443c] mr-3" size={20} />
                   <div>
                     <p className="text-gray-500 text-sm">Graduation Year</p>
-                    <p className="text-gray-900">{profile.graduation_year || "Not provided"}</p>
+                    <p className="text-gray-900">
+                      {profile.graduation_year || "Not provided"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -389,7 +423,9 @@ const ViewItianProfile = () => {
                   <div>
                     <p className="text-gray-500 text-sm">Experience</p>
                     <p className="text-gray-900">
-                      {profile.experience_years !== null ? `${profile.experience_years} years` : "Not provided"}
+                      {profile.experience_years !== null
+                        ? `${profile.experience_years} years`
+                        : "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -400,7 +436,8 @@ const ViewItianProfile = () => {
                       <p className="text-gray-500 text-sm">Current Position</p>
                       <p className="text-gray-900">
                         {profile.current_job_title}
-                        {profile.current_company && ` at ${profile.current_company}`}
+                        {profile.current_company &&
+                          ` at ${profile.current_company}`}
                       </p>
                     </div>
                   </div>
@@ -409,8 +446,12 @@ const ViewItianProfile = () => {
                   <div className="flex items-center">
                     <MapPin className="text-[#d0443c] mr-3" size={20} />
                     <div>
-                      <p className="text-gray-500 text-sm">Preferred Locations</p>
-                      <p className="text-gray-900">{profile.preferred_job_locations}</p>
+                      <p className="text-gray-500 text-sm">
+                        Preferred Locations
+                      </p>
+                      <p className="text-gray-900">
+                        {profile.preferred_job_locations}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -421,16 +462,14 @@ const ViewItianProfile = () => {
           {/* Skills Card */}
           {profile.skills?.length > 0 && (
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div 
+              <div
                 className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
-                onClick={() => toggleSection('skills')}
+                onClick={() => toggleSection("skills")}
               >
-                <h3 className="text-xl font-bold text-gray-900">
-                  Skills
-                </h3>
+                <h3 className="text-xl font-bold text-gray-900">Skills</h3>
                 {expandedSections.skills ? <ChevronUp /> : <ChevronDown />}
               </div>
-              
+
               {expandedSections.skills && (
                 <div className="px-6 pb-6">
                   <div className="flex flex-wrap gap-3">
@@ -451,24 +490,29 @@ const ViewItianProfile = () => {
           {/* Projects Card */}
           {profile.projects?.length > 0 && (
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div 
+              <div
                 className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
-                onClick={() => toggleSection('projects')}
+                onClick={() => toggleSection("projects")}
               >
-                <h3 className="text-xl font-bold text-gray-900">
-                  Projects
-                </h3>
+                <h3 className="text-xl font-bold text-gray-900">Projects</h3>
                 {expandedSections.projects ? <ChevronUp /> : <ChevronDown />}
               </div>
-              
+
               {expandedSections.projects && (
                 <div className="px-6 pb-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {profile.projects.map((project) => (
-                      <div key={project.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition">
-                        <h4 className="text-lg font-bold text-gray-900 mb-2">{project.project_title}</h4>
+                      <div
+                        key={project.id}
+                        className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition"
+                      >
+                        <h4 className="text-lg font-bold text-gray-900 mb-2">
+                          {project.project_title}
+                        </h4>
                         {project.description && (
-                          <p className="text-gray-600 mb-4">{project.description}</p>
+                          <p className="text-gray-600 mb-4">
+                            {project.description}
+                          </p>
                         )}
                         {project.project_link && (
                           <a

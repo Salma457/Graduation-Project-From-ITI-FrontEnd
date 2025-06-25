@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
-import { fetchPosts, deletePost as apiDeletePost } from "../../services/api";
+import { fetchMyPosts, deletePost as apiDeletePost } from "../../services/api";
 import PostCard from "./PostCard";
 import CreatePostModal from "./CreatePostModal";
 import EditPostModal from "./EditPostModal";
@@ -13,7 +13,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ItianSidebarProfile from "./ItianSidebarProfile";
 
-const PostList = () => {
+const MyPostsPage = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.itian.user);
 
@@ -30,48 +30,36 @@ const PostList = () => {
   const [hasMore, setHasMore] = useState(true);
   const [editPost, setEditPost] = useState(null);
   const [deletePostId, setDeletePostId] = useState(null);
-
-  // State for reactions modal
   const [reactionsModalOpen, setReactionsModalOpen] = useState(false);
   const [reactionsModalPostId, setReactionsModalPostId] = useState(null);
-
   const observer = useRef();
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.1 },
     },
   };
-
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
+      transition: { type: "spring", stiffness: 100, damping: 15 },
     },
   };
 
   const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
     try {
       setLoading(true);
-      const data = await fetchPosts({ page: pageNumber });
+      const data = await fetchMyPosts({ page: pageNumber });
       const postsArray = Array.isArray(data.data) ? data.data : [];
-
       if (reset) {
         setPosts(postsArray);
       } else {
         setPosts((prev) => [...prev, ...postsArray]);
       }
-
       setHasMore(data.current_page < data.last_page);
     } catch (err) {
       toast.error("Failed to load posts. Please try again.");
@@ -95,13 +83,11 @@ const PostList = () => {
     (node) => {
       if (loading || !hasMore) return;
       if (observer.current) observer.current.disconnect();
-
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
           setPage((prev) => prev + 1);
         }
       });
-
       if (node) observer.current.observe(node);
     },
     [loading, hasMore]
@@ -112,29 +98,24 @@ const PostList = () => {
     setIsModalOpen(false);
     toast.success("Post created successfully!");
   };
-
   const handleDeletePost = (postId) => {
     setPosts(posts.filter((post) => post.id !== postId));
     toast.success("Post deleted successfully!");
   };
-
   const handleUpdatePost = (updatedPost) => {
     setPosts(
       posts.map((post) => (post.id === updatedPost.id ? updatedPost : post))
     );
     toast.success("Post updated successfully!");
   };
-
   const handleRefresh = () => {
     setPage(1);
     loadPosts(true, 1);
   };
-
   const openEditModal = (post) => setEditPost(post);
   const closeEditModal = () => setEditPost(null);
   const openDeleteModal = (postId) => setDeletePostId(postId);
   const closeDeleteModal = () => setDeletePostId(null);
-
   const handleDeleteConfirmed = async () => {
     if (!deletePostId) return;
     try {
@@ -145,8 +126,6 @@ const PostList = () => {
       toast.error("Failed to delete post.");
     }
   };
-
-  // مرر دوال الفتح لـ PostCard
   const handleOpenReactionsModal = (postId) => {
     setReactionsModalOpen(true);
     setReactionsModalPostId(postId);
@@ -155,23 +134,19 @@ const PostList = () => {
     setReactionsModalOpen(false);
     setReactionsModalPostId(null);
   };
-
   const handleEditClick = (post) => openEditModal(post);
   const handleDeleteClick = (postId) => openDeleteModal(postId);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Left Sidebar */}
         <div className="hidden lg:block w-64 bg-white border-r border-gray-200 p-4 sticky top-0 h-screen overflow-y-auto">
           <div className="space-y-6">
             {user && <ItianSidebarProfile profile={user} />}
           </div>
         </div>
-        {/* Main Content */}
         <div className="flex-1 py-8 pl-2 pr-4 sm:pl-4 sm:pr-6 lg:pl-6 lg:pr-8">
           <div className="max-w-3xl mx-auto">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div className="flex items-center gap-3">
                 <motion.button
@@ -185,8 +160,6 @@ const PostList = () => {
                 </motion.button>
               </div>
             </div>
-
-            {/* Posts List */}
             {loading && page === 1 ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
@@ -201,7 +174,7 @@ const PostList = () => {
                   No posts found
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  Be the first to share something!
+                  You haven't created any posts yet.
                 </p>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
@@ -234,13 +207,11 @@ const PostList = () => {
                     />
                   </motion.div>
                 ))}
-
                 {loading && page > 1 && (
                   <div className="flex justify-center py-6">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
                   </div>
                 )}
-
                 {!hasMore && (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -255,8 +226,6 @@ const PostList = () => {
           </div>
         </div>
       </div>
-
-      {/* Create Post Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -265,7 +234,6 @@ const PostList = () => {
       >
         <FiPlus className="text-xl" />
       </motion.button>
-
       <AnimatePresence>
         {isModalOpen && (
           <CreatePostModal
@@ -275,8 +243,6 @@ const PostList = () => {
           />
         )}
       </AnimatePresence>
-
-      {/* Modals for edit, delete, and reactions */}
       {editPost && (
         <EditPostModal
           post={editPost}
@@ -294,7 +260,6 @@ const PostList = () => {
         postId={reactionsModalPostId}
         onClose={handleCloseReactionsModal}
       />
-
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -309,4 +274,4 @@ const PostList = () => {
   );
 };
 
-export default PostList;
+export default MyPostsPage;
