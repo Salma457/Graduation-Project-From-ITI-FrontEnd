@@ -80,7 +80,7 @@ function LandingPageContent() {
   const itiStats = [
     { label: "Annual Employment Rate", value: "85", icon: TrendingUp, color: "from-red-500 to-rose-600" },
     { label: "Partner Companies", value: "500", icon: Building2, color: "from-red-600 to-red-700" },
-    { label: "Universities & Faculties", value: "80", icon: GraduationCap, color: "from-rose-500 to-pink-600" },
+    { label: "Universities & Faculties", value: "80", icon: GraduationCap, color: "from-red-500 to-red-600" },
     { label: "ITI Graduates", value: "16000", icon: Users, color: "from-red-700 to-red-800" },
   ]
 
@@ -92,14 +92,14 @@ function LandingPageContent() {
   ]
 
   const jobCategories = [
-    { name: "Software Development", icon: Code, count: "2.5k+", color: "from-red-500 to-rose-500" },
-    { name: "Graphic Design", icon: Palette, count: "1.2k+", color: "from-rose-500 to-pink-500" },
-    { name: "Network & Security", icon: Shield, count: "950+", color: "from-red-600 to-red-700" },
-    { name: "Digital Marketing", icon: Megaphone, count: "750+", color: "from-red-400 to-rose-500" },
-    { name: "Business Management", icon: BarChart3, count: "650+", color: "from-rose-600 to-red-600" },
-    { name: "Artificial Intelligence", icon: Cpu, count: "580+", color: "from-red-500 to-red-600" },
-    { name: "Computer Engineering", icon: Building2, count: "420+", color: "from-rose-500 to-red-500" },
-    { name: "Data Science", icon: Database, count: "320+", color: "from-red-600 to-rose-600" },
+    { name: "Software Development", icon: Code, color: "from-red-500 to-rose-500" },
+    { name: "Graphic Design", icon: Palette, color: "from-rose-500 to-pink-500" },
+    { name: "Network & Security", icon: Shield, color: "from-red-600 to-red-700" },
+    { name: "Digital Marketing", icon: Megaphone, color: "from-red-400 to-rose-500" },
+    { name: "Business Management", icon: BarChart3, color: "from-rose-600 to-red-600" },
+    { name: "Artificial Intelligence", icon: Cpu,  color: "from-red-500 to-red-600" },
+    { name: "Computer Engineering", icon: Building2,  color: "from-rose-500 to-red-500" },
+    { name: "Data Science", icon: Database,  color: "from-red-600 to-rose-600" },
   ]
 
   // Top Hiring Companies Data
@@ -177,11 +177,8 @@ function LandingPageContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50"></div>
-        
-        {/* Animated background elements */}
         <FloatingElement className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full opacity-30" delay={0} />
         <FloatingElement className="absolute top-40 right-20 w-16 h-16 bg-rose-300 rounded-full opacity-20" delay={1} />
         <FloatingElement className="absolute bottom-32 left-1/4 w-12 h-12 bg-red-300 rounded-full opacity-25" delay={2} />
@@ -206,37 +203,12 @@ function LandingPageContent() {
                   Accelerate your career with our specialized job portal designed for your expertise.
                 </p>
               </div>
-              
-              <div className="flex items-center gap-12 pt-4">
-                <FadeInElement delay={2} className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
-                    2.5k+
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">Active Jobs</div>
-                </FadeInElement>
-                <FadeInElement delay={3} className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">500+</div>
-                  <div className="text-sm text-gray-600 font-medium">Companies</div>
-                </FadeInElement>
-                <FadeInElement delay={4} className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">100%</div>
-                  <div className="text-sm text-gray-600 font-medium">ITI Focused</div>
-                </FadeInElement>
-              </div>
             </FadeInElement>
 
             {/* Image Side - Animated */}
             <FadeInElement delay={1} className="flex justify-center items-center">
               <div className="relative">
                <img src="/public/choice-worker-concept.png" alt=""className="max-w-md w-full rounded-lg shadow-xl" />
-
-               {/* <div className="w-96 h-96 bg-gradient-to-br from-red-100 to-rose-100 rounded-3xl flex items-center justify-center border-2 border-dashed border-red-300 hover:border-red-400 transition-all duration-300 group">
-                    <div className="text-center text-red-600">
-                   <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                      {/* <GraduationCap className="w-10 h-10 text-white" /> 
-                    </div> 
-                  </div>
-                </div>*/}
                 <FloatingElement className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-500 to-pink-500 rounded-2xl opacity-20" delay={0.5} />
                 <FloatingElement className="absolute -bottom-20 -left-30 w-32 h-32 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl opacity-20" delay={1.5} />
               </div>
@@ -371,13 +343,51 @@ function LandingPageContent() {
                   <category.icon className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-bold text-gray-900 mb-3 text-lg group-hover:text-red-600 transition-colors">{category.name}</h3>
-                <p className="text-gray-600 font-semibold">{category.count} positions</p>
               </FadeInElement>
             ))}
           </div>
         </div>
       </section>
-
+  
+      {/* Job Categories */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <FadeInElement className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              Explore <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">Career Categories</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Discover opportunities across various tech domains perfectly suited for ITI graduates
+            </p>
+          </FadeInElement>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {jobCategories.map((category, index) => (
+              <FadeInElement
+                key={index}
+                delay={index}
+                className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-2 border border-gray-100 hover:border-red-200"
+              >
+                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${category.color} rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300`}>
+                  <category.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-3 text-lg group-hover:text-red-600 transition-colors">{category.name}</h3>
+              </FadeInElement>
+            ))}
+          </div>
+        </div>
+      </section>
+        {/* Market Opportunities Section */}
+      <section className="py-20 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 relative overflow-hidden">
+          <FadeInElement delay={5} className="mt-12 text-center">
+            <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-8 rounded-2xl shadow-xl">
+              <h4 className="text-2xl font-bold mb-4">🚀 Perfect Timing for ITI Graduates!</h4>
+              <p className="text-red-100 text-lg max-w-4xl mx-auto">
+                Egypt offers 20%+ cost savings compared to global tech hubs like India, making it an attractive destination for international companies. The government's Digital Egypt initiative is driving massive demand for skilled tech professionals.
+              </p>
+            </div>
+          </FadeInElement>
+      </section>
       {/* ITI Locations */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
