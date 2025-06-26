@@ -66,11 +66,6 @@ const PostList = () => {
     },
   };
 
-  // const buttonVariants = {
-  //   hover: { scale: 1.05, boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" },
-  //   tap: { scale: 0.98 },
-  // };
-
   const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
     try {
       setLoading(true);
@@ -291,26 +286,11 @@ const PostList = () => {
             </div>
           </div>
 
-          {/* Right Column - 20% width */}
-          <div className="w-full lg:w-1/5 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)]">
+          {/* Right Column - 20% width (Only for Chatbot on desktop) */}
+          <div className="hidden lg:block lg:w-1/5 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)]">
             <div className="flex flex-col h-full">
-              {/* Empty space that will push buttons to bottom */}
               <div className="flex-1"></div>
-              {/* Fixed buttons at bottom */}
-              <div className="sticky bottom-8 flex flex-col items-end space-y-4">
-                {/* Create Post Floating Button - Same design as ChatbotButton */}
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="fixed bottom-24 right-8 z-50 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-4 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 group"
-                  style={{ boxShadow: "0 4px 24px 0 rgba(220,38,38,0.15)" }}
-                  aria-label="Create Post"
-                >
-                  <span className="text-2xl mr-2">+</span>
-                  <span className="font-bold text-lg hidden sm:inline group-hover:inline">
-                    Create Post
-                  </span>
-                </button>
-                {/* Chatbot Floating Button */}
+              <div className="sticky bottom-8 flex flex-col items-end">
                 <ChatbotButton />
               </div>
             </div>
@@ -318,25 +298,32 @@ const PostList = () => {
         </div>
       </div>
 
-      {/* Floating Create Post Button (Mobile Only) */}
-      <motion.div
-        className="fixed bottom-24 right-6 z-50 lg:hidden"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-4 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 group"
-          style={{ boxShadow: "0 4px 24px 0 rgba(220,38,38,0.15)" }}
-          aria-label="Create Post"
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+        {/* Chatbot Button (Mobile only) */}
+        <div className="lg:hidden">
+          <ChatbotButton />
+        </div>
+
+        {/* Create Post Button (All screens) */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-          <span className="text-2xl mr-2">+</span>
-          <span className="font-bold text-lg hidden sm:inline group-hover:inline">
-            Create Post
-          </span>
-        </button>
-      </motion.div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-4 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 group"
+            style={{ boxShadow: "0 4px 24px 0 rgba(220,38,38,0.15)" }}
+            aria-label="Create Post"
+          >
+            <FiPlus className="text-2xl" />
+            <span className="font-bold text-lg hidden sm:inline group-hover:inline ml-2">
+              Create Post
+            </span>
+          </button>
+        </motion.div>
+      </div>
 
       {/* Modals */}
       <AnimatePresence>
