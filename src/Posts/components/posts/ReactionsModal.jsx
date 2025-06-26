@@ -58,6 +58,7 @@ const ReactionsModal = ({ postId, onClose, isOpen, darkMode = false }) => {
   };
 
   useEffect(() => {
+    if (!postId) return; // Prevent API call if postId is null or undefined
     const loadReactions = async () => {
       setIsLoading(true);
       try {
