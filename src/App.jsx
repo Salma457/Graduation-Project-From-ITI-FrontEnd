@@ -59,13 +59,12 @@ import RagChat from "./AI Chat/RagChat.jsx";
 import ChatbotButton from "./AI Chat/ChatbotButton.jsx";
 
 // Report Page
+import LandingPageContent from "./pages/homePage/app/page"
+// import ReportsPage from './pages/ReportsPage.jsx';          // للمستخدم العادي (ITian/Employer)
+import CreateReportPage from "./pages/CreateReportPage"; // لإنشاء التقارير
 
-import CreateReportPage from './pages/CreateReportPage';
-
-import MyReportsPage from './pages/MyReportsPage.jsx';
-import LandingPageContent from './pages/homePage/app/page'
-import NotFoundPage from "./components/NotFoundPage.jsx";
-
+import MyReportsPage from "./pages/MyReportsPage.jsx"; // لعرض التقارير الخاصة بالمستخدم
+  import NotFoundPage from "./components/NotFoundPage.jsx"
 function App() {
   useAuthInit();
   const user = useSelector((state) => state.user.user);
@@ -189,6 +188,10 @@ function App() {
 
           {/* For Admin */}
           {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
+          
+
+          {/* <Route path="/reportss" element={<ReportsPage />} /> */}
+          {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
           {/* Standalone Routes */}
           <Route path="/rag" element={<RagChat />} />
           <Route path="/reports/create" element={<CreateReportPage />} />
@@ -196,8 +199,6 @@ function App() {
           <Route path="/my-reports" element={<MyReportsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-        {/* Show ChatbotButton only if user is logged in */}
-        {user && <ChatbotButton />}
       </Router>
     </Provider>
   );
