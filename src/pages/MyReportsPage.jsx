@@ -199,7 +199,6 @@ const MyReportsPage = () => {
   };
 
   const deleteReport = async (reportId) => {
-    if (!window.confirm('Are you sure you want to delete this report?')) return;
     try {
       setActionLoading(true);
       await apiCall(`${API_BASE_URL}/reports/${reportId}`, { method: 'DELETE' });
@@ -209,10 +208,8 @@ const MyReportsPage = () => {
         setSelectedReport(null);
       }
       await fetchMyReports();
-      alert('Report deleted successfully');
     } catch (error) {
       console.error('Error deleting report:', error);
-      alert('Error deleting report');
     } finally {
       setActionLoading(false);
     }
@@ -225,7 +222,6 @@ const MyReportsPage = () => {
       setShowDetailsModal(true);
     } catch (error) {
       console.error('Error fetching report details:', error);
-      alert('Error fetching report details');
     }
   };
 

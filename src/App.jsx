@@ -185,9 +185,17 @@ function App() {
           <Route path="/rag" element={<RagChat />} />
 
           {/* <Route path="/reports" element={<ReportsPage />} /> */}
-          <Route path="/reports/create" element={<CreateReportPage />} />
+          <Route path="/itian/reports/create" element={<CreateReportPage />} />
+          <Route path="/itian/my-reports" element={<MyReportsPage />} />
+
+           <Route path="/employer/reports/create" element={<CreateReportPage />} />
+          <Route path="/employer/my-reports" element={<MyReportsPage />} />
 
           {/* For Admin */}
+          <Route path="/admin/reports" element={<AdminReportPage />} />
+          
+
+          {/* <Route path="/reportss" element={<ReportsPage />} /> */}
           {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
           {/* Standalone Routes */}
           <Route path="/rag" element={<RagChat />} />
