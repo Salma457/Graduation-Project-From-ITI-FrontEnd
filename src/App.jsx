@@ -81,24 +81,27 @@ function App() {
   }, [user, dispatch]);
 
   return (
-    <Provider store={store}>
+       <Provider store={store}>
       <Router>
         <Routes>
+          {/* No Layout - Auth */}
           <Route element={<NoLayout />}>
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
-        <Route element={<WithoutLoginLayout />}>
-          <Route path="/" element={< LandingPageContent/>} />
-        </Route>
 
-          {/* 🟧 Admin layout */}
+          {/* Public Landing */}
+          <Route element={<WithoutLoginLayout />}>
+            <Route path="/" element={<LandingPageContent />} />
+          </Route>
+
+          {/* Admin */}
           <Route element={<AdminLayout />}>{adminRoutes}</Route>
 
+          {/* Itian Layout */}
           <Route element={<ItianLayout />}>
-            <Route path="/itian" element={< LandingPageContent/>} />
-
+            <Route path="/itian" element={<LandingPageContent />} />
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/jobs/:id" element={<JobDetailsPublic />} />
             <Route path="/apply/:id" element={<ApplyForm />} />
@@ -107,92 +110,35 @@ function App() {
             <Route path="/posts" element={<PostsList />} />
             <Route path="/my-posts" element={<MyPostsPage />} />
             <Route path="/itian-profile" element={<ItianProfile />} />
-            <Route
-              path="/create-itian-profile"
-              element={<CreateItianProfile />}
-            />
+            <Route path="/create-itian-profile" element={<CreateItianProfile />} />
             <Route path="/itian/mychat" element={<ChatApp />} />
-            <Route
-              path="/employer-public-profile/:username"
-              element={<ViewEmployerProfile />}
-            />
-            <Route
-              path="/employer-profile/:userId"
-              element={<ViewEmployerProfile />}
-            />
-            <Route
-              path="/employer-profiles/:userId"
-              element={<ViewEmployerProfile />}
-            />
+            <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
+            <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+            <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
           </Route>
 
-          {/* 🟦 Employer layout */}
+          {/* Employer Layout */}
           <Route element={<EmployerLayout />}>
-            <Route path="/employer" element={< LandingPageContent/>} />
-
+            <Route path="/employer" element={<LandingPageContent />} />
             <Route path="/employer/post-job" element={<PostJob />} />
             <Route path="/employer/jobs" element={<JobList />} />
             <Route path="/employer/trash" element={<TrashPage />} />
             <Route path="/employer/job/:id" element={<JobDetails />} />
-            <Route
-              path="/employer/job/:id/applications"
-              element={<JobApplications />}
-            />
+            <Route path="/employer/job/:id/applications" element={<JobApplications />} />
             <Route path="/employer/mychat" element={<ChatApp />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/employer-profile" element={<EmployerProfile />} />
-            <Route
-              path="/create-employer-profile"
-              element={<CreateEmployerProfile />}
-            />
-            <Route
-              path="/itian-profile/:userId"
-              element={<ViewItianProfile />}
-            />
+            <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+            <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
             <Route path="/profile/:username" element={<ViewItianProfile />} />
-             <Route path="/" element={< LandingPageContent/>}/>
-
           </Route>
 
-          {/* 🟪 Public profiles (outside layout or custom later) */}
-          <Route
-            path="/create-employer-profile"
-            element={<CreateEmployerProfile />}
-          />
-          <Route path="/employer-profile" element={<EmployerProfile />} />
-          <Route
-            path="/employer-public-profile/:username"
-            element={<ViewEmployerProfile />}
-          />
-          <Route
-            path="/employer-profiles/:userId"
-            element={<ViewEmployerProfile />}
-          />
-          <Route
-            path="/create-itian-profile"
-            element={<CreateItianProfile />}
-          />
-          <Route path="/itian-profile" element={<ItianProfile />} />
-          <Route
-            path="/employer-profile/:userId"
-            element={<ViewEmployerProfile />}
-          />
-          <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
-          <Route path="/profile/:username" element={<ViewItianProfile />} />
-
-          {/* cahtAI route */}
+          {/* Standalone Routes */}
           <Route path="/rag" element={<RagChat />} />
-
-          {/* <Route path="/reports" element={<ReportsPage />} /> */}
           <Route path="/reports/create" element={<CreateReportPage />} />
-
-          {/* For Admin */}
           <Route path="/admin/reports" element={<AdminReportPage />} />
           <Route path="/my-reports" element={<MyReportsPage />} />
-
-          {/* <Route path="/reportss" element={<ReportsPage />} /> */}
         </Routes>
-        {/* Show ChatbotButton only if user is logged in */}
         {user && <ChatbotButton />}
       </Router>
     </Provider>
