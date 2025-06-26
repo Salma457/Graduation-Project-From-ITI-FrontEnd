@@ -416,13 +416,15 @@ const MyApplications = () => {
                 rows="5"
                 value={formData.cover_letter}
                 onChange={handleInputChange}
-                required
                 minLength={100}
                 placeholder="Write your cover letter here... (at least 100 characters)"
-                className={`application-form-textarea w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : ''}`}
+                className={`application-form-textarea w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : formData.cover_letter.length >= 100 ? 'border-green-500' : ''}`}
               />
               {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
                 <p className="text-red-500 text-xs mt-1">Cover letter must be at least 100 characters.</p>
+              )}
+              {formData.cover_letter.length >= 100 && (
+                <p className="text-green-600 text-xs mt-1">Looks good!</p>
               )}
             </div>
 

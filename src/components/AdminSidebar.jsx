@@ -36,8 +36,12 @@ const AdminSidebar = () => {
         </Link>
 
          <Link to="/admin/set-price" className="admin-sidebar-link">
-          <span className="admin-sidebar-icon">📊</span>
+          <span className="admin-sidebar-icon">💵</span>
           <span>Payment</span>
+        </Link>
+        <Link to="/admin/send-email" className="admin-sidebar-link">
+          <span className="admin-sidebar-icon">📧</span>
+          <span>Send Emails</span>
         </Link>
       </nav>
     </aside>
