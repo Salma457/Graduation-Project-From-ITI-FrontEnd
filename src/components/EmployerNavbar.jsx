@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
+import { FaHome,FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
 import "../css/Navbar.css";
 import Notifications from './Notification';
 import MessageNotification from './MessageNotification'; // الكومبوننت الجديد
@@ -30,6 +30,9 @@ function EmployerNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
+           <Link to="/employer" className="nav-link">
+              <FaHome className="nav-icon" /> Home
+            </Link>
            <Link to="/employer-profile" className="nav-link">
             <FaUser className="nav-icon" /> My Profile
           </Link>

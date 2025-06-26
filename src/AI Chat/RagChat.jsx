@@ -17,10 +17,10 @@ const RagChat = () => {
 
   // Sample job-related starter questions
   const jobStarterQuestions = [
-    "How do I write a strong resume for tech jobs?",
-    "What are the current in-demand IT skills?",
-    "How to prepare for a technical interview?",
-    "What should I include in my cover letter?"
+    "What are the most recent jobs available?",
+    "Are there any on-site jobs listed?",
+    "What is the salary range for backend roles?",
+    "Do you have any jobs for frontend developers?"
   ];
 
   useEffect(() => {

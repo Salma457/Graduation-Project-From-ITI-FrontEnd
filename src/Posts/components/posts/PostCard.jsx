@@ -56,7 +56,7 @@ const PostCard = memo(
       if (user?.user_id === post.itian?.user_id) {
         navigate("/itian-profile");
       } else {
-        navigate(`/public-profile/${post.itian.user_id}`);
+        navigate(`/itian-profile/${post.itian.user_id}`);
       }
     }, [navigate, post.itian?.user_id, user?.user_id]);
 

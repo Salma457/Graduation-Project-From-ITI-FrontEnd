@@ -6,7 +6,6 @@ const MessageNotification = ({ className = "", iconClassName = "" }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const userId = parseInt(localStorage.getItem('user-id'));
 
-  // دالة للتحقق من وجود عمود read_at
   const checkColumnExists = async () => {
     try {
       const { error } = await supabase
@@ -19,7 +18,6 @@ const MessageNotification = ({ className = "", iconClassName = "" }) => {
     }
   };
 
-  // دالة لحساب الرسائل غير المقروءة
   const fetchUnreadCount = async () => {
     if (!userId) return;
 

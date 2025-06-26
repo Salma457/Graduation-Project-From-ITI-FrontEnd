@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import store from "./store";
 // import store from './applicationStore';
 import "./App.css";
-import viteLogo from "/vite.svg";
 
 // Layouts
 import NoLayout from "./pages/layouts/NoLayout";
@@ -46,14 +45,14 @@ import MyApplications from "./pages/Itian/MyApplications.jsx";
 import ProposalDetails from "./pages/Itian/ProposalDetails.jsx";
 
 // Profiles
-import CreateEmployerProfile from "./pages/profiles/CreateEmployerProfile";
-import EmployerProfile from "./pages/profiles/EmployerProfile.jsx";
-import CreateItianProfile from "./pages/profiles/CreateItianProfile";
-import ItianProfile from "./pages/profiles/ItianProfile.jsx";
-import ViewItianProfile from "./pages/profiles/ViewItianProfile";
-import ViewEmployerProfile from "./pages/profiles/ViewEmployerProfile.jsx";
-
-import useAuthInit from "./hooks/useAuthInit";
+import CreateEmployerProfile from './pages/profiles/CreateEmployerProfile';
+import EmployerProfile from './pages/profiles/EmployerProfile.jsx';
+import CreateItianProfile from './pages/profiles/CreateItianProfile';
+import ItianProfile from './pages/profiles/ItianProfile.jsx';
+import ViewItianProfile from './pages/profiles/ViewItianProfile';
+import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
+import WithoutLoginLayout from './pages/layouts/layoutWithoutLogin.jsx'
+import useAuthInit from './hooks/useAuthInit';
 
 // RAG Search
 import RagChat from "./AI Chat/RagChat.jsx";
@@ -61,12 +60,11 @@ import ChatbotButton from "./AI Chat/ChatbotButton.jsx";
 
 // Report Page
 
-// import ReportsPage from './pages/ReportsPage.jsx';          
-import CreateReportPage from "./pages/CreateReportPage"; 
-import AdminReportPage from "./pages/admin/AdminReportPage.jsx";
-import MyReportsPage from "./pages/MyReportsPage.jsx"; 
+import CreateReportPage from './pages/CreateReportPage';
 
-// import useAuthInit from './hooks/useAuthInit';
+import MyReportsPage from './pages/MyReportsPage.jsx';
+import LandingPageContent from './pages/homePage/app/page'
+
 function App() {
   useAuthInit();
   const user = useSelector((state) => state.user.user);
@@ -83,38 +81,27 @@ function App() {
   }, [user, dispatch]);
 
   return (
-    <Provider store={store}>
+       <Provider store={store}>
       <Router>
         <Routes>
-          {/* 🟩 Pages without layout */}
+          {/* No Layout - Auth */}
           <Route element={<NoLayout />}>
-            <Route
-              path="/"
-              element={
-                <div className="">
-                  <img
-                    src={viteLogo}
-                    alt="Vite Logo"
-                    style={{
-                      height: 80,
-                      margin: "2rem auto",
-                      display: "block",
-                    }}
-                  />
-                  <h1>Home Page</h1>
-                </div>
-              }
-            />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
-          {/* 🟧 Admin layout */}
+          {/* Public Landing */}
+          <Route element={<WithoutLoginLayout />}>
+            <Route path="/" element={<LandingPageContent />} />
+          </Route>
+
+          {/* Admin */}
           <Route element={<AdminLayout />}>{adminRoutes}</Route>
 
-          {/* 🟨 Itian layout */}
+          {/* Itian Layout */}
           <Route element={<ItianLayout />}>
+            <Route path="/itian" element={<LandingPageContent />} />
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/jobs/:id" element={<JobDetailsPublic />} />
             <Route path="/apply/:id" element={<ApplyForm />} />
@@ -142,8 +129,9 @@ function App() {
             />
           </Route>
 
-          {/* 🟦 Employer layout */}
+          {/* Employer Layout */}
           <Route element={<EmployerLayout />}>
+            <Route path="/employer" element={<LandingPageContent />} />
             <Route path="/employer/post-job" element={<PostJob />} />
             <Route path="/employer/jobs" element={<JobList />} />
             <Route path="/employer/trash" element={<TrashPage />} />
@@ -200,9 +188,12 @@ function App() {
 
           {/* For Admin */}
           {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
+          {/* Standalone Routes */}
+          <Route path="/rag" element={<RagChat />} />
+          <Route path="/reports/create" element={<CreateReportPage />} />
+          
           <Route path="/my-reports" element={<MyReportsPage />} />
-
-          {/* <Route path="/reportss" element={<ReportsPage />} /> */}
+          <Route path="*" element={<div className="min-h-screen flex items-center justify-center text-2xl text-red-600 font-bold">404 – Page Not Found</div>} />
         </Routes>
         {/* Show ChatbotButton only if user is logged in */}
         {user && <ChatbotButton />}
