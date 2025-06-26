@@ -30,26 +30,22 @@ const schema = Yup.object().shape({
     .max(255, "Company name must be at most 255 characters"),
   company_logo: Yup.mixed()
     .nullable()
-    .test("fileSize", "Company logo is too large (max 2MB)", (value) => {
-      if (!value || !value[0]) return true;
-      return value[0].size <= 2048 * 1024; // 2MB
-    })
     .test("fileType", "Invalid company logo type (jpeg, png, jpg, gif)", (value) => {
-      if (!value || !value[0]) return true;
-      return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
+      if (!value || value.length === 0) return true;
+      if (value[0] && typeof value[0] === "string") return true;
+      return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0]?.type);
     }),
   company_description: Yup.string().nullable(),
-  website_url: Yup.string().url("Invalid URL").nullable(),
-  industry: Yup.string().nullable().max(100),
-  company_size: Yup.string().nullable().max(100),
-  location: Yup.string().nullable().max(255),
-  contact_person_name: Yup.string().nullable().max(255),
-  contact_email: Yup.string().email("Invalid email format").nullable().max(255),
-  phone_number: Yup.string()
+  website_url: Yup.string().nullable().url("Invalid URL").max(500, "Website URL must be at most 500 characters"),
+  industry: Yup.string().nullable().max(255, "Industry must be at most 255 characters"),
+  company_size: Yup.string()
     .nullable()
-    .matches(/^\+?[0-9]{7,15}$/, "Invalid phone number format")
-    .max(20),
-  is_verified: Yup.boolean().nullable(),
+    .matches(/^\d*$/, "Company size must contain numbers only")
+    .max(100, "Company size must be at most 100 characters"),
+  location: Yup.string().nullable().max(255, "Location must be at most 255 characters"),
+  contact_person_name: Yup.string().nullable().max(255, "Contact person name must be at most 255 characters"),
+  contact_email: Yup.string().nullable().email("Invalid email format").max(255, "Contact email must be at most 255 characters"),
+  phone_number: Yup.string().nullable().max(20, "Phone number must be at most 20 characters"),
 });
 
 const EmployerProfile = () => {
@@ -61,6 +57,7 @@ const EmployerProfile = () => {
   const [editProfile, setEditProfile] = useState(false);
   const [previewLogo, setPreviewLogo] = useState(null);
   const [companyLogoRemoved, setCompanyLogoRemoved] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     companyInfo: true,
     contact: true,
@@ -81,20 +78,23 @@ const EmployerProfile = () => {
 
   const companyLogoWatch = watch("company_logo");
   useEffect(() => {
-    if (companyLogoWatch && companyLogoWatch.length > 0 && companyLogoWatch[0] instanceof File) {
-      setPreviewLogo(URL.createObjectURL(companyLogoWatch[0]));
+    if (selectedFile) {
+      setPreviewLogo(URL.createObjectURL(selectedFile));
       setCompanyLogoRemoved(false);
     } else if (companyLogoRemoved) {
       setPreviewLogo(null);
     } else {
       setPreviewLogo(profile?.company_logo_url || null);
     }
-  }, [companyLogoWatch, companyLogoRemoved, profile?.company_logo_url]);
+  }, [selectedFile, companyLogoRemoved, profile?.company_logo_url]);
 
   const handleCompanyLogoChange = (e) => {
     const file = e.target.files[0];
-    setValue("company_logo", file);
-    setCompanyLogoRemoved(false);
+    if (file) {
+      setSelectedFile(file);
+      setValue("company_logo", e.target.files);
+      setCompanyLogoRemoved(false);
+    }
   };
 
   const fetchProfileData = async () => {
@@ -124,6 +124,7 @@ const EmployerProfile = () => {
         reset(profileData);
         setPreviewLogo(profileData.company_logo_url || null);
         setCompanyLogoRemoved(false);
+        setSelectedFile(null);
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -150,30 +151,14 @@ const EmployerProfile = () => {
     setError("");
     setEditProfile(false);
 
-    const formData = new FormData();
-    const token = localStorage.getItem("access-token");
-    if (!token) {
-      setError("Authentication token not found. Please log in.");
-      setLoading(false);
-      return;
-    }
-
-    console.log("Submitting data:", data); // Debug log
-    for (const key in data) {
-      if (key === "company_logo") {
-        if (data.company_logo && data.company_logo.length > 0 && data.company_logo[0] instanceof File) {
-          formData.append("company_logo", data.company_logo[0]);
-        } else if (companyLogoRemoved) {
-          formData.append("company_logo_removed", "true");
-        }
-      } else {
-        if (data[key] !== null && data[key] !== undefined) {
-          formData.append(key, data[key]);
-        }
-      }
-    }
-
     try {
+      const token = localStorage.getItem("access-token");
+      if (!token) {
+        setError("Authentication token not found. Please log in.");
+        setLoading(false);
+        return;
+      }
+
       const userId = profile?.user_id;
       if (!userId) {
         setError("User ID not found. Please log in again or fetch profile data.");
@@ -181,9 +166,33 @@ const EmployerProfile = () => {
         return;
       }
 
-      console.log(`Sending request to: ${BASE_URL}/api/employer-profiles/${userId}/update`); // Debug URL
+      const formData = new FormData();
+      
+      console.log("Submitting data:", data);
+
+      Object.keys(data).forEach(key => {
+        if (key !== "company_logo" && data[key] !== null && data[key] !== undefined && data[key] !== '') {
+          formData.append(key, data[key]);
+        }
+      });
+
+      if (selectedFile) {
+        formData.append("company_logo", selectedFile);
+        console.log("Adding file to FormData:", selectedFile.name);
+      } else if (companyLogoRemoved) {
+        formData.append("company_logo_removed", "true");
+        console.log("Marking logo as removed");
+      }
+
+      console.log("FormData contents:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+
+      console.log(`Sending request to: ${BASE_URL}/api/employer-profiles/${userId}/update`);
+      
       const response = await axios.post(
-        `${BASE_URL}/api/employer-profiles/${userId}/update`, // Changed to POST
+        `${BASE_URL}/api/employer-profiles/${userId}/update`,
         formData,
         {
           headers: {
@@ -193,13 +202,17 @@ const EmployerProfile = () => {
         }
       );
 
+      console.log("Update response:", response.data);
+
       setProfile(response.data.data);
       setPreviewLogo(response.data.data.company_logo_url || null);
       setCompanyLogoRemoved(false);
+      setSelectedFile(null);
       setError("");
-      reset(response.data.data); // Reset form with updated data
+      reset(response.data.data);
+      
     } catch (err) {
-      console.error("Update error:", err.response?.data || err.message); // Debug log
+      console.error("Update error:", err.response?.data || err.message);
       let errorMessage = "Failed to update profile. Please try again.";
       if (err.response) {
         if (err.response.status === 422 && err.response.data.errors) {
@@ -224,12 +237,14 @@ const EmployerProfile = () => {
     reset(profile);
     setPreviewLogo(profile?.company_logo_url || null);
     setCompanyLogoRemoved(false);
+    setSelectedFile(null);
   };
 
   const handleRemoveCompanyLogo = () => {
     setPreviewLogo(null);
     setValue("company_logo", null);
     setCompanyLogoRemoved(true);
+    setSelectedFile(null);
   };
 
   const toggleSection = (section) => {
@@ -304,8 +319,8 @@ const EmployerProfile = () => {
                           <input
                             type="file"
                             className="hidden"
-                            {...register("company_logo")}
-                            onChange={(e) => handleCompanyLogoChange(e)}
+                            accept="image/jpeg,image/png,image/jpg,image/gif"
+                            onChange={handleCompanyLogoChange}
                           />
                         </label>
                         {previewLogo && (
@@ -330,7 +345,7 @@ const EmployerProfile = () => {
                       <input
                         type="text"
                         {...register("company_name")}
-                        className="w-full text-2xl font-bold px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                        className={`w-full text-2xl font-bold px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.company_name ? 'border-[#d0443c]' : 'border-gray-300'}`}
                         placeholder="Company Name"
                       />
                     ) : (
@@ -338,7 +353,7 @@ const EmployerProfile = () => {
                         {profile?.company_name || "Company Name Not Set"}
                       </h2>
                     )}
-                    {errors.company_name && <p className="text-[#d0443c] text-sm">{errors.company_name.message}</p>}
+                    {errors.company_name && <p className="text-[#d0443c] text-sm mt-1">{errors.company_name.message}</p>}
                     {editProfile ? (
                       <textarea
                         {...register("company_description")}
@@ -382,7 +397,7 @@ const EmployerProfile = () => {
                         <span className="text-gray-700">{profile.location}</span>
                       </div>
                     )}
-                    {profile.company_size && (
+                    {profile.company_size && false && (
                       <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                         <User className="text-[#d0443c] mr-2" size={16} />
                         <span className="text-gray-700">{profile.company_size} employees</span>
@@ -405,6 +420,18 @@ const EmployerProfile = () => {
             </div>
             {(editProfile || !profile) ? (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Error message for company_logo */}
+                {errors.company_logo && (
+                  <div className="bg-red-50 border border-red-200 text-[#d0443c] px-4 py-3 rounded-lg mb-2">
+                    {errors.company_logo.message}
+                  </div>
+                )}
+                {/* General error message */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-[#d0443c] px-4 py-3 rounded-lg mb-2">
+                    {error}
+                  </div>
+                )}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div
                     className="flex justify-between items-center p-6 cursor-pointer border-b border-gray-200"
@@ -420,7 +447,7 @@ const EmployerProfile = () => {
                         <input
                           type="text"
                           {...register("industry")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.industry ? 'border-[#d0443c]' : 'border-gray-300'}`}
                         />
                         {errors.industry && <p className="text-[#d0443c] text-sm mt-1">{errors.industry.message}</p>}
                       </div>
@@ -429,7 +456,7 @@ const EmployerProfile = () => {
                         <input
                           type="text"
                           {...register("company_size")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.company_size ? 'border-[#d0443c]' : 'border-gray-300'}`}
                           placeholder="e.g., 1-10, 50-100, 1000+"
                         />
                         {errors.company_size && <p className="text-[#d0443c] text-sm mt-1">{errors.company_size.message}</p>}
@@ -439,7 +466,7 @@ const EmployerProfile = () => {
                         <input
                           type="text"
                           {...register("location")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.location ? 'border-[#d0443c]' : 'border-gray-300'}`}
                           placeholder="e.g., New York, NY, USA"
                         />
                         {errors.location && <p className="text-[#d0443c] text-sm mt-1">{errors.location.message}</p>}
@@ -453,7 +480,7 @@ const EmployerProfile = () => {
                           <input
                             type="text"
                             {...register("website_url")}
-                            className="flex items-center w-full pl-10 px-5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                            className={`flex items-center w-full pl-10 px-5 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.website_url ? 'border-[#d0443c]' : 'border-gray-300'}`}
                           />
                         </div>
                         {errors.website_url && <p className="text-[#d0443c] text-sm mt-1">{errors.website_url.message}</p>}
@@ -472,29 +499,29 @@ const EmployerProfile = () => {
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Contact Person Name</label>
+                        <label className="block text-gray-700 font-medium mb-2">Contact Person Name<span className="text-[#d0443c]">*</span></label>
                         <input
                           type="text"
                           {...register("contact_person_name")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.contact_person_name ? 'border-[#d0443c]' : 'border-gray-300'}`}
                         />
                         {errors.contact_person_name && <p className="text-[#d0443c] text-sm mt-1">{errors.contact_person_name.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Contact Email</label>
+                        <label className="block text-gray-700 font-medium mb-2">Contact Email<span className="text-[#d0443c]">*</span></label>
                         <input
                           type="text"
                           {...register("contact_email")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.contact_email ? 'border-[#d0443c]' : 'border-gray-300'}`}
                         />
                         {errors.contact_email && <p className="text-[#d0443c] text-sm mt-1">{errors.contact_email.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Phone Number</label>
+                        <label className="block text-gray-700 font-medium mb-2">Phone Number<span className="text-[#d0443c]">*</span></label>
                         <input
                           type="text"
                           {...register("phone_number")}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c] ${errors.phone_number ? 'border-[#d0443c]' : 'border-gray-300'}`}
                         />
                         {errors.phone_number && <p className="text-[#d0443c] text-sm mt-1">{errors.phone_number.message}</p>}
                       </div>

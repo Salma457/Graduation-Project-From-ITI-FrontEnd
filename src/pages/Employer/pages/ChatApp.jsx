@@ -103,6 +103,7 @@ const ChatApp = () => {
   const contactId = location.state?.user;
   const contactName = location.state?.name;
 
+  // Helper function to safely fetch user profile data
   const fetchUserProfile = async (userId) => {
     // Try to get basic user data first
     const { data: userData, error: userError } = await supabase
@@ -154,7 +155,7 @@ const ChatApp = () => {
     return finalResult;
   };
 
-  const processProfilePicture = (picturePath = 'profile_pictures') => {
+  const processProfilePicture = (picturePath, bucket = 'profile_pictures') => {
     if (!picturePath) return null;
     if (picturePath.startsWith("http")) return picturePath;
     return `${import.meta.env.VITE_APP_URL}/storage/${picturePath}`;
@@ -416,7 +417,8 @@ const ChatApp = () => {
         .select('*')
         .or(`and(from_id.eq.${userId},to_id.eq.${contactId}),and(from_id.eq.${contactId},to_id.eq.${userId})`)
         .order('created_at', { ascending: true });
-
+console.log('Insert message:', { data, error });
+if (error) alert(error.message);
       if (error) {
         setMessages([]);
       } else {
@@ -427,115 +429,71 @@ const ChatApp = () => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedContact) return;
+const sendMessage = async () => {
+  if (!newMessage.trim() || !selectedContact) return;
 
-    const trimmedMessage = newMessage.trim();
-    try {
-      const messageData = {
-        from_id: userId,
-        to_id: selectedContact.contact_id,
-        body: trimmedMessage,
-        created_at: new Date().toISOString(),
-      };
+  const trimmedMessage = newMessage.trim();
+  try {
+    const messageData = {
+      from_id: userId,
+      to_id: selectedContact.contact_id,
+      body: trimmedMessage,
+      created_at: new Date().toISOString(),
+    };
 
-      const { data, error } = await supabase
-        .from('ch_messages')
-        .insert([messageData])
-        .select();
+    const { data, error } = await supabase
+      .from('ch_messages')
+      .insert([messageData])
+      .select();
 
-      if (!error && data && data.length > 0) {
-        setMessages((prev) => [...prev, data[0]]);
-        setContacts((prev) =>
-          prev.map((contact) =>
-            contact.contact_id === selectedContact.contact_id
-              ? {
-                  ...contact,
-                  body: trimmedMessage,
-                  created_at: data[0].created_at,
-                  id: contact.id.toString().startsWith('temp-') ? data[0].id : contact.id,
-                }
-              : contact
-          )
-        );
-        setNewMessage('');
-      }
-    } catch (err) {}
-  };
+    setNewMessage('');
+    // Do NOT call setMessages here! Real-time will handle it.
+  } catch (err) {}
+};
 
-  useEffect(() => {
+useEffect(() => {
   if (!userId) return;
   const channel = supabase
     .channel('public:ch_messages')
-    .on('postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'ch_messages', filter: `to_id=eq.${userId}` },
-      async (payload) => {
-        if (selectedContact && payload.new.from_id === selectedContact.contact_id) {
-          setMessages(prev => [...prev, payload.new]);
-        } else {
-          setUnreadCounts(prev => ({
-            ...prev,
-            [payload.new.from_id]: (prev[payload.new.from_id] || 0) + 1
-          }));
-        }
-        const senderId = payload.new.from_id;
-        const profileResult = await fetchUserProfile(senderId);
-        setContacts(prev => {
-          const existingContactIndex = prev.findIndex(
-            contact => contact.contact_id === senderId
-          );
-          if (existingContactIndex !== -1) {
-            const updatedContacts = [...prev];
-            updatedContacts[existingContactIndex] = {
-              ...updatedContacts[existingContactIndex],
-              body: payload.new.body,
-              created_at: payload.new.created_at
-            };
-            return updatedContacts;
-          } else {
-            const newContact = {
-              id: payload.new.id,
-              contact_id: senderId,
-              contact_name: profileResult.displayName,
-              contact_avatar: profileResult.displayImage,
-              body: payload.new.body,
-              created_at: payload.new.created_at,
-              from_id: senderId
-            };
-            return [newContact, ...prev];
-          }
-        });
+    // INSERT
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ch_messages' }, (payload) => {
+      const msg = payload.new;
+      if (
+        selectedContact &&
+        (
+          (msg.from_id === selectedContact.contact_id && msg.to_id === userId) ||
+          (msg.from_id === userId && msg.to_id === selectedContact.contact_id)
+        )
+      ) {
+        setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]);
       }
-    )
-    // Edited message
-    .on('postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'ch_messages' },
-      (payload) => {
+    })
+    // UPDATE
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ch_messages' }, (payload) => {
+      const updatedMsg = payload.new;
+      if (
+        selectedContact &&
+        (
+          (updatedMsg.from_id === selectedContact.contact_id && updatedMsg.to_id === userId) ||
+          (updatedMsg.from_id === userId && updatedMsg.to_id === selectedContact.contact_id)
+        )
+      ) {
         setMessages(prev =>
-          prev.map(msg =>
-            msg.id === payload.new.id
-              ? { ...msg, ...payload.new }
-              : msg
-          )
+          prev.map(msg => (msg.id === updatedMsg.id ? { ...msg, ...updatedMsg } : msg))
         );
       }
-    )
-    // Deleted message
-    .on('postgres_changes',
-      { event: 'DELETE', schema: 'public', table: 'ch_messages' },
-      (payload) => {
-        setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
-      }
-    )
+    })
+    // DELETE
+.on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'ch_messages' }, (payload) => {
+  const deletedMsg = payload.old;
+  setMessages(prev => prev.filter(msg => msg.id !== deletedMsg.id));
+})
     .subscribe();
 
   return () => {
-    if (channel && typeof channel.unsubscribe === 'function') {
-      channel.unsubscribe();
-    }
+    channel.unsubscribe();
   };
 }, [userId, selectedContact]);
-
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([],
       {
@@ -543,57 +501,46 @@ const ChatApp = () => {
         minute: '2-digit'
       });
   };
+const deleteMessage = async (messageId) => {
+  try {
+    const { error } = await supabase
+      .from('ch_messages')
+      .delete()
+      .eq('id', messageId)
+      .eq('from_id', userId);
 
-  // Delete message by id
-  const deleteMessage = async (messageId) => {
-    try {
-      const { error } = await supabase
-        .from('ch_messages')
-        .delete()
-        .eq('id', messageId)
-        .eq('from_id', userId);
-
-      if (!error) {
-        setMessages(prev => prev.filter(msg => msg.id !== messageId));
-        setShowDeleteConfirm(null);
-      }
-    } catch (error) {
-      console.error('Error deleting message:', error);
+    if (!error) {
+      setShowDeleteConfirm(null);
     }
-  };
+  } catch (error) {
+    console.error('Error deleting message:', error);
+  }
+};
 
+const saveEditMessage = async (messageId) => {
+  if (!editMessageText.trim()) return;
+
+  try {
+    const { error } = await supabase
+      .from('ch_messages')
+      .update({
+        body: editMessageText.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', messageId)
+      .eq('from_id', userId);
+
+    if (!error) {
+      setEditingMessage(null);
+      setEditMessageText('');
+    }
+  } catch (error) {
+    console.error('Error updating message:', error);
+  }
+};
   const startEditMessage = (message) => {
     setEditingMessage(message.id);
     setEditMessageText(message.body);
-  };
-
-  const saveEditMessage = async (messageId) => {
-    if (!editMessageText.trim()) return;
-
-    try {
-      const { error } = await supabase
-        .from('ch_messages')
-        .update({
-          body: editMessageText.trim(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', messageId)
-        .eq('from_id', userId);
-
-      if (!error) {
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === messageId
-              ? { ...msg, body: editMessageText.trim(), updated_at: new Date().toISOString() }
-              : msg
-          )
-        );
-        setEditingMessage(null);
-        setEditMessageText('');
-      }
-    } catch (error) {
-      console.error('Error updating message:', error);
-    }
   };
 
   const cancelEditMessage = () => {
