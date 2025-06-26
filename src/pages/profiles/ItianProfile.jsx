@@ -353,6 +353,10 @@ const ItianProfile = () => {
     }));
   };
 
+  const handleCreateProfile = () => {
+    navigate('/create-itian-profile');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -376,16 +380,14 @@ const ItianProfile = () => {
           <button
             onClick={() => {
               if (error.includes("create your profile")) {
-                setEditProfile(true);
+                handleCreateProfile();
               } else {
                 fetchProfileData();
               }
             }}
             className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition duration-300 shadow-md"
           >
-            {error.includes("create your profile")
-              ? "Create Profile"
-              : "Try Again"}
+            {error.includes("create your profile") ? "Create Itian Profile" : "Try Again"}
           </button>
         </div>
       </div>
@@ -514,15 +516,6 @@ const ItianProfile = () => {
                       </>
                     )}
                   </div>
-                  {!editProfile && (
-                    <button
-                      onClick={() => setEditProfile(true)}
-                      className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
-                    >
-                      <Edit size={18} />
-                      <span>Edit Profile</span>
-                    </button>
-                  )}
                 </div>
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
@@ -1193,10 +1186,10 @@ const ItianProfile = () => {
               You haven't created your profile yet.
             </p>
             <button
-              onClick={() => setEditProfile(true)}
+              onClick={handleCreateProfile}
               className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition font-medium"
             >
-              Create Profile
+              Create Itian Profile
             </button>
           </div>
         )}

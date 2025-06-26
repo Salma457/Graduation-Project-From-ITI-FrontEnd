@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
+import { FaHome,FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
 import "../css/Navbar.css";
 import Notifications from './Notification';
 import MessageNotification from './MessageNotification'; // الكومبوننت الجديد
@@ -30,6 +30,9 @@ function EmployerNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
+           <Link to="/employer" className="nav-link">
+              <FaHome className="nav-icon" /> Home
+            </Link>
            <Link to="/employer-profile" className="nav-link">
             <FaUser className="nav-icon" /> My Profile
           </Link>
@@ -53,8 +56,8 @@ function EmployerNavbar() {
               <FaChartBar className="nav-icon" /> Reports
             </button>
             <div className="dropdown-content">
-              <Link to="/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
-              <Link to="/reports/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
+              <Link to="/employer/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
+              <Link to="/employer/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
             </div>
           </div>
 

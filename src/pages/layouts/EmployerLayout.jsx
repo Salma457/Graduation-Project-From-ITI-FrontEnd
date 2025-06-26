@@ -5,7 +5,7 @@ export default function EmployerLayout() {
   return (
     <>
       <EmployerNavbar />
-      <main style={{ padding: '20px' }}>
+      <main >
         <Outlet />
       </main>
     </>
