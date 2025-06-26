@@ -27,28 +27,32 @@ const JobList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
 
-  const checkAndUpdateExpiredJobs = async () => {
-    const currentDate = new Date();
-    const jobsArray = Array.isArray(jobs) ? jobs : [];
-    
-    for (const job of jobsArray) {
-      if (job.application_deadline && job.status === 'Open') {
-        const deadlineDate = new Date(job.application_deadline);
-        
-        if (currentDate > deadlineDate) {
-          try {
-            await dispatch(editJob({ 
-              jobId: job.id, 
-              jobData: { ...job, status: 'Closed' } 
-            })).unwrap();
-            console.log(`Job ${job.id} automatically closed due to expired deadline`);
-          } catch (error) {
-            console.error(`Failed to auto-close job ${job.id}:`, error);
-          }
+const checkAndUpdateExpiredJobs = async () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // نلغي الوقت من التاريخ الحالي
+
+  const jobsArray = Array.isArray(jobs) ? jobs : [];
+  
+  for (const job of jobsArray) {
+    if (job.application_deadline && job.status === 'Open') {
+      const deadlineDate = new Date(job.application_deadline);
+      deadlineDate.setHours(0, 0, 0, 0); // نلغي الوقت من الديدلاين
+
+      if (today > deadlineDate) {
+        try {
+          await dispatch(editJob({ 
+            jobId: job.id, 
+            jobData: { ...job, status: 'Closed' } 
+          })).unwrap();
+          console.log(`Job ${job.id} automatically closed due to expired deadline`);
+        } catch (error) {
+          console.error(`Failed to auto-close job ${job.id}:`, error);
         }
       }
     }
-  };
+  }
+};
+
 
   useEffect(() => {
     dispatch(fetchEmployerData());
