@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import store from './store';
 // import store from './applicationStore';
 import "./App.css";
-import viteLogo from "/vite.svg";
 
 // Layouts
 import NoLayout from "./pages/layouts/NoLayout";
@@ -52,7 +51,7 @@ import CreateItianProfile from './pages/profiles/CreateItianProfile';
 import ItianProfile from './pages/profiles/ItianProfile.jsx';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
-
+import WithoutLoginLayout from './pages/layouts/layoutWithoutLogin.jsx'
 import useAuthInit from './hooks/useAuthInit';
 
 // RAG Search
@@ -60,13 +59,11 @@ import RagChat from "./AI Chat/RagChat.jsx";
 
 // Report Page
 
-// import ReportsPage from './pages/ReportsPage.jsx';          // للمستخدم العادي (ITian/Employer)
-import CreateReportPage from './pages/CreateReportPage'; // لإنشاء التقارير
+import CreateReportPage from './pages/CreateReportPage';
 import AdminReportPage from './pages/AdminReportPage';
-import MyReportsPage from './pages/MyReportsPage.jsx'; // لعرض التقارير الخاصة بالمستخدم
+import MyReportsPage from './pages/MyReportsPage.jsx';
+import LandingPageContent from './pages/homePage/app/page'
 
-
-// import useAuthInit from './hooks/useAuthInit';
 function App() {
   useAuthInit();
   const user = useSelector((state) => state.user.user);
@@ -87,19 +84,21 @@ function App() {
       
       <Router>
         <Routes>
-          {/* 🟩 Pages without layout */}
           <Route element={<NoLayout />}>
-            <Route path="/" element={<div className=""><img src={viteLogo} alt="Vite Logo" style={{ height: 80, margin: '2rem auto', display: 'block' }} /><h1>Home Page</h1></div>} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
+        <Route element={<WithoutLoginLayout />}>
+          <Route path="/" element={< LandingPageContent/>} />
+        </Route>
 
         {/* 🟧 Admin layout */}
         <Route element={<AdminLayout />}>{adminRoutes}</Route>
 
-          {/* 🟨 Itian layout */}
           <Route element={<ItianLayout />}>
+            <Route path="/itian" element={< LandingPageContent/>} />
+
             <Route path="/jobs" element={<JobsPage />} />
             <Route path="/jobs/:id" element={<JobDetailsPublic />} />
             <Route path="/apply/:id" element={<ApplyForm />} />
@@ -117,6 +116,8 @@ function App() {
 
           {/* 🟦 Employer layout */}
           <Route element={<EmployerLayout />}>
+            <Route path="/employer" element={< LandingPageContent/>} />
+
             <Route path="/employer/post-job" element={<PostJob />} />
             <Route path="/employer/jobs" element={<JobList />} />
             <Route path="/employer/trash" element={<TrashPage />} />
@@ -128,6 +129,7 @@ function App() {
             <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
             <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
             <Route path="/profile/:username" element={<ViewItianProfile />} />
+             <Route path="/" element={< LandingPageContent/>}/>
 
           </Route>
 

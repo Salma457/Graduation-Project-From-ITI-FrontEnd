@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import {  FaUser,FaBriefcase, FaFileAlt, FaBars, FaTimes, FaSignOutAlt, FaExclamationTriangle } from "react-icons/fa";
+import { FaHome, FaUser,FaBriefcase, FaFileAlt, FaBars, FaTimes, FaSignOutAlt, FaExclamationTriangle } from "react-icons/fa";
 import "../css/Navbar.css";
 import Notifications from "./Notification";
 import MessageNotification from "./MessageNotification";
@@ -29,6 +29,9 @@ function ItianNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
+           <Link to="/itian" className="nav-link">
+            <FaHome className="nav-icon" /> Home
+          </Link>
           <Link to="/posts" className="nav-link">
             <FaFileAlt className="nav-icon" /> Posts
           </Link>
