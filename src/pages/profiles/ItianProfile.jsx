@@ -514,15 +514,6 @@ const ItianProfile = () => {
                       </>
                     )}
                   </div>
-                  {!editProfile && (
-                    <button
-                      onClick={() => setEditProfile(true)}
-                      className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
-                    >
-                      <Edit size={18} />
-                      <span>Edit Profile</span>
-                    </button>
-                  )}
                 </div>
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">

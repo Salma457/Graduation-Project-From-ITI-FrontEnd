@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaExclamationTriangle } from "react-icons/fa";
+import { FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
 import "../css/Navbar.css";
 import Notifications from './Notification';
 import MessageNotification from './MessageNotification'; // الكومبوننت الجديد
 
 function EmployerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [jobsDropdownOpen, setJobsDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [reportsDropdownOpen, setReportsDropdownOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleJobsDropdown = () => setJobsDropdownOpen(!jobsDropdownOpen);
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
   const toggleReportsDropdown = () => setReportsDropdownOpen(!reportsDropdownOpen);
 
   const handleLogout = () => {
@@ -23,7 +23,7 @@ function EmployerNavbar() {
     <>
       <nav className="navbar">
         <div className="logo-container">
-          <img src="public/logo.png" alt="Logo" className="logo-img" />
+          <img src="public/logo.png" alt="Logo" className="logo-img " />
           <div className="logo-text">
             <Link to="/">ITIAN</Link>
           </div>
@@ -48,14 +48,13 @@ function EmployerNavbar() {
             </div>
           </div>
 
-          {/* Added Reports Dropdown */}
           <div className={`dropdown ${reportsDropdownOpen ? "open" : ""}`} onClick={toggleReportsDropdown}>
             <button className="dropbtn">
-              <FaExclamationTriangle className="nav-icon" /> Reports
+              <FaChartBar className="nav-icon" /> Reports
             </button>
             <div className="dropdown-content">
               <Link to="/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
-              <Link to="/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
+              <Link to="/reports/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
             </div>
           </div>
 
