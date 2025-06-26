@@ -64,6 +64,7 @@ import CreateReportPage from './pages/CreateReportPage';
 
 import MyReportsPage from './pages/MyReportsPage.jsx';
 import LandingPageContent from './pages/homePage/app/page'
+import NotFoundPage from "./components/NotFoundPage.jsx";
 
 function App() {
   useAuthInit();
@@ -193,7 +194,7 @@ function App() {
           <Route path="/reports/create" element={<CreateReportPage />} />
           
           <Route path="/my-reports" element={<MyReportsPage />} />
-          <Route path="*" element={<div className="min-h-screen flex items-center justify-center text-2xl text-red-600 font-bold">404 – Page Not Found</div>} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         {/* Show ChatbotButton only if user is logged in */}
         {user && <ChatbotButton />}
