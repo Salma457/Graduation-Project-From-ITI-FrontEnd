@@ -348,35 +348,6 @@ function LandingPageContent() {
           </div>
         </div>
       </section>
-  
-      {/* Job Categories */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <FadeInElement className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Explore <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">Career Categories</span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover opportunities across various tech domains perfectly suited for ITI graduates
-            </p>
-          </FadeInElement>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {jobCategories.map((category, index) => (
-              <FadeInElement
-                key={index}
-                delay={index}
-                className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-2 border border-gray-100 hover:border-red-200"
-              >
-                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${category.color} rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300`}>
-                  <category.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-3 text-lg group-hover:text-red-600 transition-colors">{category.name}</h3>
-              </FadeInElement>
-            ))}
-          </div>
-        </div>
-      </section>
         {/* Market Opportunities Section */}
       <section className="py-20 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 relative overflow-hidden">
           <FadeInElement delay={5} className="mt-12 text-center">
