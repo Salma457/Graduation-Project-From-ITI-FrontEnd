@@ -158,6 +158,8 @@ export const editJob = createAsyncThunk(
         throw new Error('Authentication token not found');
       }
 
+      console.log('Sending update for job:', jobId, 'with data:', jobData); // Debug log
+
       const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
         method: 'PUT',
         headers: {
@@ -169,8 +171,10 @@ export const editJob = createAsyncThunk(
       });
 
       const data = await handleApiResponse(response);
-      return data;
+      console.log('Update response:', data); // Debug log
+      return { id: jobId, ...data };
     } catch (error) {
+      console.error('Error in editJob:', error); // Debug log
       return rejectWithValue({
         message: error.message || 'Failed to edit job',
         status: error.status,
@@ -409,12 +413,15 @@ const jobPostSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchEmployerData.fulfilled, (state, action) => {
-        console.log('📦 Employer Data:', action.payload);
-        state.loading = false;
-        state.jobs = action.payload.jobs;
-        state.employerData = action.payload.company;
-      })
+          const { jobs, company } = action.payload;
 
+          state.jobs = jobs.map(job => ({
+            ...job,
+            company_name: company?.company_name || 'Unknown Company'
+          }));
+          state.loading = false;
+          state.error = null;
+    })
       .addCase(fetchEmployerData.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;

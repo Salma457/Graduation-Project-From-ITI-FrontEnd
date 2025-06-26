@@ -27,32 +27,50 @@ const JobList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 5;
 
-  const checkAndUpdateExpiredJobs = async () => {
-    const currentDate = new Date();
-    const jobsArray = Array.isArray(jobs) ? jobs : [];
-    
-    for (const job of jobsArray) {
-      if (job.application_deadline && job.status === 'Open') {
-        const deadlineDate = new Date(job.application_deadline);
-        
-        if (currentDate > deadlineDate) {
-          try {
-            await dispatch(editJob({ 
-              jobId: job.id, 
-              jobData: { ...job, status: 'Closed' } 
-            })).unwrap();
-            console.log(`Job ${job.id} automatically closed due to expired deadline`);
-          } catch (error) {
-            console.error(`Failed to auto-close job ${job.id}:`, error);
+const checkAndUpdateExpiredJobs = async () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const jobsArray = Array.isArray(jobs) ? jobs : [];
+  
+  for (const job of jobsArray) {
+    if (job.application_deadline && job.status === 'Open') {
+      const deadlineDate = new Date(job.application_deadline);
+      deadlineDate.setHours(0, 0, 0, 0);
+
+      if (today > deadlineDate) {
+        try {
+          console.log(`Closing expired job ${job.id}...`);
+          const result = await dispatch(editJob({ 
+            jobId: job.id, 
+            jobData: { 
+              ...job,
+              status: 'Closed' 
+            } 
+          }));
+
+          if (result.error) {
+            console.error(`Failed to close job ${job.id}:`, result.error);
+          } else {
+            console.log(`Successfully closed job ${job.id}`);
+            // إعادة تحميل البيانات بعد التحديث
+            dispatch(fetchEmployerData());
           }
+        } catch (error) {
+          console.error(`Error closing job ${job.id}:`, error);
         }
       }
     }
-  };
+  }
+};
+
 
   useEffect(() => {
     dispatch(fetchEmployerData());
   }, [dispatch]);
+useEffect(() => {
+  console.log("Fetched jobs:", jobs);
+}, [jobs]);
 
   useEffect(() => {
     if (jobs.length > 0) {
@@ -72,12 +90,12 @@ const JobList = () => {
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
 
-  const isJobExpired = (job) => {
-    if (!job.application_deadline) return false;
-    const currentDate = new Date();
-    const deadlineDate = new Date(job.application_deadline);
-    return currentDate > deadlineDate;
-  };
+const isJobExpired = (job) => {
+  if (!job.application_deadline) return false;
+  const currentDate = new Date();
+  const deadlineDate = new Date(job.application_deadline);
+  return currentDate > deadlineDate;
+};
 
     const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
     const statusMatch = filter === 'all' || job.status === filter;
@@ -575,7 +593,7 @@ return (
               <div className="list-card-details">
                 <div className="list-meta">
                   <div className="list-meta-item">
-                    <span className="list-meta-label">Company Type:</span>
+                    <span className="list-meta-label">Company Name:</span>
                     <span className="list-meta-value">{job.company_name || "IT Industry"}</span>
                   </div>
                   <div className="list-meta-item">
@@ -587,9 +605,10 @@ return (
                   {job.applications_count ?? 0} Application{job.applications_count === 1 ? '' : 's'}
                 </span>
                 <div className="list-status-badge">
-                  <span className={`list-status-badge ${job.status?.toLowerCase() || 'open'}`}>
-                    {job.status || 'Open'}
-                    {isJobExpired(job) && job.status === 'Open' && ' (Auto-Closing)'}
+                  <span className={`list-status-badge ${
+                    isJobExpired(job) ? 'closed' : job.status?.toLowerCase() || 'open'
+                  }`}>
+                    {isJobExpired(job) ? 'Closed (Expired)' : job.status || 'Open'}
                   </span>
                 </div>
               </div>

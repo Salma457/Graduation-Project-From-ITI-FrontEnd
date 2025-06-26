@@ -66,6 +66,11 @@ const PostList = () => {
     },
   };
 
+  // const buttonVariants = {
+  //   hover: { scale: 1.05, boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" },
+  //   tap: { scale: 0.98 },
+  // };
+
   const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
     try {
       setLoading(true);

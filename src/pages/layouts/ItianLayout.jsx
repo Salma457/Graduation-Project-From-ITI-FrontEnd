@@ -5,7 +5,7 @@ export default function ItianLayout() {
   return (
     <>
       <ItianNavbar />
-      <main style={{ padding: '20px' }}>
+      <main>
         <Outlet />
       </main>
     </>

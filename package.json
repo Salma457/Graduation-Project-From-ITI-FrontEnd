@@ -20,7 +20,7 @@
     "@tailwindcss/vite": "^4.1.10",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.18.1",
+    "framer-motion": "^12.19.1",
     "jwt-decode": "^4.0.0",
     "laravel-echo": "^2.1.6",
     "lucide-react": "^0.518.0",

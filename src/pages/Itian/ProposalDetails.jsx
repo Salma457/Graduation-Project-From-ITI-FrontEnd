@@ -223,7 +223,22 @@ if (loading) return (
           <form onSubmit={handleUpdate} className="proposal-form">
             <div className="proposal-form-group">
               <label htmlFor="cover_letter" className="proposal-form-label">Cover Letter</label>
-              <textarea id="cover_letter" name="cover_letter" rows="5" value={formData.cover_letter} onChange={handleInputChange} required className="proposal-form-textarea" />
+              <textarea
+                id="cover_letter"
+                name="cover_letter"
+                rows="5"
+                value={formData.cover_letter}
+                onChange={handleInputChange}
+                minLength={100}
+                placeholder="Write your cover letter here... (at least 100 characters)"
+                className={`proposal-form-textarea w-full rounded-lg border-2 border-gray-300 focus:border-blue-500 bg-white text-black p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : formData.cover_letter.length >= 100 ? 'border-green-500' : ''}`}
+              />
+              {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
+                <p className="text-red-500 text-xs mt-1">Cover letter must be at least 100 characters.</p>
+              )}
+              {formData.cover_letter.length >= 100 && (
+                <p className="text-green-600 text-xs mt-1">Looks good!</p>
+              )}
             </div>
 
             <div className="proposal-form-group">
@@ -240,7 +255,9 @@ if (loading) return (
 
             <div className="proposal-form-actions">
               <button type="button" onClick={closeModal} className="proposal-cancel-btn">Cancel</button>
-              <button type="submit" disabled={submitting} className="proposal-submit-btn">{submitting ? 'Updating...' : 'Update Application'}</button>
+              <button type="submit" disabled={submitting || formData.cover_letter.length < 100} className="proposal-submit-btn">
+                {submitting ? 'Updating...' : 'Update Application'}
+              </button>
             </div>
           </form>
         )}
