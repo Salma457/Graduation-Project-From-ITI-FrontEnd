@@ -161,7 +161,7 @@ function App() {
         </Routes>
         
       </Router>
-      </Provider>
+    </Provider>
   );
 }
 
