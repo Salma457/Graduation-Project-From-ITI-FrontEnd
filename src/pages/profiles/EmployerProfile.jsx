@@ -258,6 +258,10 @@ const EmployerProfile = () => {
     navigate('/payment');
   };
 
+  const handleCreateProfile = () => {
+    navigate('/create-employer-profile');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -279,7 +283,7 @@ const EmployerProfile = () => {
           <button
             onClick={() => {
               if (error.includes("create your profile")) {
-                setEditProfile(true);
+                handleCreateProfile();
               } else {
                 fetchProfileData();
               }
@@ -588,7 +592,7 @@ const EmployerProfile = () => {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">No Employer Profile Found</h2>
             <p className="text-gray-600 mb-6">You haven't created your employer profile yet.</p>
             <button
-              onClick={() => setEditProfile(true)}
+              onClick={handleCreateProfile}
               className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition font-medium"
             >
               Create Employer Profile

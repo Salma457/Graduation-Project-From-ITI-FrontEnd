@@ -53,8 +53,8 @@ function EmployerNavbar() {
               <FaChartBar className="nav-icon" /> Reports
             </button>
             <div className="dropdown-content">
-              <Link to="/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
-              <Link to="/reports/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
+              <Link to="/employer/reports/create"><FaFileAlt className="dropdown-icon" /> Create Report</Link>
+              <Link to="/employer/my-reports"><FaFileAlt className="dropdown-icon" /> My Reports</Link>
             </div>
           </div>
 
