@@ -4,7 +4,7 @@ import axios from "axios";
 import Modal from "react-modal";
 import "../../css/ProposalDetails.css";
 
-import { Sparkles } from 'lucide-react'; // أو أي مكتبة الأيقونات التي تستخدمها
+import { Sparkles } from 'lucide-react';
 
 
 const ProposalDetails = () => {
@@ -23,7 +23,7 @@ const ProposalDetails = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
 
-  // ✅ نعملها كـ دالة مستقلة عشان نعيد استدعائها بعد التعديل
+
   const fetchProposal = async () => {
     try {
       const token = localStorage.getItem('access-token');
@@ -94,7 +94,7 @@ const ProposalDetails = () => {
       formDataToSend.append('_method', 'PUT');
       if (formData.cv) formDataToSend.append('cv', formData.cv);
 
-      await axios.post(`http://localhost:8000/api/job-application/${id}`, formDataToSend, {
+      const response = await axios.post(`http://localhost:8000/api/job-application/${id}`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
@@ -103,13 +103,11 @@ const ProposalDetails = () => {
       });
 
       setSubmitSuccess(true);
-
-      // ✅ استدعِ التحديث من جديد بعد ثانية
+      // Update proposal in UI immediately
+      setProposal(prev => ({ ...prev, ...response.data.data }));
       setTimeout(() => {
-        fetchProposal();
         closeModal();
       }, 1000);
-
     } catch (error) {
       console.error('Error updating application:', error);
       const validationErrors = error?.response?.data?.errors;
@@ -199,8 +197,12 @@ if (loading) return (
         <div className="proposal-actions">
           <Link to="/my-applications" className="proposal-back-btn">Back to My Applications</Link>
           <div className="proposal-action-buttons">
-            <button onClick={handleEdit} className="proposal-edit-btn">Edit</button>
-            <button onClick={handleDelete} className="proposal-delete-btn">Withdraw</button>
+            {!["rejected", "approved"].includes((proposal.status || '').toLowerCase()) && (
+              <>
+                <button onClick={handleEdit} className="proposal-edit-btn">Edit</button>
+                <button onClick={handleDelete} className="proposal-delete-btn">Withdraw</button>
+              </>
+            )}
           </div>
         </div>
       </div>

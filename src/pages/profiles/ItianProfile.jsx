@@ -5,6 +5,7 @@ import { setRole } from "../../store/userSlice";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
@@ -79,6 +80,7 @@ const schema = Yup.object().shape({
 
 const ItianProfile = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -166,7 +168,11 @@ const ItianProfile = () => {
         setProfile(null);
         setError("No profile data found. Please create your profile.");
       } else {
-        setError(`Failed to load profile. ${err.response?.data?.message || err.message}`);
+        setError(
+          `Failed to load profile. ${
+            err.response?.data?.message || err.message
+          }`
+        );
       }
     } finally {
       setLoading(false);
@@ -238,6 +244,33 @@ const ItianProfile = () => {
       formData.append("profile_picture", data.profile_picture);
     }
 
+    data.skills.forEach((skill, index) => {
+      if (skill.skill_name && skill.skill_name.trim() !== "") {
+        formData.append(
+          `skills[${index}][skill_name]`,
+          skill.skill_name.trim()
+        );
+      }
+    });
+
+    data.projects.forEach((project, index) => {
+      if (project.project_title && project.project_title.trim() !== "") {
+        formData.append(
+          `projects[${index}][project_title]`,
+          project.project_title.trim()
+        );
+        if (project.description)
+          formData.append(
+            `projects[${index}][description]`,
+            project.description
+          );
+        if (project.project_link)
+          formData.append(
+            `projects[${index}][project_link]`,
+            project.project_link
+          );
+      }
+    });
     if (data.cv) {
       formData.append("cv", data.cv);
     }
@@ -328,7 +361,9 @@ const ItianProfile = () => {
           <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-[#d0443c] rounded-full animate-spin animation-delay-150"></div>
           <Sparkles className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#d0443c] w-8 h-8 animate-pulse" />
         </div>
-        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">Loading profile...</p>
+        <p className="ml-6 text-gray-800 text-xl font-medium animate-pulse">
+          Loading profile...
+        </p>
       </div>
     );
   }
@@ -348,7 +383,9 @@ const ItianProfile = () => {
             }}
             className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition duration-300 shadow-md"
           >
-            {error.includes("create your profile") ? "Create Profile" : "Try Again"}
+            {error.includes("create your profile")
+              ? "Create Profile"
+              : "Try Again"}
           </button>
         </div>
       </div>
@@ -363,11 +400,17 @@ const ItianProfile = () => {
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
               <div className="relative">
                 <div className="h-48 bg-gradient-to-r from-[#d0443c] to-[#b53c35]"></div>
+
+                {/* Profile Picture */}
                 <div className="absolute -bottom-16 left-6">
                   <div className="relative">
                     <div className="w-36 h-36 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
                       {previewImage ? (
-                        <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                        <img
+                          src={previewImage}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
                           <User size={72} />
@@ -414,8 +457,16 @@ const ItianProfile = () => {
                             placeholder="Last Name"
                           />
                         </div>
-                        {errors.first_name && <p className="text-[#d0443c] text-sm">{errors.first_name.message}</p>}
-                        {errors.last_name && <p className="text-[#d0443c] text-sm">{errors.last_name.message}</p>}
+                        {errors.first_name && (
+                          <p className="text-[#d0443c] text-sm">
+                            {errors.first_name.message}
+                          </p>
+                        )}
+                        {errors.last_name && (
+                          <p className="text-[#d0443c] text-sm">
+                            {errors.last_name.message}
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <div>
@@ -423,7 +474,9 @@ const ItianProfile = () => {
                           {profile.first_name} {profile.last_name}
                         </h2>
                         {profile.current_job_title && (
-                          <p className="text-gray-600 mt-1">{profile.current_job_title}</p>
+                          <p className="text-gray-600 mt-1">
+                            {profile.current_job_title}
+                          </p>
                         )}
                       </div>
                     )}
@@ -434,7 +487,31 @@ const ItianProfile = () => {
                         placeholder="Tell us about yourself..."
                       />
                     ) : (
-                      <p className="text-gray-600 mt-2">{profile.bio || "No bio provided"}</p>
+                      <p className="text-gray-600 mt-2">
+                        {profile.bio || "No bio provided"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Edit & Show My Posts Buttons */}
+                  <div className="flex gap-2">
+                    {!editProfile && (
+                      <>
+                        <button
+                          onClick={() => setEditProfile(true)}
+                          className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
+                        >
+                          <Edit size={18} />
+                          <span>Edit Profile</span>
+                        </button>
+                        <button
+                          onClick={() => navigate("/my-posts")}
+                          className="flex items-center gap-2 bg-[#d0443c]/10 text-[#d0443c] px-4 py-2 rounded-lg hover:bg-[#d0443c]/20 transition"
+                        >
+                          <BookOpen size={18} />
+                          <span>Show My Posts</span>
+                        </button>
+                      </>
                     )}
                   </div>
                   {!editProfile && (
@@ -450,16 +527,22 @@ const ItianProfile = () => {
                 <div className="mt-6 flex flex-wrap gap-4">
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                     <Briefcase className="text-[#d0443c] mr-2" size={16} />
-                    <span className="text-gray-700">{profile.iti_track || "ITI Track"}</span>
+                    <span className="text-gray-700">
+                      {profile.iti_track || "ITI Track"}
+                    </span>
                   </div>
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                     <Calendar className="text-[#d0443c] mr-2" size={16} />
-                    <span className="text-gray-700">Graduated {profile.graduation_year || "Year"}</span>
+                    <span className="text-gray-700">
+                      Graduated {profile.graduation_year || "Year"}
+                    </span>
                   </div>
                   {profile.experience_years !== null && (
                     <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg">
                       <Star className="text-[#d0443c] mr-2" size={16} />
-                      <span className="text-gray-700">{profile.experience_years} years experience</span>
+                      <span className="text-gray-700">
+                        {profile.experience_years} years experience
+                      </span>
                     </div>
                   )}
                 </div>
@@ -478,25 +561,39 @@ const ItianProfile = () => {
                   {expandedSections.contact && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Email</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Email
+                        </label>
                         <input
                           type="text"
                           {...register("email")}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.email && <p className="text-[#d0443c] text-sm mt-1">{errors.email.message}</p>}
+                        {errors.email && (
+                          <p className="text-[#d0443c] text-sm mt-1">
+                            {errors.email.message}
+                          </p>
+                        )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Phone</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Phone
+                        </label>
                         <input
                           type="text"
                           {...register("number")}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         />
-                        {errors.number && <p className="text-[#d0443c] text-sm mt-1">{errors.number.message}</p>}
+                        {errors.number && (
+                          <p className="text-[#d0443c] text-sm mt-1">
+                            {errors.number.message}
+                          </p>
+                        )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Portfolio URL</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Portfolio URL
+                        </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Link size={16} className="text-gray-400" />
@@ -589,7 +686,9 @@ const ItianProfile = () => {
                   {expandedSections.professional && (
                     <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">ITI Track</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          ITI Track
+                        </label>
                         <input
                           type="text"
                           {...register("iti_track")}
@@ -600,7 +699,9 @@ const ItianProfile = () => {
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Graduation Year</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Graduation Year
+                        </label>
                         <input
                           type="text"
                           {...register("graduation_year")}
@@ -611,7 +712,9 @@ const ItianProfile = () => {
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Experience (Years)</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Experience (Years)
+                        </label>
                         <input
                           type="text"
                           {...register("experience_years")}
@@ -622,7 +725,9 @@ const ItianProfile = () => {
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Current Job Title</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Current Job Title
+                        </label>
                         <input
                           type="text"
                           {...register("current_job_title")}
@@ -633,7 +738,9 @@ const ItianProfile = () => {
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Current Company</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Current Company
+                        </label>
                         <input
                           type="text"
                           {...register("current_company")}
@@ -644,7 +751,9 @@ const ItianProfile = () => {
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Preferred Locations</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Preferred Locations
+                        </label>
                         <input
                           type="text"
                           {...register("preferred_job_locations")}
@@ -656,13 +765,17 @@ const ItianProfile = () => {
                         )}
                       </div>
                       <div>
-                        <label className="block text-gray-700 font-medium mb-2">Open to Work</label>
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Open to Work
+                        </label>
                         <select
                           {...register("is_open_to_work")}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                         >
                           <option value="true">Yes, I'm open to work</option>
-                          <option value="false">No, I'm not currently looking</option>
+                          <option value="false">
+                            No, I'm not currently looking
+                          </option>
                         </select>
                         {errors.is_open_to_work && (
                           <p className="text-[#d0443c] text-sm mt-1">{errors.is_open_to_work.message}</p>
@@ -683,7 +796,10 @@ const ItianProfile = () => {
                     <div className="px-6 pb-6">
                       <div className="space-y-4">
                         {skillFields.map((item, index) => (
-                          <div key={item.id} className="flex items-center gap-4">
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-4"
+                          >
                             <input
                               type="text"
                               {...register(`skills.${index}.skill_name`)}
@@ -722,9 +838,14 @@ const ItianProfile = () => {
                     <div className="px-6 pb-6">
                       <div className="space-y-6">
                         {projectFields.map((item, index) => (
-                          <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                          <div
+                            key={item.id}
+                            className="border border-gray-200 rounded-lg p-4"
+                          >
                             <div className="flex justify-between items-center mb-4">
-                              <h4 className="font-medium text-gray-900">Project {index + 1}</h4>
+                              <h4 className="font-medium text-gray-900">
+                                Project {index + 1}
+                              </h4>
                               <button
                                 type="button"
                                 onClick={() => removeProject(index)}
@@ -735,10 +856,14 @@ const ItianProfile = () => {
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                               <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Title</label>
+                                <label className="block text-gray-700 text-sm font-medium mb-1">
+                                  Title
+                                </label>
                                 <input
                                   type="text"
-                                  {...register(`projects.${index}.project_title`)}
+                                  {...register(
+                                    `projects.${index}.project_title`
+                                  )}
                                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                                   placeholder="Project title"
                                 />
@@ -749,14 +874,18 @@ const ItianProfile = () => {
                                 )}
                               </div>
                               <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Link</label>
+                                <label className="block text-gray-700 text-sm font-medium mb-1">
+                                  Link
+                                </label>
                                 <div className="relative">
                                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Link size={16} className="text-gray-400" />
                                   </div>
                                   <input
                                     type="text"
-                                    {...register(`projects.${index}.project_link`)}
+                                    {...register(
+                                      `projects.${index}.project_link`
+                                    )}
                                     className="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
                                     placeholder="Project URL"
                                   />
@@ -768,7 +897,9 @@ const ItianProfile = () => {
                                 )}
                               </div>
                               <div>
-                                <label className="block text-gray-700 text-sm font-medium mb-1">Description</label>
+                                <label className="block text-gray-700 text-sm font-medium mb-1">
+                                  Description
+                                </label>
                                 <textarea
                                   {...register(`projects.${index}.description`)}
                                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#d0443c] focus:border-[#d0443c]"
@@ -828,14 +959,18 @@ const ItianProfile = () => {
                         <Mail className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Email</p>
-                          <p className="text-gray-900">{profile.email || "Not provided"}</p>
+                          <p className="text-gray-900">
+                            {profile.email || "Not provided"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center">
                         <Phone className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">Phone</p>
-                          <p className="text-gray-900">{profile.number || "Not provided"}</p>
+                          <p className="text-gray-900">
+                            {profile.number || "Not provided"}
+                          </p>
                         </div>
                       </div>
                       {profile.portfolio_url && (
@@ -919,14 +1054,20 @@ const ItianProfile = () => {
                         <Briefcase className="text-[#d0443c] mr-3" size={20} />
                         <div>
                           <p className="text-gray-500 text-sm">ITI Track</p>
-                          <p className="text-gray-900">{profile.iti_track || "Not provided"}</p>
+                          <p className="text-gray-900">
+                            {profile.iti_track || "Not provided"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="text-[#d0443c] mr-3" size={20} />
                         <div>
-                          <p className="text-gray-500 text-sm">Graduation Year</p>
-                          <p className="text-gray-900">{profile.graduation_year || "Not provided"}</p>
+                          <p className="text-gray-500 text-sm">
+                            Graduation Year
+                          </p>
+                          <p className="text-gray-900">
+                            {profile.graduation_year || "Not provided"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center">
@@ -934,25 +1075,34 @@ const ItianProfile = () => {
                         <div>
                           <p className="text-gray-500 text-sm">Experience</p>
                           <p className="text-gray-900">
-                            {profile.experience_years !== null ? `${profile.experience_years} years` : "Not provided"}
+                            {profile.experience_years !== null
+                              ? `${profile.experience_years} years`
+                              : "Not provided"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center">
                         <Briefcase className="text-[#d0443c] mr-3" size={20} />
                         <div>
-                          <p className="text-gray-500 text-sm">Current Position</p>
+                          <p className="text-gray-500 text-sm">
+                            Current Position
+                          </p>
                           <p className="text-gray-900">
                             {profile.current_job_title || "Not provided"}
-                            {profile.current_company && ` at ${profile.current_company}`}
+                            {profile.current_company &&
+                              ` at ${profile.current_company}`}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center">
                         <MapPin className="text-[#d0443c] mr-3" size={20} />
                         <div>
-                          <p className="text-gray-500 text-sm">Preferred Locations</p>
-                          <p className="text-gray-900">{profile.preferred_job_locations || "Not specified"}</p>
+                          <p className="text-gray-500 text-sm">
+                            Preferred Locations
+                          </p>
+                          <p className="text-gray-900">
+                            {profile.preferred_job_locations || "Not specified"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center">
@@ -960,7 +1110,9 @@ const ItianProfile = () => {
                         <div>
                           <p className="text-gray-500 text-sm">Job Status</p>
                           <p className="text-gray-900">
-                            {profile.is_open_to_work ? "Open to work" : "Not currently looking"}
+                            {profile.is_open_to_work
+                              ? "Open to work"
+                              : "Not currently looking"}
                           </p>
                         </div>
                       </div>
@@ -1034,8 +1186,12 @@ const ItianProfile = () => {
           </>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Profile Found</h2>
-            <p className="text-gray-600 mb-6">You haven't created your profile yet.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              No Profile Found
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You haven't created your profile yet.
+            </p>
             <button
               onClick={() => setEditProfile(true)}
               className="px-6 py-3 bg-[#d0443c] text-white rounded-lg hover:bg-[#b53c35] transition font-medium"

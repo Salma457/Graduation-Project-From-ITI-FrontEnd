@@ -1,10 +1,8 @@
-// hooks/useAuthInit.js
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { setUser } from '../store/userSlice';
 
-// useAuthInit.js
 const useAuthInit = () => {
   const dispatch = useDispatch();
 
@@ -12,46 +10,50 @@ const useAuthInit = () => {
     const token = localStorage.getItem('access-token');
     if (!token) return;
 
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      };
+
       try {
-        const profileResponse = await axios.get('http://localhost:8000/api/user', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const user = profileResponse.data;
-
-        if (user.role === 'itian') {
-          const itianProfile = await axios.get('http://localhost:8000/api/itian-profile', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          dispatch(setUser({
-            user,
-            role: 'itian',
-            itian_profile: itianProfile.data,
-          }));
-        } else if (user.role === 'employer') {
-          const employerProfile = await axios.get('http://localhost:8000/api/employer-profile', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          dispatch(setUser({
-            user,
-            role: 'employer',
-            employer_profile: employerProfile.data,
-          }));
+        // نجرب نجيب بيانات الـ employer أولاً
+        const employerRes = await axios.get('http://localhost:8000/api/employer-profile', config);
+        const employerUser = employerRes.data.user || employerRes.data;
+        if (employerUser) {
+          dispatch(setUser({ ...employerUser, role: 'employer' }));
+          localStorage.setItem('user', JSON.stringify({ ...employerUser, role: 'employer' }));
+          localStorage.setItem('user-id', employerUser?.id || employerUser?.user_id);
+          return;
         }
-
-        // Add admin case if needed
       } catch (err) {
-        console.error("Auth Init Error:", err);
+        if (err.response?.status !== 404) {
+          console.error("Error fetching employer profile:", err);
+        }
       }
+
+      try {
+        const itianRes = await axios.get('http://localhost:8000/api/itian-profile', config);
+        const itianUser = itianRes.data.user || itianRes.data;
+        if (itianUser) {
+          dispatch(setUser({ ...itianUser, role: 'itian' }));
+          localStorage.setItem('user', JSON.stringify({ ...itianUser, role: 'itian' }));
+          localStorage.setItem('user-id', itianUser?.id || itianUser?.user_id);
+          return;
+        }
+      } catch (err) {
+        if (err.response?.status !== 404) {
+          console.error("Error fetching itian profile:", err);
+        }
+      }
+
+      console.warn("❌ No valid profile found for current user.");
     };
 
-    fetchUser();
-  }, []);
+    fetchUserData();
+  }, [dispatch]);
 };
 
 export default useAuthInit;

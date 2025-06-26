@@ -27,19 +27,65 @@ serve(async (req) => {
       )
     }
 
-    // تحويل ID إلى عدد صحيح إذا كان مرسلاً كسلسلة
     const userId = parseInt(current_user_id, 10);
     if (isNaN(userId)) {
       throw new Error('Invalid user ID format');
     }
 
-    const { data, error } = await supabase.rpc('get_latest_messages_per_contact', {
+    // جلب آخر الرسائل
+    const { data: messagesData, error } = await supabase.rpc('get_latest_messages_per_contact', {
       user_id_input: userId
     })
 
     if (error) throw error
 
-    return new Response(JSON.stringify(data), {
+    // إثراء البيانات بمعلومات المستخدمين
+    const enrichedData = await Promise.all(messagesData.map(async (msg) => {
+      const contactId = msg.from_id === userId ? msg.to_id : msg.from_id;
+      
+      // جلب معلومات المستخدم
+      const { data: userData } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', contactId)
+        .single();
+
+      // جلب معلومات ITI Profile
+      const { data: itiData } = await supabase
+        .from('itian_profiles')
+        .select('first_name, last_name, profile_picture')
+        .eq('user_id', contactId)
+        .single();
+
+      // جلب معلومات Employer Profile
+      const { data: empData } = await supabase
+        .from('employer_profiles')
+        .select('company_name, company_logo')
+        .eq('user_id', contactId)
+        .single();
+
+      // تحديد الاسم والصورة
+      let contact_name = `User ${contactId}`;
+      let contact_avatar = null;
+
+      if (itiData) {
+        contact_name = `${itiData.first_name || ''} ${itiData.last_name || ''}`.trim();
+        contact_avatar = itiData.profile_picture;
+      } else if (empData) {
+        contact_name = empData.company_name || contact_name;
+        contact_avatar = empData.company_logo;
+      } else if (userData) {
+        contact_name = userData.name || userData.email || contact_name;
+      }
+
+      return {
+        ...msg,
+        contact_name,
+        contact_avatar
+      };
+    }));
+
+    return new Response(JSON.stringify(enrichedData), {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*' 

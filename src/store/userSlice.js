@@ -4,31 +4,29 @@ const initialState = {
   user: null,
   role: null,
   itianProfile: null,
+  employerProfile: null,
 };
-
 
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
     setUser: (state, action) => {
-  const payload = action.payload;
-  if (payload.user) {
-    state.user = payload.user;
-    state.role = payload.user.role;
-    state.itianProfile = payload.itian_profile || null;
-  } else {
-    state.user = payload;
-    state.role = payload?.role || null;
-  }
-}
-,
-
-    // clear user if the user logs out
+      const payload = action.payload;
+      state.user = payload;
+      state.role = payload.role || null;
+      state.itianProfile = payload.itian_profile || null;
+      state.employerProfile = payload.employer_profile || null;
+    },
     clearUser: (state) => {
       state.user = null;
       state.role = null;
+      state.itianProfile = null;
+      state.employerProfile = null;
     },
+    setRole: (state, action) => {
+      state.role = action.payload;
+    }
   },
 });
 

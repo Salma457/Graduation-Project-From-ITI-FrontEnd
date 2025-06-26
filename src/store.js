@@ -9,8 +9,8 @@ import { notificationsApi } from './api/notificationsApi.js';
 import itianProfileReducer from './store/itianProfileSlice';
 import employerProfileReducer from './store/employerProfileSlice';
 import itianReducer from './Posts/store/itianSlice.js';
+import applicationReducer from './applicationSlice';
 import userReducer from './store/userSlice';
-import applicationReducer from './applicationSlice.js'
 
 // import reportsReducer from './store/reportsSlice';
 const store = configureStore({
@@ -25,6 +25,7 @@ const store = configureStore({
     itianProfile: itianProfileReducer,
     employerProfile: employerProfileReducer,
     itian: itianReducer,
+    
     // reports: reportsReducer,
     [chatApi.reducerPath]: chatApi.reducer,
     [notificationsApi.reducerPath]: notificationsApi.reducer,
@@ -35,4 +36,3 @@ const store = configureStore({
 });
 
 export default store;
-
