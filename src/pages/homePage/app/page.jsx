@@ -8,6 +8,8 @@ import {
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "../../../contexts/TranslationContext"
 import LanguageSwitcher from "../../../components/LanguageSwitcher"
+import DarkModeToggle from "../../../components/DarkModeToggle"
+import { useDarkMode } from "../../../contexts/DarkModeContext"
 
 // Animation Components
 const AnimatedCounter = ({ value, duration = 2000 }) => {
@@ -76,7 +78,7 @@ function LandingPageContent() {
 
   const handleGetStarted = () => {
     if (!isLoggedIn) {
-      navigate("/login"); // Redirect to login page using React Router
+      navigate("/login");
     }
   };
 
@@ -100,12 +102,11 @@ function LandingPageContent() {
     { name: t('categories.items.networkSecurity'), icon: Shield, color: "from-red-600 to-red-700" },
     { name: t('categories.items.digitalMarketing'), icon: Megaphone, color: "from-red-400 to-rose-500" },
     { name: t('categories.items.businessManagement'), icon: BarChart3, color: "from-rose-600 to-red-600" },
-    { name: t('categories.items.artificialIntelligence'), icon: Cpu,  color: "from-red-500 to-red-600" },
-    { name: t('categories.items.computerEngineering'), icon: Building2,  color: "from-rose-500 to-red-500" },
-    { name: t('categories.items.dataScience'), icon: Database,  color: "from-red-600 to-rose-600" },
+    { name: t('categories.items.artificialIntelligence'), icon: Cpu, color: "from-red-500 to-red-600" },
+    { name: t('categories.items.computerEngineering'), icon: Building2, color: "from-rose-500 to-red-500" },
+    { name: t('categories.items.dataScience'), icon: Database, color: "from-red-600 to-rose-600" },
   ]
 
-  // Top Hiring Companies Data
   const hiringCompanies = [
     {
       name: "Valeo",
@@ -160,60 +161,75 @@ function LandingPageContent() {
   const testimonials = t('testimonials.items')
 
   return (
-    <div className={`min-h-screen bg-white ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Language Switcher - Fixed Position */}
-      <div className="fixed top-4 right-4 z-50">
-        <LanguageSwitcher />
-      </div>
+    <div className={`min-h-screen transition-colors duration-300 ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-red-900 dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="text-2xl font-bold text-white">
+            ITI Career Gateway
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-white dark:text-gray-300 hover:text-red-300 dark:hover:text-red-400 transition-colors">
+              {t('nav.home')}
+            </a>
+            <a href="#" className="text-white dark:text-gray-300 hover:text-red-300 dark:hover:text-red-400 transition-colors">
+              {t('nav.jobs')}
+            </a>
+            <a href="#" className="text-white dark:text-gray-300 hover:text-red-300 dark:hover:text-red-400 transition-colors">
+              {t('nav.about')}
+            </a>
+            <LanguageSwitcher />
+            <DarkModeToggle className="ml-2" />
+          </div>
+        </div>
+      </nav>
 
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50"></div>
-        <FloatingElement className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full opacity-30" delay={0} />
-        <FloatingElement className="absolute top-40 right-20 w-16 h-16 bg-rose-300 rounded-full opacity-20" delay={1} />
-        <FloatingElement className="absolute bottom-32 left-1/4 w-12 h-12 bg-red-300 rounded-full opacity-25" delay={2} />
+      {/* Main Content */}
+      <section className="relative pt-24 pb-20 overflow-hidden bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
+        <div className="absolute inset-0"></div>
+        <FloatingElement className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full opacity-30 dark:bg-gray-700 dark:opacity-20" delay={0} />
+        <FloatingElement className="absolute top-40 right-20 w-16 h-16 bg-rose-300 rounded-full opacity-20 dark:bg-gray-600 dark:opacity-15" delay={1} />
+        <FloatingElement className="absolute bottom-32 left-1/4 w-12 h-12 bg-red-300 rounded-full opacity-25 dark:bg-gray-500 dark:opacity-15" delay={2} />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Text Side */}
             <FadeInElement className="space-y-8">
               <div className="space-y-6">
-                <div className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-red-100 to-rose-100 border border-red-200 animate-pulse">
-                  <GraduationCap className="w-5 h-5 text-red-600 mr-2" />
-                  <span className="text-red-800 font-semibold">{t('hero.badge')}</span>
+                <div className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-red-100 to-rose-100 dark:from-gray-800 dark:to-gray-700 border border-red-200 dark:border-gray-600 animate-pulse">
+                  <GraduationCap className="w-5 h-5 text-red-600 dark:text-gray-300 mr-2" />
+                  <span className="text-red-800 dark:text-gray-200 font-semibold">{t('hero.badge')}</span>
                 </div>
                 
-                <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
-                  {t('hero.title')} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{t('hero.titleHighlight')}</span>
-                  <span className="block text-3xl mt-3 text-gray-700 font-semibold">{t('hero.subtitle')}</span>
+                <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight">
+                  {t('hero.title')} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent dark:from-gray-300 dark:to-gray-400">{t('hero.titleHighlight')}</span>
+                  <span className="block text-3xl mt-3 text-gray-700 dark:text-gray-300 font-semibold">{t('hero.subtitle')}</span>
                 </h1>
                 
-                <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-lg leading-relaxed">
                   {t('hero.description')}
                 </p>
               </div>
             </FadeInElement>
 
-            {/* Image Side - Animated */}
             <FadeInElement delay={1} className="flex justify-center items-center">
               <div className="relative">
-               <img src="/public/choice-worker-concept.png" alt="" className="max-w-md w-full rounded-lg shadow-xl" />
-                <FloatingElement className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-500 to-pink-500 rounded-2xl opacity-20" delay={0.5} />
-                <FloatingElement className="absolute -bottom-20 -left-30 w-32 h-32 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl opacity-20" delay={1.5} />
+                <img src="/public/choice-worker-concept.png" alt="" className="max-w-md w-full rounded-lg shadow-xl dark:brightness-75" />
+                <FloatingElement className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-500 to-pink-500 dark:from-gray-700 dark:to-gray-600 rounded-2xl opacity-20" delay={0.5} />
+                <FloatingElement className="absolute -bottom-20 -left-30 w-32 h-32 bg-gradient-to-br from-red-500 to-rose-500 dark:from-gray-800 dark:to-gray-700 rounded-2xl opacity-20" delay={1.5} />
               </div>
             </FadeInElement>
           </div>
         </div>
       </section>
 
-      {/* ITI Stats Section */}
-      <section className="py-20 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-rose-50/50"></div>
+      <section className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-rose-50/50 dark:from-gray-800/50 dark:to-gray-700/50"></div>
         <div className="container mx-auto px-4 relative z-10">
           <FadeInElement className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              {t('stats.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{t('stats.titleHighlight')}</span>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+              {t('stats.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent dark:from-gray-300 dark:to-gray-400">{t('stats.titleHighlight')}</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               {t('stats.description')}
             </p>
           </FadeInElement>
@@ -225,28 +241,27 @@ function LandingPageContent() {
                 delay={index + 2}
                 className="group text-center hover:scale-105 transition-all duration-300 cursor-pointer"
               >
-                <div className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${stat.color} rounded-2xl mb-6 shadow-lg group-hover:shadow-xl group-hover:rotate-6 transition-all duration-300`}>
+                <div className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${stat.color} dark:from-gray-700 dark:to-gray-600 rounded-2xl mb-6 shadow-lg group-hover:shadow-xl group-hover:rotate-6 transition-all duration-300`}>
                   <stat.icon className="w-10 h-10 text-white" />
                 </div>
-                <div className="text-4xl font-bold text-gray-900 mb-3">
+                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
                   <AnimatedCounter value={stat.value} />
                   {stat.label.includes('Rate') || stat.label.includes('معدل') ? '%' : stat.label.includes('Graduates') || stat.label.includes('خريجي') ? '+' : '+'}
                 </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
+                <div className="text-gray-600 dark:text-gray-300 font-medium">{stat.label}</div>
               </FadeInElement>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Top Hiring Companies Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <FadeInElement className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              {t('companies.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{t('companies.titleHighlight')}</span>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+              {t('companies.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent dark:from-gray-300 dark:to-gray-400">{t('companies.titleHighlight')}</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               {t('companies.description')}
             </p>
           </FadeInElement>
@@ -256,35 +271,35 @@ function LandingPageContent() {
               <FadeInElement
                 key={index}
                 delay={index}
-                className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-2 border border-gray-100 hover:border-red-200"
+                className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-2 border border-gray-100 dark:border-gray-700 hover:border-red-200 dark:hover:border-gray-600"
               >
-                <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+                <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center p-6">
                   <div className="w-full h-24 flex items-center justify-center">
                     <img 
                       src={company.logo} 
                       alt={company.name} 
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300 dark:brightness-90"
                     />
                   </div>
                 </div>
                 <div className="p-8">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-gray-300 transition-colors">
                       {company.name}
                     </h3>
                     <span className="bg-gradient-to-r from-red-500 to-rose-500 text-white text-sm font-semibold px-3 py-1 rounded-full">
                       {company.hiring}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-6">{company.description}</p>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">{company.description}</p>
                   
                   <div className="mb-6">
-                    <h4 className="font-semibold text-gray-900 mb-3">{t('companies.popularPositions')}</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">{t('companies.popularPositions')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {company.positions.map((position, i) => (
                         <span 
                           key={i}
-                          className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full group-hover:bg-red-50 group-hover:text-red-600 transition-colors"
+                          className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm px-3 py-1 rounded-full group-hover:bg-red-50 dark:group-hover:bg-gray-600 group-hover:text-red-600 dark:group-hover:text-gray-300 transition-colors"
                         >
                           {position}
                         </span>
@@ -296,7 +311,7 @@ function LandingPageContent() {
                     href={company.website} 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-red-600 font-semibold hover:text-red-700 transition-colors group-hover:translate-x-2 transform duration-300"
+                    className="inline-flex items-center text-red-600 dark:text-gray-300 font-semibold hover:text-red-700 dark:hover:text-gray-200 transition-colors group-hover:translate-x-2 transform duration-300"
                   >
                     {t('companies.visitWebsite')}
                     <ArrowRight className={`w-4 h-4 ${isRTL ? 'mr-2 rotate-180' : 'ml-2'}`} />
@@ -308,14 +323,13 @@ function LandingPageContent() {
         </div>
       </section>
 
-      {/* Job Categories */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <FadeInElement className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              {t('categories.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{t('categories.titleHighlight')}</span>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+              {t('categories.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent dark:from-gray-300 dark:to-gray-400">{t('categories.titleHighlight')}</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               {t('categories.description')}
             </p>
           </FadeInElement>
@@ -325,25 +339,24 @@ function LandingPageContent() {
               <FadeInElement
                 key={index}
                 delay={index}
-                className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-2 border border-gray-100 hover:border-red-200"
+                className="group bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-2 border border-gray-100 dark:border-gray-700 hover:border-red-200 dark:hover:border-gray-600"
               >
-                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${category.color} rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300`}>
+                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br ${category.color} dark:from-gray-700 dark:to-gray-600 rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300`}>
                   <category.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-3 text-lg group-hover:text-red-600 transition-colors">{category.name}</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white mb-3 text-lg group-hover:text-red-600 dark:group-hover:text-gray-300 transition-colors">{category.name}</h3>
               </FadeInElement>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Market Opportunities Section */}
-      <section className="py-20 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 relative overflow-hidden">
         <div className="container mx-auto px-4">
           <FadeInElement delay={5} className="text-center">
-            <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-8 rounded-2xl shadow-xl">
+            <div className="bg-gradient-to-r from-red-600 to-rose-600 dark:from-gray-700 dark:to-gray-600 text-white p-8 rounded-2xl shadow-xl">
               <h4 className="text-2xl font-bold mb-4">{t('market.title')}</h4>
-              <p className="text-red-100 text-lg max-w-4xl mx-auto">
+              <p className="text-red-100 dark:text-gray-300 text-lg max-w-4xl mx-auto">
                 {t('market.description')}
               </p>
             </div>
@@ -351,14 +364,13 @@ function LandingPageContent() {
         </div>
       </section>
 
-      {/* ITI Locations */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="container mx-auto px-4">
           <FadeInElement className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              {t('locations.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">{t('locations.titleHighlight')}</span>
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+              {t('locations.title').split(' ')[0]} <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent dark:from-gray-300 dark:to-gray-400">{t('locations.titleHighlight')}</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               {t('locations.description')}
             </p>
           </FadeInElement>
@@ -368,22 +380,21 @@ function LandingPageContent() {
               <FadeInElement
                 key={index}
                 delay={index * 0.5}
-                className="group bg-gradient-to-br from-gray-50 to-gray-100 hover:from-red-50 hover:to-rose-50 p-4 rounded-xl text-center transition-all duration-300 hover:shadow-lg cursor-pointer hover:scale-105"
+                className="group bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 hover:from-red-50 dark:hover:from-gray-600 hover:to-rose-50 dark:hover:to-gray-700 p-4 rounded-xl text-center transition-all duration-300 hover:shadow-lg cursor-pointer hover:scale-105"
               >
-                <MapPin className="w-6 h-6 text-gray-400 group-hover:text-red-500 mx-auto mb-2 transition-colors group-hover:bounce" />
-                <p className="text-gray-700 group-hover:text-gray-900 font-medium text-sm">{location}</p>
+                <MapPin className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-red-500 dark:group-hover:text-gray-300 mx-auto mb-2 transition-colors group-hover:bounce" />
+                <p className="text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white font-medium text-sm">{location}</p>
               </FadeInElement>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <FadeInElement className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">{t('testimonials.title')}</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">{t('testimonials.title')}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               {t('testimonials.description')}
             </p>
           </FadeInElement>
@@ -393,21 +404,21 @@ function LandingPageContent() {
               <FadeInElement
                 key={index}
                 delay={index + 2}
-                className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 hover:border-red-200 group"
+                className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 dark:border-gray-700 hover:border-red-200 dark:hover:border-gray-600 group"
               >
                 <div className="flex items-center gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 fill-red-400 text-red-400 group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${i * 100}ms`}} />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-6 text-lg italic">"{testimonial.content}"</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg italic">"{testimonial.content}"</p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                    <div className="text-sm text-gray-600">{testimonial.role}</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{testimonial.role}</div>
                   </div>
                 </div>
               </FadeInElement>
@@ -416,26 +427,24 @@ function LandingPageContent() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-rose-600 to-red-700"></div>
-        <div className="absolute inset-0 bg-black opacity-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-rose-600 to-red-700 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800"></div>
+        <div className="absolute inset-0 bg-black opacity-10 dark:opacity-20"></div>
         
-        {/* Animated background elements */}
-        <FloatingElement className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full" delay={0} />
-        <FloatingElement className="absolute bottom-20 right-20 w-32 h-32 bg-white/5 rounded-full" delay={1} />
+        <FloatingElement className="absolute top-10 left-10 w-24 h-24 bg-white/10 dark:bg-gray-700/10 rounded-full" delay={0} />
+        <FloatingElement className="absolute bottom-20 right-20 w-32 h-32 bg-white/5 dark:bg-gray-600/5 rounded-full" delay={1} />
         
         <div className="container mx-auto px-4 text-center relative z-10">
           <FadeInElement className="max-w-4xl mx-auto">
             <h2 className="text-4xl font-bold text-white mb-6">{t('cta.title')}</h2>
-            <p className="text-red-100 mb-10 text-xl">
+            <p className="text-red-100 dark:text-gray-300 mb-10 text-xl">
               {t('cta.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               {!isLoggedIn && (
                 <button 
                   onClick={handleGetStarted}
-                  className="bg-white text-red-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 transform"
+                  className="bg-white dark:bg-gray-800 text-red-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 transform"
                 >
                   {t('cta.button')}
                 </button>
@@ -445,47 +454,46 @@ function LandingPageContent() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16">
+      <footer className="bg-gray-900 dark:bg-gray-800 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <FadeInElement>
               <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-red-400 to-rose-400 bg-clip-text text-transparent">
                 ITI Career Gateway
               </h3>
-              <p className="text-gray-300 mb-6 leading-relaxed">
+              <p className="text-gray-300 dark:text-gray-200 mb-6 leading-relaxed">
                 {t('footer.description')}
               </p>
             </FadeInElement>
             <FadeInElement delay={1}>
-              <h4 className="font-semibold mb-6 text-lg">{t('footer.quickLinks.title')}</h4>
-              <ul className="space-y-3 text-gray-300">
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.quickLinks.items.findJobs')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.quickLinks.items.postJob')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.quickLinks.items.community')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.quickLinks.items.aboutIti')}</a></li>
+              <h4 className="font-semibold mb-6 text-lg text-white">{t('footer.quickLinks.title')}</h4>
+              <ul className="space-y-3 text-gray-300 dark:text-gray-200">
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.quickLinks.items.findJobs')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.quickLinks.items.postJob')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.quickLinks.items.community')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.quickLinks.items.aboutIti')}</a></li>
               </ul>
             </FadeInElement>
             <FadeInElement delay={2}>
-              <h4 className="font-semibold mb-6 text-lg">{t('footer.categories.title')}</h4>
-              <ul className="space-y-3 text-gray-300">
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.categories.items.softwareDev')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.categories.items.networkEng')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.categories.items.graphicDesign')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.categories.items.dataScience')}</a></li>
+              <h4 className="font-semibold mb-6 text-lg text-white">{t('footer.categories.title')}</h4>
+              <ul className="space-y-3 text-gray-300 dark:text-gray-200">
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.categories.items.softwareDev')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.categories.items.networkEng')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.categories.items.graphicDesign')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.categories.items.dataScience')}</a></li>
               </ul>
             </FadeInElement>
             <FadeInElement delay={3}>
-              <h4 className="font-semibold mb-6 text-lg">{t('footer.support.title')}</h4>
-              <ul className="space-y-3 text-gray-300">
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.support.items.helpCenter')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.support.items.contactUs')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.support.items.privacyPolicy')}</a></li>
-                <li><a href="#" className="hover:text-red-400 transition-colors">{t('footer.support.items.termsOfService')}</a></li>
+              <h4 className="font-semibold mb-6 text-lg text-white">{t('footer.support.title')}</h4>
+              <ul className="space-y-3 text-gray-300 dark:text-gray-200">
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.support.items.helpCenter')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.support.items.contactUs')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.support.items.privacyPolicy')}</a></li>
+                <li><a href="#" className="hover:text-red-400 dark:hover:text-gray-300 transition-colors">{t('footer.support.items.termsOfService')}</a></li>
               </ul>
             </FadeInElement>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+          <div className="border-t border-gray-800 dark:border-gray-700 mt-12 pt-8 text-center text-gray-400 dark:text-gray-300">
             <p>{t('footer.copyright')}</p>
           </div>
         </div>

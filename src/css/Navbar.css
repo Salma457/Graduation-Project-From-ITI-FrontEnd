@@ -102,6 +102,13 @@
     border-radius: 0;
   }
 }
+.dark-mode-wrapper {
+  /* الستايل اللي عاوزاه */
+}
+
+.navbar-dark-mode-toggle {
+  /* ستايل خاص بالنافبار */
+}
 .logo-container {
   display: flex;
   align-items: center;
@@ -722,4 +729,73 @@
     display: none;
   }
 }
-/* Rest of your existing CSS... */
+
+/* Dark mode styles for navbar and dropdowns */
+.dark .navbar {
+  background: #222 !important;
+  color: #fff !important;
+}
+
+.dark .nav-link,
+.dark .dropbtn,
+.dark .dropdown-content a {
+  color: #fff !important;
+}
+
+.dark .dropdown-content {
+  background: #222 !important;
+  border-color: #444 !important;
+}
+
+.dark .dropdown-content a:hover {
+  background: #333 !important;
+  color: #b53c35 !important;
+}
+
+.dark .navbar-language-switcher {
+  background: rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+}
+
+.dark .navbar-language-switcher:hover {
+  background: rgba(255,255,255,0.18) !important;
+}
+
+.dark .language-dropdown {
+  background: #222 !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+
+.dark .language-option {
+  color: #fff !important;
+}
+
+.dark .language-option:hover {
+  background: #333 !important;
+  color: #b53c35 !important;
+}
+
+.dark .notification-dropdown {
+  background: #222 !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+
+.dark .notification-item {
+  color: #fff !important;
+}
+
+.dark .notification-item:hover {
+  background: #333 !important;
+}
+
+.dark .view-all {
+  color: #b53c35 !important;
+}
+
+.dark .view-all:hover {
+  background: #333 !important;
+}
+
+/* ...existing code... */

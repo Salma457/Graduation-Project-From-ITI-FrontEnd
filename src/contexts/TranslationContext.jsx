@@ -10,6 +10,7 @@ const translations = {
       profile: "My Profile", 
       chat: "Chat",
       jobs: "Jobs",
+      posts: "Posts", // إضافة جديدة
       postJob: "Post New Job",
       myJobs: "My Jobs",
       reports: "Reports",
@@ -187,6 +188,7 @@ const translations = {
       profile: "ملفي الشخصي",
       chat: "المحادثات", 
       jobs: "الوظائف",
+      posts: "المنشورات", // إضافة جديدة
       postJob: "إضافة وظيفة جديدة",
       myJobs: "وظائفي",
       reports: "التقارير",

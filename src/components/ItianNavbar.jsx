@@ -4,8 +4,9 @@ import { FaHome, FaUser, FaBriefcase, FaFileAlt, FaBars, FaTimes, FaSignOutAlt, 
 import "../css/Navbar.css";
 import Notifications from "./Notification";
 import MessageNotification from "./MessageNotification";
-import LanguageSwitcher from './LanguageSwitcher'; // إضافة المكون
-import { useTranslation } from '../contexts/TranslationContext'; // إضافة الهوك
+import LanguageSwitcher from './LanguageSwitcher';
+import DarkModeToggle from './DarkModeToggle'; // إضافة الـ Dark Mode Toggle
+import { useTranslation } from '../contexts/TranslationContext';
 
 function ItianNavbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +15,7 @@ function ItianNavbar() {
   
   // إضافة الترجمة
   const { t } = useTranslation();
-
+  
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
   const toggleJobsDropdown = () => setJobsDropdownOpen(!jobsDropdownOpen);
@@ -35,7 +36,7 @@ function ItianNavbar() {
         </div>
 
         <div className={`menu ${isOpen ? "open" : ""}`}>
-          <Link to="/itian" className="nav-link">
+           <Link to="/itian" className="nav-link">
             <FaHome className="nav-icon" /> {t('navbar.home') || 'Home'}
           </Link>
           <Link to="/posts" className="nav-link">
@@ -83,9 +84,15 @@ function ItianNavbar() {
             <LanguageSwitcher className="navbar-language-switcher" />
           </div>
 
+          {/* إضافة Dark Mode Toggle */}
+          <div className="dark-mode-wrapper">
+            <DarkModeToggle className="navbar-dark-mode-toggle" />
+          </div>
+
           <button className="nav-link logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="nav-icon" /> {t('navbar.logout') || 'Logout'}
           </button>
+
         </div>
 
         <button className="toggle-btn" onClick={toggleMenu}>

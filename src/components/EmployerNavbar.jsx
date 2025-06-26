@@ -4,15 +4,15 @@ import { FaHome,FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFi
 import "../css/Navbar.css";
 import Notifications from './Notification';
 import MessageNotification from './MessageNotification';
-import LanguageSwitcher from './LanguageSwitcher'; // إضافة المكون
-import { useTranslation } from '../contexts/TranslationContext'; // إضافة الهوك
+import LanguageSwitcher from './LanguageSwitcher';
+import DarkModeToggle from './DarkModeToggle'; // إضافة الـ Dark Mode Toggle
+import { useTranslation } from '../contexts/TranslationContext';
 
 function EmployerNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [reportsDropdownOpen, setReportsDropdownOpen] = useState(false);
   
-  // إضافة الترجمة
   const { t } = useTranslation();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -73,6 +73,11 @@ function EmployerNavbar() {
           {/* إضافة Language Switcher */}
           <div className="language-switcher-wrapper">
             <LanguageSwitcher className="navbar-language-switcher" />
+          </div>
+
+          {/* إضافة Dark Mode Toggle */}
+          <div className="dark-mode-wrapper">
+            <DarkModeToggle className="navbar-dark-mode-toggle" />
           </div>
 
           <button className="nav-link logout-btn" onClick={handleLogout}>
