@@ -32,7 +32,7 @@ const JobsPage = () => {
   const queryParams = new URLSearchParams(location.search);
   const employerIdFromURL = queryParams.get('employer_id');
 
-  // 💡 ضيف employer_id للفلتر قبل ما تبعت الريكوست
+ 
   useEffect(() => {
     const mergedFilters = {
       ...filters,
@@ -155,7 +155,7 @@ const JobsPage = () => {
                   onClick={handleClearAll}
                   className="clear-all-btn"
                 >
-                  Clear Filters
+                  
                 </button>
               </div>
             ) : (
