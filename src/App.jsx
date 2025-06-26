@@ -62,10 +62,9 @@ import ChatbotButton from "./AI Chat/ChatbotButton.jsx";
 // Report Page
 
 // import ReportsPage from './pages/ReportsPage.jsx';          // للمستخدم العادي (ITian/Employer)
-import CreateReportPage from './pages/CreateReportPage'; // لإنشاء التقارير
-import AdminReportPage from './pages/AdminReportPage';
-import MyReportsPage from './pages/MyReportsPage.jsx'; // لعرض التقارير الخاصة بالمستخدم
-
+import CreateReportPage from "./pages/CreateReportPage"; // لإنشاء التقارير
+import AdminReportPage from "./pages/AdminReportPage";
+import MyReportsPage from "./pages/MyReportsPage.jsx"; // لعرض التقارير الخاصة بالمستخدم
 
 // import useAuthInit from './hooks/useAuthInit';
 function App() {
@@ -168,30 +167,45 @@ function App() {
           </Route>
 
           {/* 🟪 Public profiles (outside layout or custom later) */}
-           <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+          <Route
+            path="/create-employer-profile"
+            element={<CreateEmployerProfile />}
+          />
           <Route path="/employer-profile" element={<EmployerProfile />} />
-          <Route path="/employer-public-profile/:username" element={<ViewEmployerProfile />} />
-          <Route path="/employer-profiles/:userId" element={<ViewEmployerProfile />} />
-          <Route path="/create-itian-profile" element={<CreateItianProfile />} />
+          <Route
+            path="/employer-public-profile/:username"
+            element={<ViewEmployerProfile />}
+          />
+          <Route
+            path="/employer-profiles/:userId"
+            element={<ViewEmployerProfile />}
+          />
+          <Route
+            path="/create-itian-profile"
+            element={<CreateItianProfile />}
+          />
           <Route path="/itian-profile" element={<ItianProfile />} />
-          <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+          <Route
+            path="/employer-profile/:userId"
+            element={<ViewEmployerProfile />}
+          />
           <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
           <Route path="/profile/:username" element={<ViewItianProfile />} />
 
           {/* cahtAI route */}
           <Route path="/rag" element={<RagChat />} />
 
-          
           {/* <Route path="/reports" element={<ReportsPage />} /> */}
           <Route path="/reports/create" element={<CreateReportPage />} />
-        
+
           {/* For Admin */}
           <Route path="/admin/reports" element={<AdminReportPage />} />
           <Route path="/my-reports" element={<MyReportsPage />} />
 
           {/* <Route path="/reportss" element={<ReportsPage />} /> */}
         </Routes>
-        <ChatbotButton />
+        {/* Show ChatbotButton only if user is logged in */}
+        {user && <ChatbotButton />}
       </Router>
     </Provider>
   );
