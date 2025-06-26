@@ -1,13 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchItianProfile } from '../../store/itianSlice';
-import { toast } from 'react-toastify';
-import { fetchComments, addComment, updateComment, deleteComment } from '../../services/api';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiEdit2, FiTrash2, FiSend, FiX, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchItianProfile } from "../../store/itianSlice";
+import { toast } from "react-toastify";
+import {
+  fetchComments,
+  addComment,
+  updateComment,
+  deleteComment,
+} from "../../services/api";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiEdit2,
+  FiTrash2,
+  FiSend,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+  FiMessageSquare,
+} from "react-icons/fi";
+import { useNavigate } from "react-router-dom"; // Added for navigation
 
 const CommentSection = ({ postId }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Added for navigation
   const user = useSelector((state) => state.itian.user);
 
   useEffect(() => {
@@ -20,11 +35,11 @@ const CommentSection = ({ postId }) => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [newComment, setNewComment] = useState('');
-  const [replyContent, setReplyContent] = useState('');
+  const [newComment, setNewComment] = useState("");
+  const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingComment, setEditingComment] = useState(null);
-  const [editContent, setEditContent] = useState('');
+  const [editContent, setEditContent] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const [collapsedComments, setCollapsedComments] = useState({});
@@ -32,7 +47,7 @@ const CommentSection = ({ postId }) => {
     currentPage: 1,
     lastPage: 1,
     perPage: 5,
-    total: 0
+    total: 0,
   });
 
   // Load initial comments
@@ -46,12 +61,12 @@ const CommentSection = ({ postId }) => {
           currentPage: data.current_page,
           lastPage: data.last_page,
           perPage: data.per_page,
-          total: data.total
+          total: data.total,
         });
       } catch (err) {
-        setError('Failed to load comments');
-        console.error('Error loading comments:', err);
-        toast.error('Failed to load comments');
+        setError("Failed to load comments");
+        console.error("Error loading comments:", err);
+        toast.error("Failed to load comments");
       } finally {
         setLoading(false);
       }
@@ -69,15 +84,15 @@ const CommentSection = ({ postId }) => {
       const nextPage = pagination.currentPage + 1;
       const data = await fetchComments(postId, { page: nextPage });
 
-      setComments(prev => [...prev, ...data.data]);
-      setPagination(prev => ({
+      setComments((prev) => [...prev, ...data.data]);
+      setPagination((prev) => ({
         ...prev,
         currentPage: data.current_page,
-        lastPage: data.last_page
+        lastPage: data.last_page,
       }));
     } catch (err) {
-      console.error('Error loading more comments:', err);
-      toast.error('Failed to load more comments');
+      console.error("Error loading more comments:", err);
+      toast.error("Failed to load more comments");
     } finally {
       setLoadingMore(false);
     }
@@ -85,9 +100,9 @@ const CommentSection = ({ postId }) => {
 
   // Toggle comment collapse
   const toggleCollapse = (commentId) => {
-    setCollapsedComments(prev => ({
+    setCollapsedComments((prev) => ({
       ...prev,
-      [commentId]: !prev[commentId]
+      [commentId]: !prev[commentId],
     }));
   };
 
@@ -98,33 +113,35 @@ const CommentSection = ({ postId }) => {
 
     try {
       const response = await addComment(postId, content, replyingTo);
-      
+
       if (replyingTo) {
         const addReplyToComments = (commentsList, parentId, newReply) => {
-          return commentsList.map(comment => {
+          return commentsList.map((comment) => {
             if (comment.id === parentId) {
               return {
                 ...comment,
-                replies: [...(comment.replies || []), newReply]
+                replies: [...(comment.replies || []), newReply],
               };
             }
-            
+
             return comment;
           });
         };
-        
-        setComments(prev => addReplyToComments(prev, replyingTo, response));
-        setReplyContent('');
+
+        setComments((prev) => addReplyToComments(prev, replyingTo, response));
+        setReplyContent("");
       } else {
-        setComments(prev => [response, ...prev]);
-        setNewComment('');
+        setComments((prev) => [response, ...prev]);
+        setNewComment("");
       }
 
       setReplyingTo(null);
-      toast.success(replyingTo ? 'Reply added successfully' : 'Comment added successfully');
+      toast.success(
+        replyingTo ? "Reply added successfully" : "Comment added successfully"
+      );
     } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
+      console.error("Error adding comment:", error);
+      toast.error("Failed to add comment");
     }
   };
 
@@ -134,32 +151,42 @@ const CommentSection = ({ postId }) => {
 
     try {
       const updatedComment = await updateComment(editingComment, editContent);
-      
+
       const updateCommentInList = (commentsList, commentId, updatedContent) => {
-        return commentsList.map(comment => {
+        return commentsList.map((comment) => {
           if (comment.id === commentId) {
             return { ...comment, content: updatedContent };
           }
-          
+
           if (comment.replies) {
             return {
               ...comment,
-              replies: updateCommentInList(comment.replies, commentId, updatedContent)
+              replies: updateCommentInList(
+                comment.replies,
+                commentId,
+                updatedContent
+              ),
             };
           }
-          
+
           return comment;
         });
       };
-      
-      setComments(prev => updateCommentInList(prev, editingComment, updatedComment.comment.content));
+
+      setComments((prev) =>
+        updateCommentInList(
+          prev,
+          editingComment,
+          updatedComment.comment.content
+        )
+      );
 
       setEditingComment(null);
-      setEditContent('');
-      toast.success('Comment updated successfully');
+      setEditContent("");
+      toast.success("Comment updated successfully");
     } catch (error) {
-      console.error('Error updating comment:', error);
-      toast.error('Failed to update comment');
+      console.error("Error updating comment:", error);
+      toast.error("Failed to update comment");
     }
   };
 
@@ -172,34 +199,38 @@ const CommentSection = ({ postId }) => {
   // Delete comment or reply
   const handleDeleteComment = async () => {
     if (!commentToDelete) return;
-    
+
     try {
       await deleteComment(commentToDelete.commentId);
 
       const deleteCommentFromList = (commentsList, commentId) => {
-        const filtered = commentsList.filter(comment => comment.id !== commentId);
-        
+        const filtered = commentsList.filter(
+          (comment) => comment.id !== commentId
+        );
+
         if (filtered.length === commentsList.length) {
-          return commentsList.map(comment => {
+          return commentsList.map((comment) => {
             if (comment.replies) {
               return {
                 ...comment,
-                replies: deleteCommentFromList(comment.replies, commentId)
+                replies: deleteCommentFromList(comment.replies, commentId),
               };
             }
             return comment;
           });
         }
-        
+
         return filtered;
       };
-      
-      setComments(prev => deleteCommentFromList(prev, commentToDelete.commentId));
 
-      toast.success('Comment deleted successfully');
+      setComments((prev) =>
+        deleteCommentFromList(prev, commentToDelete.commentId)
+      );
+
+      toast.success("Comment deleted successfully");
     } catch (error) {
-      console.error('Error deleting comment:', error);
-      toast.error('Failed to delete comment');
+      console.error("Error deleting comment:", error);
+      toast.error("Failed to delete comment");
     } finally {
       setShowDeleteModal(false);
       setCommentToDelete(null);
@@ -209,17 +240,27 @@ const CommentSection = ({ postId }) => {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   // Check if current user owns the content
   const isOwner = (commentUserId) => {
     return String(user?.user_id) === String(commentUserId);
+  };
+
+  // Navigate to profile
+  const handleProfileClick = (commentUserId) => {
+    if (!user) return;
+    if (String(user.user_id) === String(commentUserId)) {
+      navigate("/itian-profile");
+    } else {
+      navigate(`/itian-profile/${commentUserId}`);
+    }
   };
 
   // Render comment with its replies
@@ -229,82 +270,105 @@ const CommentSection = ({ postId }) => {
     const hasReplies = comment.replies && comment.replies.length > 0;
 
     return (
-      <motion.div 
-        key={comment.id} 
-        className={`relative ${!isTopLevel ? 'ml-10 pl-4' : ''}`}
+      <motion.div
+        key={comment.id}
+        className={`relative ${!isTopLevel ? "ml-10 pl-4" : ""}`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
-        <div 
-          className={`bg-white rounded-xl p-4 shadow-sm transition-all duration-200 hover:shadow-md ${isTopLevel ? '' : 'cursor-default'}`}
-          onClick={(e) => {
-            // Only allow reply on top-level comments
-            if (isTopLevel && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'svg' && e.target.tagName !== 'path') {
-              setReplyingTo(comment.id);
-              setEditingComment(null);
-            }
-          }}
-        >
+        <div className="bg-white rounded-xl p-4 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="flex justify-between items-start">
             <div className="flex items-center space-x-3">
+              {/* Avatar clickable for profile navigation */}
               {comment.user.profile_picture ? (
                 <motion.img
                   whileHover={{ scale: 1.05 }}
                   src={`http://localhost:8000/storage/${comment.user.profile_picture}`}
                   alt="Profile"
-                  className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md"
+                  className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md cursor-pointer"
+                  onClick={() => handleProfileClick(comment.user.id)}
                 />
               ) : (
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="h-10 w-10 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-lg shadow-md"
+                  className="h-10 w-10 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-lg shadow-md cursor-pointer"
+                  onClick={() => handleProfileClick(comment.user.id)}
                 >
-                  {comment.user.name?.charAt(0) || 'U'}
+                  {comment.user.name?.charAt(0) || "U"}
                 </motion.div>
               )}
               <div>
-                <h4 className="font-medium text-gray-900">
-                  {comment.user.name || `${comment.user.first_name} ${comment.user.last_name}`}
+                {/* Name clickable for profile navigation */}
+                <h4
+                  className="font-medium text-gray-900 cursor-pointer"
+                  onClick={() => handleProfileClick(comment.user.id)}
+                >
+                  {comment.user.name ||
+                    `${comment.user.first_name} ${comment.user.last_name}`}
                 </h4>
-                <p className="text-xs text-gray-500">{formatDate(comment.created_at)}</p>
+                <p className="text-xs text-gray-500">
+                  {formatDate(comment.created_at)}
+                </p>
               </div>
             </div>
-            
-            {isOwner(comment.user.id) && (
-              <div className="flex space-x-2">
-                <motion.button 
+
+            <div className="flex space-x-2">
+              {/* Reply Button - Only for top-level comments */}
+              {isTopLevel && (
+                <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className="text-gray-400 hover:text-red-500 p-1"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEditingComment(comment.id);
-                    setEditContent(comment.content);
-                    setReplyingTo(null);
+                    setReplyingTo(comment.id);
+                    setEditingComment(null);
                   }}
+                  title="Reply"
                 >
-                  <FiEdit2 />
+                  <FiMessageSquare />
                 </motion.button>
-                <motion.button 
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="text-gray-400 hover:text-red-500 p-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    confirmDelete(comment.id);
-                  }}
-                >
-                  <FiTrash2 />
-                </motion.button>
-              </div>
-            )}
+              )}
+
+              {/* Edit/Delete Buttons - Only for owner */}
+              {isOwner(comment.user.id) && (
+                <>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-gray-400 hover:text-red-500 p-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingComment(comment.id);
+                      setEditContent(comment.content);
+                      setReplyingTo(null);
+                    }}
+                    title="Edit"
+                  >
+                    <FiEdit2 />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-gray-400 hover:text-red-500 p-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDelete(comment.id);
+                    }}
+                    title="Delete"
+                  >
+                    <FiTrash2 />
+                  </motion.button>
+                </>
+              )}
+            </div>
           </div>
 
           {editingComment === comment.id ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="mt-3 space-y-2"
             >
@@ -336,7 +400,9 @@ const CommentSection = ({ postId }) => {
             </motion.div>
           ) : (
             <div className="mt-2">
-              <p className="text-gray-700 whitespace-pre-line">{comment.content}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {comment.content}
+              </p>
               {hasReplies && (
                 <div className="mt-3">
                   <button
@@ -368,7 +434,7 @@ const CommentSection = ({ postId }) => {
         {replyingTo === comment.id && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
             className="mt-3 bg-gray-50 rounded-lg p-4"
@@ -382,16 +448,18 @@ const CommentSection = ({ postId }) => {
                 />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-sm shadow-sm">
-                  {user?.first_name?.charAt(0) || 'Y'}
+                  {user?.first_name?.charAt(0) || "Y"}
                 </div>
               )}
               <div className="flex-1">
                 <div className="flex items-center text-sm text-red-500 mb-2">
-                  <span>Replying to {comment.user.name || comment.user.first_name}</span>
-                  <button 
+                  <span>
+                    Replying to {comment.user.name || comment.user.first_name}
+                  </span>
+                  <button
                     onClick={() => {
                       setReplyingTo(null);
-                      setReplyContent('');
+                      setReplyContent("");
                     }}
                     className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded-full"
                   >
@@ -413,7 +481,7 @@ const CommentSection = ({ postId }) => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setReplyingTo(null);
-                      setReplyContent('');
+                      setReplyContent("");
                     }}
                     className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                   >
@@ -427,9 +495,9 @@ const CommentSection = ({ postId }) => {
                       handleAddComment();
                     }}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors shadow-sm ${
-                      replyContent.trim() 
-                        ? 'bg-red-600 text-white hover:bg-red-700' 
-                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      replyContent.trim()
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
                     }`}
                     disabled={!replyContent.trim()}
                   >
@@ -443,13 +511,13 @@ const CommentSection = ({ postId }) => {
 
         {/* Render replies if not collapsed */}
         {hasReplies && !isCollapsed && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
             className="mt-3 space-y-3"
           >
-            {comment.replies.map(reply => renderComment(reply, depth + 1))}
+            {comment.replies.map((reply) => renderComment(reply, depth + 1))}
           </motion.div>
         )}
       </motion.div>
@@ -459,7 +527,7 @@ const CommentSection = ({ postId }) => {
   return (
     <div className="max-w-3xl mx-auto px-4">
       {/* Comment Input */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -474,14 +542,14 @@ const CommentSection = ({ postId }) => {
               className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-md"
             />
           ) : (
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.05 }}
               className="h-12 w-12 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-xl shadow-md"
             >
-              {user?.name?.charAt(0) || 'Y'}
+              {user?.name?.charAt(0) || "Y"}
             </motion.div>
           )}
-          
+
           <div className="flex-1 space-y-3">
             <textarea
               value={newComment}
@@ -496,9 +564,9 @@ const CommentSection = ({ postId }) => {
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddComment}
                 className={`px-5 py-2.5 rounded-xl transition-all shadow-sm flex items-center space-x-2 ${
-                  newComment.trim() 
-                    ? 'bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600' 
-                    : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                  newComment.trim()
+                    ? "bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600"
+                    : "bg-gray-100 text-gray-500 cursor-not-allowed"
                 }`}
                 disabled={!newComment.trim()}
               >
@@ -511,7 +579,7 @@ const CommentSection = ({ postId }) => {
       </motion.div>
 
       {/* Comments Count */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -519,7 +587,7 @@ const CommentSection = ({ postId }) => {
       >
         <div className="h-px bg-gray-200 flex-1"></div>
         <span className="px-4 text-gray-500 font-medium">
-          {pagination.total} {pagination.total === 1 ? 'Comment' : 'Comments'}
+          {pagination.total} {pagination.total === 1 ? "Comment" : "Comments"}
         </span>
         <div className="h-px bg-gray-200 flex-1"></div>
       </motion.div>
@@ -541,7 +609,7 @@ const CommentSection = ({ postId }) => {
           <p className="text-red-500">{error}</p>
         </div>
       ) : comments.length === 0 ? (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12 bg-white rounded-xl p-6 shadow-sm"
@@ -549,12 +617,14 @@ const CommentSection = ({ postId }) => {
           <div className="mx-auto h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
             <FiSend className="h-6 w-6 text-red-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No comments yet</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">
+            No comments yet
+          </h3>
           <p className="text-gray-500">Be the first to share what you think!</p>
         </motion.div>
       ) : (
         <div className="space-y-6">
-          {comments.map(comment => renderComment(comment))}
+          {comments.map((comment) => renderComment(comment))}
 
           {/* Load More Button */}
           {pagination.currentPage < pagination.lastPage && (
@@ -571,8 +641,8 @@ const CommentSection = ({ postId }) => {
                 disabled={loadingMore}
                 className={`px-5 py-2.5 rounded-xl flex items-center space-x-2 transition-all ${
                   loadingMore
-                    ? 'bg-gray-100 text-gray-500'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:border-red-300 hover:text-red-600 shadow-sm'
+                    ? "bg-gray-100 text-gray-500"
+                    : "bg-white border border-gray-200 text-gray-700 hover:border-red-300 hover:text-red-600 shadow-sm"
                 }`}
               >
                 {loadingMore ? (
@@ -600,17 +670,22 @@ const CommentSection = ({ postId }) => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 overflow-hidden"
             >
               <div className="text-center space-y-5">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
                   <FiTrash2 className="h-6 w-6 text-red-600" />
                 </div>
-                
+
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">Delete comment?</h3>
-                  <p className="text-gray-500 mt-2">This will permanently remove the comment and all its replies.</p>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Delete comment?
+                  </h3>
+                  <p className="text-gray-500 mt-2">
+                    This will permanently remove the comment and all its
+                    replies.
+                  </p>
                 </div>
 
                 <div className="flex justify-center space-x-3 pt-2">
