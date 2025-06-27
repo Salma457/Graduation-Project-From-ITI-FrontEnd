@@ -123,7 +123,7 @@ const Jobs = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8 pt-0">
       {/* Statistics Cards */}
       <div className="flex flex-wrap gap-3 sm:gap-4 mb-6">
         <StatCard 

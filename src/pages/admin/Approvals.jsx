@@ -141,12 +141,12 @@ const Approvals = () => {
   useEffect(() => { setEmployerPage(1); }, [employerSearch]);
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-0">
       {loading && <LoaderOverlay text="Loading approvals..." />}
       {!loading && (
         <>
-          <h1 className="text-2xl font-bold mb-2">Approvals</h1>
-          <p className="mb-4">Approve ITIANs and Employers requests to join the platform.</p>
+          {/* <h1 className="text-2xl font-bold mb-2">Approvals</h1>
+          <p className="mb-4">Approve ITIANs and Employers requests to join the platform.</p> */}
           {/* Tab Navigation */}
           <div className="flex gap-2 mb-6">
             <button

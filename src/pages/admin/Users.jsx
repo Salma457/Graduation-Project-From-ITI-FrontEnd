@@ -107,12 +107,12 @@ const Users = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-0">
       {loading && <LoaderOverlay text="Loading users..." />}
       {!loading && (
         <>
-          <h1 className="text-2xl font-bold mb-2">Users</h1>
-          <p className="mb-4">Show and delete users.</p>
+          {/* <h1 className="text-2xl font-bold mb-2">Users</h1>
+          <p className="mb-4">Show and delete users.</p> */}
           {/* Stats Cards */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6 w-full">
             <StatCard label="Total Users" value={totalUsers} icon="👥" color="bg-blue-100 text-blue-700" />
