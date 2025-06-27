@@ -6,33 +6,53 @@ import {
   BookOpen, MapPin, Briefcase, Target, Zap, Shield, Cpu
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useAddTestimonialMutation, useGetTestimonialsQuery } from '../../../api/testimonialsApi'
+import { Dialog } from '@headlessui/react'
+import { useSelector } from 'react-redux';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+
+import '../styles/home.css';
+
 // Animation Components
 const AnimatedCounter = ({ value, duration = 2000 }) => {
   const [count, setCount] = useState(0)
-  
+
   useEffect(() => {
-    const increment = parseInt(value) / (duration / 50)
+    const isPercent = typeof value === "string" && value.includes("%");
+    const isPlus = typeof value === "string" && value.includes("+");
+    const cleanValue = parseInt(value);
+    const increment = cleanValue / (duration / 50)
     const timer = setInterval(() => {
       setCount(prev => {
         const next = prev + increment
-        if (next >= parseInt(value)) {
+        if (next >= cleanValue) {
           clearInterval(timer)
-          return parseInt(value)
+          return cleanValue
         }
         return Math.floor(next)
       })
     }, 50)
     return () => clearInterval(timer)
   }, [value, duration])
-  
-  return <span>{count}{value.includes('+') ? '+' : ''}{value.includes('%') ? '%' : ''}</span>
+
+  const isPercent = typeof value === "string" && value.includes("%");
+  const isPlus = typeof value === "string" && value.includes("+");
+
+  return (
+    <span>
+      {count}
+      {isPlus ? "+" : ""}
+      {isPercent ? "%" : ""}
+    </span>
+  )
 }
 
 const FloatingElement = ({ children, className = "", delay = 0 }) => {
   return (
-    <div 
+    <div
       className={`animate-bounce ${className}`}
-      style={{ 
+      style={{
         animationDelay: `${delay}s`,
         animationDuration: '3s',
         animationIterationCount: 'infinite'
@@ -45,14 +65,14 @@ const FloatingElement = ({ children, className = "", delay = 0 }) => {
 
 const FadeInElement = ({ children, className = "", delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false)
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), delay * 100)
     return () => clearTimeout(timer)
   }, [delay])
-  
+
   return (
-    <div 
+    <div
       className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'} ${className}`}
     >
       {children}
@@ -60,10 +80,41 @@ const FadeInElement = ({ children, className = "", delay = 0 }) => {
   )
 }
 
-
 function LandingPageContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false)
+  const [message, setMessage] = useState('')
+  const [addTestimonial] = useAddTestimonialMutation();
+const { data: response = {}, isLoading: testimonialsLoading } = useGetTestimonialsQuery();
+const testimonials = Array.isArray(response.data)
+  ? response.data.filter(t => t.status === 'approved')
+  : [];
+
+  const role = useSelector((state) => state.user.role);
+  const itianProfile = useSelector((state) => state.user.itianProfile);
+  const employerProfile = useSelector((state) => state.user.employerProfile);
+
+  const name = role === 'itian'
+    ? itianProfile?.first_name
+    : employerProfile?.company_name;
+
+  const email = role === 'itian'
+    ? itianProfile?.email
+    : employerProfile?.email;
+
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+    await addTestimonial({
+      name: name || "Anonymous",
+      email: email || "noemail@example.com",
+      role: role,
+      message: message,
+      rating: 5
+    });
+    setMessage('')
+    setShowModal(false)
+  }
 
   // Check login status
   useEffect(() => {
@@ -97,9 +148,9 @@ function LandingPageContent() {
     { name: "Network & Security", icon: Shield, color: "from-red-600 to-red-700" },
     { name: "Digital Marketing", icon: Megaphone, color: "from-red-400 to-rose-500" },
     { name: "Business Management", icon: BarChart3, color: "from-rose-600 to-red-600" },
-    { name: "Artificial Intelligence", icon: Cpu,  color: "from-red-500 to-red-600" },
-    { name: "Computer Engineering", icon: Building2,  color: "from-rose-500 to-red-500" },
-    { name: "Data Science", icon: Database,  color: "from-red-600 to-rose-600" },
+    { name: "Artificial Intelligence", icon: Cpu, color: "from-red-500 to-red-600" },
+    { name: "Computer Engineering", icon: Building2, color: "from-rose-500 to-red-500" },
+    { name: "Data Science", icon: Database, color: "from-red-600 to-rose-600" },
   ]
 
   // Top Hiring Companies Data
@@ -154,27 +205,6 @@ function LandingPageContent() {
     }
   ]
 
-  const testimonials = [
-    {
-      name: "Ahmed Mohamed",
-      role: "Software Developer at Valeo",
-      content: "The ITI program gave me the exact skills needed to land my dream job at Valeo.",
-      rating: 5,
-    },
-    {
-      name: "Fatma Ali",
-      role: "UI/UX Designer at ITWorx",
-      content: "Excellent platform with quality job listings specifically for ITI graduates.",
-      rating: 5,
-    },
-    {
-      name: "Mohamed Saad",
-      role: "Network Engineer at Raya",
-      content: "Love the user experience and the variety of tech opportunities available for ITI alumni.",
-      rating: 5,
-    },
-  ]
-
   return (
     <div className="min-h-screen bg-white">
       <section className="relative py-24 overflow-hidden">
@@ -182,7 +212,7 @@ function LandingPageContent() {
         <FloatingElement className="absolute top-20 left-10 w-20 h-20 bg-red-200 rounded-full opacity-30" delay={0} />
         <FloatingElement className="absolute top-40 right-20 w-16 h-16 bg-rose-300 rounded-full opacity-20" delay={1} />
         <FloatingElement className="absolute bottom-32 left-1/4 w-12 h-12 bg-red-300 rounded-full opacity-25" delay={2} />
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Text Side */}
@@ -192,14 +222,14 @@ function LandingPageContent() {
                   <GraduationCap className="w-5 h-5 text-red-600 mr-2" />
                   <span className="text-red-800 font-semibold">Welcome to ITI Career Gateway</span>
                 </div>
-                
+
                 <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
                   Launch Your <span className="bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">Tech Career</span>
                   <span className="block text-3xl mt-3 text-gray-700 font-semibold">As an ITI Graduate</span>
                 </h1>
-                
+
                 <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
-                  Exclusive opportunities for ITI graduates to connect with top tech employers. 
+                  Exclusive opportunities for ITI graduates to connect with top tech employers.
                   Accelerate your career with our specialized job portal designed for your expertise.
                 </p>
               </div>
@@ -208,7 +238,7 @@ function LandingPageContent() {
             {/* Image Side - Animated */}
             <FadeInElement delay={1} className="flex justify-center items-center">
               <div className="relative">
-               <img src="/public/choice-worker-concept.png" alt=""className="max-w-md w-full rounded-lg shadow-xl" />
+                <img src="/public/choice-worker-concept.png" alt="" className="max-w-md w-full rounded-lg shadow-xl" />
                 <FloatingElement className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-500 to-pink-500 rounded-2xl opacity-20" delay={0.5} />
                 <FloatingElement className="absolute -bottom-20 -left-30 w-32 h-32 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl opacity-20" delay={1.5} />
               </div>
@@ -229,7 +259,7 @@ function LandingPageContent() {
               Discover the impressive achievements and reach of Information Technology Institute
             </p>
           </FadeInElement>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {itiStats.map((stat, index) => (
               <FadeInElement
@@ -262,7 +292,7 @@ function LandingPageContent() {
               Leading organizations that actively recruit ITI graduates for their technical teams
             </p>
           </FadeInElement>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {hiringCompanies.map((company, index) => (
               <FadeInElement
@@ -272,9 +302,9 @@ function LandingPageContent() {
               >
                 <div className="h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
                   <div className="w-full h-24 flex items-center justify-center">
-                    <img 
-                      src={company.logo} 
-                      alt={company.name} 
+                    <img
+                      src={company.logo}
+                      alt={company.name}
                       className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -289,12 +319,12 @@ function LandingPageContent() {
                     </span>
                   </div>
                   <p className="text-gray-600 mb-6">{company.description}</p>
-                  
+
                   <div className="mb-6">
                     <h4 className="font-semibold text-gray-900 mb-3">Popular Positions:</h4>
                     <div className="flex flex-wrap gap-2">
                       {company.positions.map((position, i) => (
-                        <span 
+                        <span
                           key={i}
                           className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full group-hover:bg-red-50 group-hover:text-red-600 transition-colors"
                         >
@@ -303,9 +333,9 @@ function LandingPageContent() {
                       ))}
                     </div>
                   </div>
-                  
-                  <a 
-                    href={company.website} 
+
+                  <a
+                    href={company.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-red-600 font-semibold hover:text-red-700 transition-colors group-hover:translate-x-2 transform duration-300"
@@ -331,7 +361,7 @@ function LandingPageContent() {
               Discover opportunities across various tech domains perfectly suited for ITI graduates
             </p>
           </FadeInElement>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {jobCategories.map((category, index) => (
               <FadeInElement
@@ -348,16 +378,16 @@ function LandingPageContent() {
           </div>
         </div>
       </section>
-        {/* Market Opportunities Section */}
+      {/* Market Opportunities Section */}
       <section className="py-20 bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 relative overflow-hidden">
-          <FadeInElement delay={5} className="mt-12 text-center">
-            <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-8 rounded-2xl shadow-xl">
-              <h4 className="text-2xl font-bold mb-4">🚀 Perfect Timing for ITI Graduates!</h4>
-              <p className="text-red-100 text-lg max-w-4xl mx-auto">
-                Egypt offers 20%+ cost savings compared to global tech hubs like India, making it an attractive destination for international companies. The government's Digital Egypt initiative is driving massive demand for skilled tech professionals.
-              </p>
-            </div>
-          </FadeInElement>
+        <FadeInElement delay={5} className="mt-12 text-center">
+          <div className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-8 rounded-2xl shadow-xl">
+            <h4 className="text-2xl font-bold mb-4">🚀 Perfect Timing for ITI Graduates!</h4>
+            <p className="text-red-100 text-lg max-w-4xl mx-auto">
+              Egypt offers 20%+ cost savings compared to global tech hubs like India, making it an attractive destination for international companies. The government's Digital Egypt initiative is driving massive demand for skilled tech professionals.
+            </p>
+          </div>
+        </FadeInElement>
       </section>
       {/* ITI Locations */}
       <section className="py-20 bg-gray-50">
@@ -370,7 +400,7 @@ function LandingPageContent() {
               With locations across Egypt, ITI provides quality education and career opportunities everywhere
             </p>
           </FadeInElement>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {itiLocations.map((location, index) => (
               <FadeInElement
@@ -378,7 +408,7 @@ function LandingPageContent() {
                 delay={index * 0.5}
                 className="group bg-gradient-to-br from-gray-50 to-gray-100 hover:from-red-50 hover:to-rose-50 p-4 rounded-xl text-center transition-all duration-300 hover:shadow-lg cursor-pointer hover:scale-105"
               >
-                <MapPin className="w-6 h-6 text-gray-400 group-hover:text-red-500 mx-auto mb-2 transition-colors group-hover:bounce" />
+                <MapPin className="w-6 h-6 text-gray-400 group-hover:text-red-500 mx-auto mb-2 transition-colors" />
                 <p className="text-gray-700 group-hover:text-gray-900 font-medium text-sm">{location}</p>
               </FadeInElement>
             ))}
@@ -395,32 +425,93 @@ function LandingPageContent() {
               Hear from ITI graduates who found their dream careers through our platform
             </p>
           </FadeInElement>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <FadeInElement
-                key={index}
-                delay={index + 2}
-                className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 hover:border-red-200 group"
-              >
-                <div className="flex items-center gap-1 mb-6">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-red-400 text-red-400 group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${i * 100}ms`}} />
-                  ))}
+
+          {testimonialsLoading ? (
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading testimonials...</p>
+            </div>
+          ) : (
+            <Swiper
+              modules={[Navigation]}
+              spaceBetween={30}
+              slidesPerView={1}
+              navigation
+              breakpoints={{
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+            >
+              {testimonials.map((testimonial, index) => (
+                <SwiperSlide key={testimonial.id || index}>
+                  <FadeInElement
+                    delay={index + 1}
+                    className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 border-red-200 group"
+                  >
+                    <div className="flex items-center gap-1 mb-6">
+                      {[...Array(testimonial.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 fill-red-400 text-red-400 group-hover:scale-110 transition-transform duration-300" />
+                      ))}
+                    </div>
+                    <p className="text-gray-600 mb-6 text-lg italic">
+                      "{testimonial.content || testimonial.message}"
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                        <div className="text-sm text-gray-600">{testimonial.role || 'ITI Graduate'}</div>
+                      </div>
+                    </div>
+                  </FadeInElement>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
+
+          {role === 'itian' && (
+            <>
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="bg-red-600 text-white px-6 py-3 rounded-xl font-semibold shadow hover:bg-red-700 transition"
+                >
+                  Contact Us
+                </button>
+              </div>
+
+              <Dialog open={showModal} onClose={() => setShowModal(false)} className="fixed z-50 inset-0 overflow-y-auto">
+                <div className="flex items-center justify-center min-h-screen bg-black/30">
+                  <Dialog.Panel className="bg-white rounded-xl p-6 w-full max-w-md">
+                    <Dialog.Title className="text-xl font-bold mb-4">Send us a message</Dialog.Title>
+                    <textarea
+                      rows={5}
+                      className="w-full border border-gray-300 rounded-lg p-3 mb-4"
+                      placeholder="Enter your message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                    />
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSendMessage}
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </Dialog.Panel>
                 </div>
-                <p className="text-gray-600 mb-6 text-lg italic">"{testimonial.content}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <User className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                    <div className="text-sm text-gray-600">{testimonial.role}</div>
-                  </div>
-                </div>
-              </FadeInElement>
-            ))}
-          </div>
+              </Dialog>
+            </>
+          )}
         </div>
       </section>
 
@@ -428,11 +519,11 @@ function LandingPageContent() {
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-rose-600 to-red-700"></div>
         <div className="absolute inset-0 bg-black opacity-10"></div>
-        
+
         {/* Animated background elements */}
         <FloatingElement className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full" delay={0} />
         <FloatingElement className="absolute bottom-20 right-20 w-32 h-32 bg-white/5 rounded-full" delay={1} />
-        
+
         <div className="container mx-auto px-4 text-center relative z-10">
           <FadeInElement className="max-w-4xl mx-auto">
             <h2 className="text-4xl font-bold text-white mb-6">Ready to Launch Your ITI Career?</h2>
@@ -441,7 +532,7 @@ function LandingPageContent() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               {!isLoggedIn && (
-                <button 
+                <button
                   onClick={handleGetStarted}
                   className="bg-white text-red-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 transform"
                 >
@@ -452,7 +543,6 @@ function LandingPageContent() {
           </FadeInElement>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4">
