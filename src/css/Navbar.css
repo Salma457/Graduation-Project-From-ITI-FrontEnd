@@ -402,6 +402,7 @@
   }
 }
 
+
 /* Admin Navbar - معدل */
 .admin-navbar {
   display: flex;
@@ -633,3 +634,4 @@
     display: none;
   }
 }
+/* Rest of your existing CSS... */
