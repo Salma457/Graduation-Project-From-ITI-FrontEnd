@@ -5,7 +5,6 @@ import "../css/Navbar.css";
 import Notifications from "./Notification";
 import MessageNotification from "./MessageNotification";
 import LanguageSwitcher from './LanguageSwitcher';
-import DarkModeToggle from './DarkModeToggle'; // إضافة الـ Dark Mode Toggle
 import { useTranslation } from '../contexts/TranslationContext';
 
 function ItianNavbar() {
@@ -84,15 +83,9 @@ function ItianNavbar() {
             <LanguageSwitcher className="navbar-language-switcher" />
           </div>
 
-          {/* إضافة Dark Mode Toggle */}
-          <div className="dark-mode-wrapper">
-            <DarkModeToggle className="navbar-dark-mode-toggle" />
-          </div>
-
           <button className="nav-link logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="nav-icon" /> {t('navbar.logout') || 'Logout'}
           </button>
-
         </div>
 
         <button className="toggle-btn" onClick={toggleMenu}>

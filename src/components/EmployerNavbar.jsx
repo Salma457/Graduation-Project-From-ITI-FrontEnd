@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { FaHome,FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
+import { FaHome, FaBell, FaUser, FaBriefcase, FaSignOutAlt, FaBars, FaTimes, FaFileAlt, FaChartBar } from "react-icons/fa";
 import "../css/Navbar.css";
 import Notifications from './Notification';
 import MessageNotification from './MessageNotification';
 import LanguageSwitcher from './LanguageSwitcher';
-import DarkModeToggle from './DarkModeToggle'; // إضافة الـ Dark Mode Toggle
 import { useTranslation } from '../contexts/TranslationContext';
 
 function EmployerNavbar() {
@@ -75,11 +74,7 @@ function EmployerNavbar() {
             <LanguageSwitcher className="navbar-language-switcher" />
           </div>
 
-          {/* إضافة Dark Mode Toggle */}
-          <div className="dark-mode-wrapper">
-            <DarkModeToggle className="navbar-dark-mode-toggle" />
-          </div>
-
+         
           <button className="nav-link logout-btn" onClick={handleLogout}>
             <FaSignOutAlt className="nav-icon" /> {t('navbar.logout') || 'Logout'}
           </button>

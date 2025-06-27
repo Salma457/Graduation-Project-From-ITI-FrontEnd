@@ -13,102 +13,7 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   margin-bottom: 8%;
 }
-.language-switcher-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin: 0 10px;
-}
 
-.navbar-language-switcher {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: white;
-  cursor: pointer;
-  padding: 5px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.navbar-language-switcher:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.language-icon {
-  font-size: 1rem;
-  color: white;
-}
-
-.language-code {
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-/* تصميم القائمة المنسدلة مشابه لأمازون */
-.language-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  min-width: 180px;
-  border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 1000;
-  padding: 10px 0;
-}
-
-.language-dropdown.open {
-  display: block;
-}
-
-.language-option {
-  padding: 8px 15px;
-  color: #333;
-  text-decoration: none;
-  display: block;
-  font-size: 0.9rem;
-  transition: background 0.2s;
-}
-
-.language-option:hover {
-  background: #f5f5f5;
-  color: #b53c35;
-}
-
-/* للموبايل */
-@media (max-width: 768px) {
-  .language-switcher-wrapper {
-    margin: 10px 0;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .navbar-language-switcher {
-    justify-content: center;
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-  }
-  
-  .language-dropdown {
-    width: 100%;
-    right: auto;
-    left: 0;
-    border-radius: 0;
-  }
-}
-.dark-mode-wrapper {
-  /* الستايل اللي عاوزاه */
-}
-
-.navbar-dark-mode-toggle {
-  /* ستايل خاص بالنافبار */
-}
 .logo-container {
   display: flex;
   align-items: center;
@@ -497,7 +402,6 @@
   }
 }
 
-
 /* Admin Navbar - معدل */
 .admin-navbar {
   display: flex;
@@ -729,73 +633,3 @@
     display: none;
   }
 }
-
-/* Dark mode styles for navbar and dropdowns */
-.dark .navbar {
-  background: #222 !important;
-  color: #fff !important;
-}
-
-.dark .nav-link,
-.dark .dropbtn,
-.dark .dropdown-content a {
-  color: #fff !important;
-}
-
-.dark .dropdown-content {
-  background: #222 !important;
-  border-color: #444 !important;
-}
-
-.dark .dropdown-content a:hover {
-  background: #333 !important;
-  color: #b53c35 !important;
-}
-
-.dark .navbar-language-switcher {
-  background: rgba(255,255,255,0.08) !important;
-  color: #fff !important;
-}
-
-.dark .navbar-language-switcher:hover {
-  background: rgba(255,255,255,0.18) !important;
-}
-
-.dark .language-dropdown {
-  background: #222 !important;
-  color: #fff !important;
-  border-color: #444 !important;
-}
-
-.dark .language-option {
-  color: #fff !important;
-}
-
-.dark .language-option:hover {
-  background: #333 !important;
-  color: #b53c35 !important;
-}
-
-.dark .notification-dropdown {
-  background: #222 !important;
-  color: #fff !important;
-  border-color: #444 !important;
-}
-
-.dark .notification-item {
-  color: #fff !important;
-}
-
-.dark .notification-item:hover {
-  background: #333 !important;
-}
-
-.dark .view-all {
-  color: #b53c35 !important;
-}
-
-.dark .view-all:hover {
-  background: #333 !important;
-}
-
-/* ...existing code... */
