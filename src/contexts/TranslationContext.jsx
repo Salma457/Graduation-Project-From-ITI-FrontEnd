@@ -16,7 +16,9 @@ const translations = {
       reports: "Reports",
       createReport: "Create Report",
       myReports: "My Reports",
-      logout: "Logout"
+      logout: "Logout",
+      allJobs:"All Jobs",
+      myApplications:"My Applications"
     },
     
     // Hero Section
@@ -194,7 +196,9 @@ const translations = {
       reports: "التقارير",
       createReport: "إنشاء تقرير",
       myReports: "تقاريري",
-      logout: "تسجيل الخروج"
+      logout: "تسجيل الخروج",
+      allJobs:"جميع الوظائف",
+      myApplications:"تقديماتى"
     },
     
     // Hero Section

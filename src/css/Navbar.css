@@ -402,6 +402,7 @@
   }
 }
 
+
 /* Admin Navbar - معدل */
 .admin-navbar {
   display: flex;
@@ -619,7 +620,6 @@
   color: white;
 }
 
-/* تعديلات للشاشات الصغيرة */
 @media (max-width: 768px) {
   .admin-logo-img {
     height: 30px;
@@ -633,3 +633,4 @@
     display: none;
   }
 }
+/* Rest of your existing CSS... */
