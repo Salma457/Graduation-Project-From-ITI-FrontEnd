@@ -93,12 +93,49 @@ const Login = () => {
       
       // Store token and user data
       localStorage.setItem('access-token', response.data.access_token);
-      dispatch(setUser(response.data.user));
-      
-      // Check for redirect location or use role-based default
-      const redirectPath = location.state?.from?.pathname || getDefaultRoute(response.data.user.role);
-      navigate(redirectPath, { replace: true });
-
+dispatch(setUser({
+  ...response.data.user,
+  role: response.data.user.role,
+}));
+     localStorage.setItem('user-id', JSON.stringify(response.data.user.id));
+      const userRole = response.data.user.role;
+      if (userRole === 'employer') {
+        try {
+          const profileCheck = await axios.get("http://127.0.0.1:8000/api/employer-profile", {
+            headers: { Authorization: `Bearer ${response.data.access_token}` },
+          });
+          if (profileCheck.status === 200) {
+            navigate("/employer-profile");
+          } else {
+            navigate("/create-employer-profile");
+          }
+        } catch (err) {
+          if (err.response?.status === 404) {
+            navigate("/create-employer-profile");
+          } else {
+            throw err;
+          }
+        }
+      } else if (userRole === 'itian') {
+        try {
+          const profileCheck = await axios.get("http://127.0.0.1:8000/api/itian-profile", {
+            headers: { Authorization: `Bearer ${response.data.access_token}` },
+          });
+          if (profileCheck.status === 200) {
+            navigate("/itian-profile");
+          } else {
+            navigate("/create-itian-profile");
+          }
+        } catch (err) {
+          if (err.response?.status === 404) {
+            navigate("/create-itian-profile");
+          } else {
+            throw err;
+          }
+        }
+      } else if (userRole === 'admin') {
+        navigate('/admin');
+      }
     } catch (error) {
       setIsSubmitting(false);
       handleLoginError(error);

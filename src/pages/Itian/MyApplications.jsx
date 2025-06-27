@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
-import "../css/MyApplications.css";
+import "../../css/MyApplications.css";
 import { Sparkles } from 'lucide-react';
 Modal.setAppElement('#root');
 
@@ -21,6 +21,9 @@ const MyApplications = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 5;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -207,6 +210,17 @@ const MyApplications = () => {
     }
   };
 
+  // Filtered and paginated applications
+  const filteredApplications = applications.filter(app =>
+    app.job.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.job.employer?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredApplications.length / perPage);
+  const paginatedApplications = filteredApplications
+    .slice()
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice((currentPage - 1) * perPage, currentPage * perPage);
+
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
       <div className="relative">
@@ -235,11 +249,23 @@ const MyApplications = () => {
       <div className="application-header">
         <h1 className="application-title">My Job Applications</h1>
         <p className="application-subtitle">View and manage your job applications</p>
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          <input
+            type="text"
+            placeholder="Search by job title or company..."
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full sm:w-72 focus:outline-none focus:border-[#e35d5b]"
+          />
+        </div>
       </div>
 
-      {applications.length === 0 ? (
+      {filteredApplications.length === 0 ? (
         <div className="application-empty-state">
-          <p className="application-empty-message">You haven't applied to any jobs yet.</p>
+          <p className="application-empty-message">No applications found.</p>
           <Link 
             to="/jobs" 
             className="application-browse-btn"
@@ -248,8 +274,9 @@ const MyApplications = () => {
           </Link>
         </div>
       ) : (
+        <>
         <div className="application-list">
-          {applications.map(application => (
+          {paginatedApplications.map(application => (
             <div key={application.id} className="application-item">
               <div className="application-item-header">
                 <h2 className="application-job-title">
@@ -268,10 +295,12 @@ const MyApplications = () => {
                 <div className="application-detail">
                   <span className="application-detail-label">Applied On:</span>
                   <span className="application-detail-value">
-                    {new Date(application.application_date).toLocaleDateString()}
+                    {application.created_at && application.created_at !== 'Invalid Date'
+                      ? new Date(application.created_at).toLocaleDateString()
+                      : ''}
                   </span>
                 </div>
-                <div className="application-detail">
+                <div className="application-detail flex items-center gap-2">
                   <span className="application-detail-label">Cover Letter:</span>
                   <p className="application-cover-letter-preview">
                     {application.cover_letter.substring(0, 100)}...
@@ -279,14 +308,20 @@ const MyApplications = () => {
                 </div>
               </div>
               
-              <div className="application-actions">
-                {application.status.toLowerCase() === 'pending' ? (
+              <div className="application-actions flex items-center gap-2 mt-2">
+                {['pending', 'review', 'shortlisted'].includes(application.status.toLowerCase()) ? (
                   <>
                     <button 
                       onClick={() => handleEdit(application)}
                       className="application-edit-btn"
                     >
                       Edit
+                    </button>
+                    <button
+                      onClick={() => navigate(`/jobs/${application.job.id}`)}
+                      className="application-edit-btn ml-2"
+                    >
+                      Job Details
                     </button>
                     <button 
                       onClick={() => handleDelete(application.id)}
@@ -296,46 +331,83 @@ const MyApplications = () => {
                     </button>
                   </>
                 ) : (
-                  <div className="text-gray-500 text-sm">
-                    Actions unavailable for this application status
-                  </div>
+                  <>
+                    <div className="text-gray-500 text-sm">
+                      Actions unavailable for this application status
+                    </div>
+                    <button
+                      onClick={() => navigate(`/jobs/${application.job.id}`)}
+                      className="application-edit-btn ml-2"
+                    >
+                      Job Details
+                    </button>
+                  </>
                 )}
               </div>
             </div>
           ))}
         </div>
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <nav className="inline-flex gap-1">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-l bg-gray-100 border border-gray-300 text-gray-700 hover:bg-[#e35d5b] hover:text-white disabled:opacity-50"
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 border border-gray-300 ${currentPage === i + 1 ? 'bg-[#e35d5b] text-white font-bold' : 'bg-gray-100 text-gray-700'} hover:bg-[#e35d5b] hover:text-white`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-r bg-gray-100 border border-gray-300 text-gray-700 hover:bg-[#e35d5b] hover:text-white disabled:opacity-50"
+              >
+                Next
+              </button>
+            </nav>
+          </div>
+        )}
+        </>
       )}
 
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        className="application-modal"
-        overlayClassName="application-modal-overlay"
+        className="application-modal bg-[#e35d5b] rounded-2xl p-0 max-w-lg w-full mx-auto shadow-2xl border-none"
+        overlayClassName="application-modal-overlay bg-black/40 backdrop-blur-sm flex items-center justify-center fixed inset-0 z-50"
       >
-        <div className="application-modal-header">
-          <h2 className="application-modal-title">
+        <div className="application-modal-header flex items-center justify-between px-6 pt-6 pb-2">
+          <h2 className="application-modal-title text-black text-xl font-bold">
             Edit Application for {selectedApplication?.job.job_title}
           </h2>
-          <button onClick={closeModal} className="application-modal-close">
-            &times;
-          </button>
+          <button onClick={closeModal} className="application-modal-close text-black text-2xl font-bold hover:text-gray-700">&times;</button>
         </div>
 
         {submitSuccess ? (
-          <div className="application-success-message">
-            <h3 className="application-success-title">Application Updated!</h3>
-            <p className="application-success-text">Your changes have been saved.</p>
+          <div className="application-success-message text-center px-6 pb-6">
+            <h3 className="application-success-title text-black text-lg font-semibold mb-2">Application Updated!</h3>
+            <p className="application-success-text text-black/90 mb-4">Your changes have been saved.</p>
             <button 
               onClick={closeModal} 
-              className="application-modal-close-btn"
+              className="application-modal-close-btn bg-white text-[#e35d5b] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleUpdate} className="application-form">
-            <div className="application-form-group">
-              <label htmlFor="cover_letter" className="application-form-label">
+          <form onSubmit={handleUpdate} className="application-form px-6 pb-6">
+            <div className="application-form-group mb-4">
+              <label htmlFor="cover_letter" className="application-form-label text-black font-semibold block mb-2">
                 Cover Letter
               </label>
               <textarea
@@ -344,14 +416,20 @@ const MyApplications = () => {
                 rows="5"
                 value={formData.cover_letter}
                 onChange={handleInputChange}
-                required
-                placeholder="Write your cover letter here..."
-                className="application-form-textarea"
+                minLength={100}
+                placeholder="Write your cover letter here... (at least 100 characters)"
+                className={`application-form-textarea w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : formData.cover_letter.length >= 100 ? 'border-green-500' : ''}`}
               />
+              {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
+                <p className="text-red-500 text-xs mt-1">Cover letter must be at least 100 characters.</p>
+              )}
+              {formData.cover_letter.length >= 100 && (
+                <p className="text-green-600 text-xs mt-1">Looks good!</p>
+              )}
             </div>
 
-            <div className="application-form-group">
-              <label htmlFor="cv" className="application-form-label">
+            <div className="application-form-group mb-4">
+              <label htmlFor="cv" className="application-form-label text-black font-semibold block mb-2">
                 Update CV (Optional)
               </label>
               <input
@@ -360,36 +438,25 @@ const MyApplications = () => {
                 name="cv"
                 accept=".pdf,.doc,.docx"
                 onChange={handleFileChange}
-                className="application-form-file"
+                className="application-form-file w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-2 outline-none transition"
               />
-              {selectedApplication?.cv && (
-                <p className="application-current-cv">
-                  Current CV: <a 
-                    href={`http://localhost:8000/storage/${selectedApplication.cv}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="application-cv-link"
-                  >
-                    View CV
-                  </a>
-                </p>
-              )}
+             
             </div>
 
-            {submitError && <p className="application-form-error">{submitError}</p>}
+            {submitError && <p className="application-form-error text-red-500 mb-2">{submitError}</p>}
 
-            <div className="application-form-actions">
+            <div className="application-form-actions flex justify-end gap-3">
               <button
                 type="button"
                 onClick={closeModal}
-                className="application-cancel-btn"
+                className="application-cancel-btn bg-white text-[#e35d5b] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="application-submit-btn"
+                disabled={submitting || formData.cover_letter.length < 100}
+                className="application-submit-btn bg-white text-[#e35d5b] font-bold px-5 py-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Updating...' : 'Update Application'}
               </button>

@@ -1,208 +1,379 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { fetchPosts, fetchMyPosts } from '../../services/api';
-import PostCard from './PostCard';
-import CreatePostModal from './CreatePostModal';
-import FilterPosts from './FilterPosts';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchItianProfile } from '../../store/itianSlice';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useEffect, useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiPlus, FiRefreshCw } from "react-icons/fi";
+import { fetchPosts, deletePost as apiDeletePost } from "../../services/api";
+import PostCard from "./PostCard";
+import CreatePostModal from "./CreatePostModal";
+import EditPostModal from "./EditPostModal";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import ReactionsModal from "./ReactionsModal";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchItianProfile } from "../../store/itianSlice";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ItianSidebarProfile from "./ItianSidebarProfile";
+import ChatbotButton from "../../../AI Chat/ChatbotButton";
 
 const PostList = () => {
- const dispatch = useDispatch();
- const user = useSelector((state) => state.itian.user);
-//  const isLoadingUser = useSelector((state) => state.itian.loading);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.itian?.user ?? null);
 
- useEffect(() => {
-   if (!user) {
-     dispatch(fetchItianProfile());
-  }
- }, [user, dispatch]);  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('all');
+  useEffect(() => {
+    if (!user) {
+      dispatch(fetchItianProfile());
+    }
+  }, [user, dispatch]);
+
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [filters, setFilters] = useState({
-    sort: 'newest',
-    search: '',
-    reactions: []
-  });
+  const [editPost, setEditPost] = useState(null);
+  const [deletePostId, setDeletePostId] = useState(null);
+  const [reactionsModalOpen, setReactionsModalOpen] = useState(false);
+  const [reactionsModalPostId, setReactionsModalPostId] = useState(null);
 
   const observer = useRef();
 
-  const loadPosts = useCallback(async (reset = false) => {
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 120,
+        damping: 12,
+      },
+    },
+    exit: {
+      y: -20,
+      opacity: 0,
+      transition: { duration: 0.2 },
+    },
+  };
+
+  // const buttonVariants = {
+  //   hover: { scale: 1.05, boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" },
+  //   tap: { scale: 0.98 },
+  // };
+
+  const loadPosts = useCallback(async (reset = false, pageNumber = 1) => {
     try {
       setLoading(true);
-      const currentPage = reset ? 1 : page;
-
-      const params = {
-        page: currentPage,
-        sort: filters.sort,
-        search: filters.search,
-        reactions: filters.reactions.join(',')
-      };
-
-      const data = activeTab === 'all'
-        ? await fetchPosts(params)
-        : await fetchMyPosts(params);
-
+      const data = await fetchPosts({ page: pageNumber });
       const postsArray = Array.isArray(data.data) ? data.data : [];
 
       if (reset) {
         setPosts(postsArray);
-        setPage(1);
       } else {
-        setPosts(prev => [...prev, ...postsArray]);
+        setPosts((prev) => [...prev, ...postsArray]);
       }
 
       setHasMore(data.current_page < data.last_page);
     } catch (err) {
-      setError('Failed to load posts. Please try again later.');
-      console.error('Error fetching posts:', err);
-      toast.error('Failed to load posts');
+      toast.error("Failed to load posts. Please try again.");
+      console.error("Error fetching posts:", err);
     } finally {
       setLoading(false);
     }
-  }, [activeTab, page, filters]);
+  }, []);
 
   useEffect(() => {
-  loadPosts(true);
-}, [loadPosts])
+    setPage(1);
+    loadPosts(true, 1);
+  }, [loadPosts]);
 
-  const lastPostRef = useCallback(node => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
+  useEffect(() => {
+    if (page === 1) return;
+    loadPosts(false, page);
+  }, [page, loadPosts]);
 
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prev => prev + 1);
-      }
-    });
+  const lastPostRef = useCallback(
+    (node) => {
+      if (loading || !hasMore) return;
+      if (observer.current) observer.current.disconnect();
 
-    if (node) observer.current.observe(node);
-  }, [loading, hasMore]);
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      });
 
- useEffect(() => {
-  if (page > 1) {
-    loadPosts();
-  }
-}, [page, loadPosts]);
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
 
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
     setIsModalOpen(false);
-    toast.success('✅ Post created successfully!');
+    toast.success("Post created successfully!");
   };
 
   const handleDeletePost = (postId) => {
-    setPosts(posts.filter(post => post.id !== postId));
+    setPosts(posts.filter((post) => post.id !== postId));
+    toast.success("Post deleted successfully!");
   };
 
   const handleUpdatePost = (updatedPost) => {
-    setPosts(posts.map(post =>
-      post.id === updatedPost.id ? updatedPost : post
-    ));
-    toast.success('✅ Post updated successfully!');
+    setPosts(
+      posts.map((post) => (post.id === updatedPost.id ? updatedPost : post))
+    );
+    toast.success("Post updated successfully!");
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
+  const handleRefresh = () => {
+    setPage(1);
+    loadPosts(true, 1);
   };
+
+  const openEditModal = (post) => setEditPost(post);
+  const closeEditModal = () => setEditPost(null);
+  const openDeleteModal = (postId) => setDeletePostId(postId);
+  const closeDeleteModal = () => setDeletePostId(null);
+
+  const handleDeleteConfirmed = async () => {
+    if (!deletePostId) return;
+    try {
+      await apiDeletePost(deletePostId);
+      handleDeletePost(deletePostId);
+      closeDeleteModal();
+    } catch {
+      toast.error("Failed to delete post.");
+    }
+  };
+
+  const handleOpenReactionsModal = (postId) => {
+    setReactionsModalOpen(true);
+    setReactionsModalPostId(postId);
+  };
+  const handleCloseReactionsModal = () => {
+    setReactionsModalOpen(false);
+    setReactionsModalPostId(null);
+  };
+
+  const handleEditClick = (post) => openEditModal(post);
+  const handleDeleteClick = (postId) => openDeleteModal(postId);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 relative">
-      <div className={`max-w-3xl mx-auto transition-all duration-300 ${isModalOpen ? 'blur-md pointer-events-none scale-[0.98] opacity-80' : ''}`}>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'all' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-200 hover:bg-gray-300'}`}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Three Column Layout */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left Sidebar - 20% width */}
+          <div className="w-full lg:w-1/3 bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto">
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
             >
-              All Posts
-            </button>
-            <button
-              onClick={() => setActiveTab('my')}
-              className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'my' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-200 hover:bg-gray-300'}`}
-            >
-              My Posts
-            </button>
+              {user && <ItianSidebarProfile profile={user} />}
+            </motion.div>
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <FilterPosts
-              filters={filters}
-              onChange={handleFilterChange}
-            />
-
-            {user && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-all whitespace-nowrap"
+          {/* Center Posts - 60% width */}
+          <div className="w-full lg:w-3/3">
+            <div className="max-w-3xl mx-auto">
+              {/* Header with Refresh Button */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-between items-center mb-6"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Post
-              </button>
-            )}
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Community Posts
+                </h1>
+                <motion.button
+                  whileHover={{ rotate: 180 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-50 text-gray-600 transition-all"
+                >
+                  <FiRefreshCw
+                    className={`text-lg ${loading ? "animate-spin" : ""}`}
+                  />
+                </motion.button>
+              </motion.div>
+
+              {/* Posts List */}
+              {loading && page === 1 ? (
+                <div className="flex justify-center py-16">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1,
+                      ease: "linear",
+                    }}
+                    className="h-12 w-12 border-4 border-red-500 border-t-transparent rounded-full"
+                  />
+                </div>
+              ) : posts.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center"
+                >
+                  <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                    No posts yet
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Be the first to share your thoughts with the community!
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-6"
+                >
+                  <AnimatePresence>
+                    {posts.map((post, index) => (
+                      <motion.div
+                        key={post.id}
+                        variants={itemVariants}
+                        layout
+                        exit="exit"
+                        ref={index === posts.length - 1 ? lastPostRef : null}
+                      >
+                        <PostCard
+                          post={post}
+                          onEditClick={handleEditClick}
+                          onDeleteClick={handleDeleteClick}
+                          onOpenReactionsModal={handleOpenReactionsModal}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {loading && page > 1 && (
+                    <div className="flex justify-center py-8">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          ease: "linear",
+                        }}
+                        className="h-8 w-8 border-3 border-red-500 border-t-transparent rounded-full"
+                      />
+                    </div>
+                  )}
+
+                  {!hasMore && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      You've reached the end of posts
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - 20% width (Only for Chatbot on desktop) */}
+          <div className="hidden lg:block lg:w-1/5 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)]">
+            <div className="flex flex-col h-full">
+              <div className="flex-1"></div>
+              <div className="sticky bottom-8 flex flex-col items-end">
+                <ChatbotButton />
+              </div>
+            </div>
           </div>
         </div>
-
-        {loading && page === 1 ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-white p-6 rounded-lg shadow text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <button
-              onClick={() => loadPosts(true)}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {posts.map((post, index) => (
-              <div
-                key={post.id}
-                ref={index === posts.length - 1 ? lastPostRef : null}
-              >
-                <PostCard
-                  post={post}
-                  onDelete={handleDeletePost}
-                  onUpdate={handleUpdatePost}
-                />
-              </div>
-            ))}
-
-            {loading && page > 1 && (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
-              </div>
-            )}
-
-            {!hasMore && (
-              <div className="text-center py-4 text-gray-500">
-                No more posts to load
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Create Post Modal */}
-      <CreatePostModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onPostCreated={handlePostCreated}
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-30 right-6 z-50 flex flex-col items-end gap-4">
+        {/* Chatbot Button (Mobile only) */}
+        <div className="lg:hidden">
+          <ChatbotButton />
+        </div>
+
+        {/* Create Post Button (All screens) */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-4 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 group"
+            style={{ boxShadow: "0 4px 24px 0 rgba(220,38,38,0.15)" }}
+            aria-label="Create Post"
+          >
+            <FiPlus className="text-2xl" />
+            <span className="font-bold text-lg hidden sm:inline group-hover:inline ml-2">
+              Create Post
+            </span>
+          </button>
+        </motion.div>
+      </div>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <CreatePostModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onPostCreated={handlePostCreated}
+          />
+        )}
+      </AnimatePresence>
+
+      {editPost && (
+        <EditPostModal
+          post={editPost}
+          onClose={closeEditModal}
+          onUpdate={handleUpdatePost}
+        />
+      )}
+
+      <DeleteConfirmModal
+        isOpen={!!deletePostId}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteConfirmed}
       />
 
-      {/* ✅ Toast messages container */}
-      <ToastContainer position="top-center" autoClose={2000} />
+      <ReactionsModal
+        isOpen={reactionsModalOpen}
+        postId={reactionsModalPostId}
+        onClose={handleCloseReactionsModal}
+      />
+
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        toastClassName="shadow-lg"
+        progressClassName="bg-gradient-to-r from-red-500 to-red-600"
+      />
     </div>
   );
 };

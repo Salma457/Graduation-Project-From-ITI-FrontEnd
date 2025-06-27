@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Modal from "react-modal";
-import "../css/ProposalDetails.css";
-import { Sparkles } from 'lucide-react'; // أو أي مكتبة الأيقونات التي تستخدمها
-Modal.setAppElement('#root');
+import "../../css/ProposalDetails.css";
+
+import { Sparkles } from 'lucide-react';
+
 
 const ProposalDetails = () => {
   const { id } = useParams();
@@ -22,7 +23,7 @@ const ProposalDetails = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
 
-  // ✅ نعملها كـ دالة مستقلة عشان نعيد استدعائها بعد التعديل
+
   const fetchProposal = async () => {
     try {
       const token = localStorage.getItem('access-token');
@@ -93,7 +94,7 @@ const ProposalDetails = () => {
       formDataToSend.append('_method', 'PUT');
       if (formData.cv) formDataToSend.append('cv', formData.cv);
 
-      await axios.post(`http://localhost:8000/api/job-application/${id}`, formDataToSend, {
+      const response = await axios.post(`http://localhost:8000/api/job-application/${id}`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
@@ -102,13 +103,11 @@ const ProposalDetails = () => {
       });
 
       setSubmitSuccess(true);
-
-      // ✅ استدعِ التحديث من جديد بعد ثانية
+      // Update proposal in UI immediately
+      setProposal(prev => ({ ...prev, ...response.data.data }));
       setTimeout(() => {
-        fetchProposal();
         closeModal();
       }, 1000);
-
     } catch (error) {
       console.error('Error updating application:', error);
       const validationErrors = error?.response?.data?.errors;
@@ -198,8 +197,12 @@ if (loading) return (
         <div className="proposal-actions">
           <Link to="/my-applications" className="proposal-back-btn">Back to My Applications</Link>
           <div className="proposal-action-buttons">
-            <button onClick={handleEdit} className="proposal-edit-btn">Edit</button>
-            <button onClick={handleDelete} className="proposal-delete-btn">Withdraw</button>
+            {!["rejected", "approved"].includes((proposal.status || '').toLowerCase()) && (
+              <>
+                <button onClick={handleEdit} className="proposal-edit-btn">Edit</button>
+                <button onClick={handleDelete} className="proposal-delete-btn">Withdraw</button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -220,7 +223,22 @@ if (loading) return (
           <form onSubmit={handleUpdate} className="proposal-form">
             <div className="proposal-form-group">
               <label htmlFor="cover_letter" className="proposal-form-label">Cover Letter</label>
-              <textarea id="cover_letter" name="cover_letter" rows="5" value={formData.cover_letter} onChange={handleInputChange} required className="proposal-form-textarea" />
+              <textarea
+                id="cover_letter"
+                name="cover_letter"
+                rows="5"
+                value={formData.cover_letter}
+                onChange={handleInputChange}
+                minLength={100}
+                placeholder="Write your cover letter here... (at least 100 characters)"
+                className={`proposal-form-textarea w-full rounded-lg border-2 border-gray-300 focus:border-blue-500 bg-white text-black p-3 outline-none transition min-h-[120px] ${formData.cover_letter.length > 0 && formData.cover_letter.length < 100 ? 'border-red-500' : formData.cover_letter.length >= 100 ? 'border-green-500' : ''}`}
+              />
+              {formData.cover_letter.length > 0 && formData.cover_letter.length < 100 && (
+                <p className="text-red-500 text-xs mt-1">Cover letter must be at least 100 characters.</p>
+              )}
+              {formData.cover_letter.length >= 100 && (
+                <p className="text-green-600 text-xs mt-1">Looks good!</p>
+              )}
             </div>
 
             <div className="proposal-form-group">
@@ -237,7 +255,9 @@ if (loading) return (
 
             <div className="proposal-form-actions">
               <button type="button" onClick={closeModal} className="proposal-cancel-btn">Cancel</button>
-              <button type="submit" disabled={submitting} className="proposal-submit-btn">{submitting ? 'Updating...' : 'Update Application'}</button>
+              <button type="submit" disabled={submitting || formData.cover_letter.length < 100} className="proposal-submit-btn">
+                {submitting ? 'Updating...' : 'Update Application'}
+              </button>
             </div>
           </form>
         )}
