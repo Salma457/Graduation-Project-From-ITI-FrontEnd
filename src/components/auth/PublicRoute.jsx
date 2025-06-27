@@ -1,14 +1,14 @@
 // components/auth/PublicRoute.jsx
 import { useSelector } from 'react-redux';
 import { Navigate, Outlet } from 'react-router-dom';
-import LoadingSpinner from '../LoadingSpinner';
+import LoaderOverlay from '../LoaderOverlay';
 
 const PublicRoute = () => {
   const user = useSelector((state) => state.user.user);
   const isLoading = useSelector((state) => state.user.isLoading);
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoaderOverlay />;
   }
 
   if (user) {

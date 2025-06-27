@@ -1,7 +1,7 @@
 // components/auth/ProtectedRoute.jsx
 import { useSelector } from 'react-redux';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import LoadingSpinner from '../LoadingSpinner';
+import LoaderOverlay from '../LoaderOverlay';
 
 const ProtectedRoute = ({ allowedRoles }) => {
   const user = useSelector((state) => state.user.user);
@@ -9,7 +9,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
   const location = useLocation();
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <LoaderOverlay />;
   }
 
   if (!user) {
