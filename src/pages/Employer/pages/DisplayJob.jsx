@@ -29,18 +29,19 @@ const JobList = () => {
 
 const checkAndUpdateExpiredJobs = async () => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // خلي اليوم يبدأ من 00:00
+  today.setHours(0, 0, 0, 0); // نحافظ عليه لو حابب تستخدمه لاحقًا
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
 
   for (const job of jobsArray) {
+    if (!job.application_deadline) continue;
+
     const deadline = new Date(job.application_deadline);
-    deadline.setHours(0, 0, 0, 0);
+    deadline.setHours(23, 59, 59, 999); // نخلي الجوب تفضل مفتوحة لحد نهاية اليوم
 
     const isOpen = job.status === 'Open';
-    const hasDeadline = !!job.application_deadline;
 
-    if (isOpen && hasDeadline && deadline.getTime() < today.getTime()) {
+    if (isOpen && today > deadline) {
       try {
         console.log(`⛔ Closing job ${job.id} with deadline ${job.application_deadline}`);
 
@@ -51,7 +52,7 @@ const checkAndUpdateExpiredJobs = async () => {
 
         if (!result.error) {
           console.log(`✅ Job ${job.id} closed successfully`);
-          dispatch(fetchEmployerData()); // لتحديث القائمة بعد التعديل
+          dispatch(fetchEmployerData());
         } else {
           console.error(`❌ Failed to close job ${job.id}:`, result.error);
         }
@@ -92,10 +93,9 @@ useEffect(() => {
 
 const isJobExpired = (job) => {
   if (!job.application_deadline) return false;
-  const currentDate = new Date();
-  const deadlineDate = new Date(job.application_deadline);
-  return currentDate > deadlineDate;
+  return new Date().toDateString() > new Date(job.application_deadline).toDateString();
 };
+
 
     const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
     const statusMatch = filter === 'all' || job.status === filter;
@@ -198,7 +198,7 @@ const isJobExpired = (job) => {
     
     const currentDate = new Date();
     const deadlineDate = new Date(job.application_deadline);
-    const isExpired = currentDate > deadlineDate;
+    const isExpired = new Date(currentDate.toDateString()) > new Date(deadlineDate.toDateString());
     
     const formattedDate = deadlineDate.toLocaleDateString('en-GB');
     
