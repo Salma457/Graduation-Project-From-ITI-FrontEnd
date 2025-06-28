@@ -213,7 +213,7 @@ const translations = {
     // Stats Section
     stats: {
       title: "إحصائيات نجاح معهد ITI",
-      titleHighlight: "إحصائيات نجاح",
+      titleHighlight: "نجاح",
       description: "اكتشف الإنجازات المذهلة ونطاق وصول معهد تكنولوجيا المعلومات",
       labels: {
         employmentRate: "معدل التوظيف السنوي",
