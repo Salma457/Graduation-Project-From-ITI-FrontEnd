@@ -40,6 +40,8 @@ const MyReportsPage = () => {
   });
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   const API_BASE_URL = 'http://localhost:8000/api';
@@ -198,21 +200,38 @@ const MyReportsPage = () => {
     );
   };
 
-  const deleteReport = async (reportId) => {
+  const handleDeleteClick = (report) => {
+    setReportToDelete(report);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!reportToDelete) return;
+    
     try {
       setActionLoading(true);
-      await apiCall(`${API_BASE_URL}/reports/${reportId}`, { method: 'DELETE' });
-      setReports(prevReports => prevReports.filter(report => report.report_id !== reportId));
-      if (showDetailsModal) {
+      await apiCall(`${API_BASE_URL}/reports/${reportToDelete.report_id}`, { method: 'DELETE' });
+      setReports(prevReports => prevReports.filter(report => report.report_id !== reportToDelete.report_id));
+      
+      // Close modals if the deleted report was being viewed
+      if (showDetailsModal && selectedReport?.report_id === reportToDelete.report_id) {
         setShowDetailsModal(false);
         setSelectedReport(null);
       }
+      
+      setShowDeleteModal(false);
+      setReportToDelete(null);
       await fetchMyReports();
     } catch (error) {
       console.error('Error deleting report:', error);
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setReportToDelete(null);
   };
 
   const viewReportDetails = async (reportId) => {
@@ -417,7 +436,7 @@ const MyReportsPage = () => {
                       </button>
                       <button
                         className="flex-1 flex items-center justify-center bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
-                        onClick={() => deleteReport(report.report_id)}
+                        onClick={() => handleDeleteClick(report)}
                         disabled={actionLoading}
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
@@ -438,9 +457,57 @@ const MyReportsPage = () => {
           </div>
         )}
 
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && reportToDelete && (
+          <div className="fixed inset-0 bg-white overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+            <div className="relative mx-auto p-6 border w-96 shadow-lg rounded-lg bg-white">
+              <div className="mt-3 text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Report</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Are you sure you want to delete this report? This action cannot be undone.
+                </p>
+                <div className="bg-gray-50 p-3 rounded-lg mb-6 text-left">
+                  <p className="text-sm text-gray-700 line-clamp-3">
+                    <span className="font-medium">Report Content:</span> {reportToDelete.content}
+                  </p>
+                </div>
+                <div className="flex items-center justify-center space-x-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                    disabled={actionLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    disabled={actionLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Details Modal */}
         {showDetailsModal && selectedReport && (
-          <div className="fixed inset-0  bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="fixed inset-0 bg-white overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <div className="flex items-center justify-between mb-4">
@@ -496,11 +563,11 @@ const MyReportsPage = () => {
                   </div>
                   <div className="flex items-center justify-start space-x-3 pt-4 border-t border-gray-200">
                     <button
-                      onClick={() => deleteReport(selectedReport.report_id)}
+                      onClick={() => handleDeleteClick(selectedReport)}
                       disabled={actionLoading}
                       className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Trash2 className="w-4 h-4 ml-2" />}
+                      <Trash2 className="w-4 h-4 mr-2" />
                       Delete
                     </button>
                   </div>

@@ -1,16 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Send, Loader2, X, AlertCircle } from 'lucide-react';
 import ItianNavbar from '../components/ItianNavbar'; // Adjust the import path as necessary
 const API_BASE_URL = 'http://localhost:8000/api';
 
 const CreateReportPage = () => {
   const navigate = useNavigate();
+  const user = useSelector(state => state.user);
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    // Get user role from Redux state or localStorage
+    if (user && user.role) {
+      setUserRole(user.role);
+    } else {
+      // Fallback: try to get role from localStorage or make API call
+      const token = localStorage.getItem('access-token');
+      if (token) {
+        // You might want to decode the token or make an API call to get user info
+        // For now, we'll assume the role is stored somewhere accessible
+        // This is a placeholder - adjust based on your actual implementation
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUserRole(parsedUser.role);
+        }
+      }
+    }
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +62,15 @@ const CreateReportPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      navigate('/my-reports');
+      // Navigate based on user role
+      if (userRole === 'itian') {
+        navigate('/itian/my-reports');
+      } else if (userRole === 'employer') {
+        navigate('/employer/my-reports');
+      } else {
+        // Default fallback
+        navigate('/my-reports');
+      }
     } catch (err) {
       setError(`Failed to create report: ${err.response?.data?.message || err.message}`);
       setShowError(true);
@@ -50,9 +81,7 @@ const CreateReportPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-
-
-{      /* Navbar */}
+      {/* Navbar */}
       <ItianNavbar />
       <div className="max-w-3xl mx-auto">
         {/* Header Card */}
