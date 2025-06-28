@@ -199,9 +199,12 @@ function App() {
           <Route path="/my-reports" element={<MyReportsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        {/* Show ChatbotButton only if user is logged in */}
+        {user && <ChatbotButton />}
       </Router>
     </Provider>
   );
 }
+
 
 export default App;
