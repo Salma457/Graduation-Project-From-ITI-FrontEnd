@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react'; 
-import { useSelector } from 'react-redux'; // اضافة useSelector
 import ItianNavbar from '../components/ItianNavbar'; 
-import EmployerNavbar from '../components/EmployerNavbar'; // اضافة EmployerNavbar
 import { 
   Search, 
   Eye, 
@@ -30,7 +28,6 @@ import {
 } from 'lucide-react';
 
 const MyReportsPage = () => {
-  const user = useSelector(state => state.user); // الحصول على بيانات المستخدم من Redux
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,32 +40,11 @@ const MyReportsPage = () => {
   });
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [reportToDelete, setReportToDelete] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [userRole, setUserRole] = useState(''); // اضافة state للدور
 
   const API_BASE_URL = 'http://localhost:8000/api';
 
   const getAuthToken = () => localStorage.getItem('access-token');
-
-  // useEffect لتحديد دور المستخدم
-  useEffect(() => {
-    if (user && user.role) {
-      setUserRole(user.role);
-    } else {
-      // Fallback: try to get role from localStorage
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setUserRole(parsedUser.role);
-        } catch (e) {
-          console.error('Error parsing stored user:', e);
-        }
-      }
-    }
-  }, [user]);
 
   const apiCall = async (url, options = {}) => {
     const token = getAuthToken();
@@ -222,38 +198,21 @@ const MyReportsPage = () => {
     );
   };
 
-  const handleDeleteClick = (report) => {
-    setReportToDelete(report);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!reportToDelete) return;
-    
+  const deleteReport = async (reportId) => {
     try {
       setActionLoading(true);
-      await apiCall(`${API_BASE_URL}/reports/${reportToDelete.report_id}`, { method: 'DELETE' });
-      setReports(prevReports => prevReports.filter(report => report.report_id !== reportToDelete.report_id));
-      
-      // Close modals if the deleted report was being viewed
-      if (showDetailsModal && selectedReport?.report_id === reportToDelete.report_id) {
+      await apiCall(`${API_BASE_URL}/reports/${reportId}`, { method: 'DELETE' });
+      setReports(prevReports => prevReports.filter(report => report.report_id !== reportId));
+      if (showDetailsModal) {
         setShowDetailsModal(false);
         setSelectedReport(null);
       }
-      
-      setShowDeleteModal(false);
-      setReportToDelete(null);
       await fetchMyReports();
     } catch (error) {
       console.error('Error deleting report:', error);
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setReportToDelete(null);
   };
 
   const viewReportDetails = async (reportId) => {
@@ -300,17 +259,6 @@ const MyReportsPage = () => {
     });
   };
 
-  // تحديد الناف بار بناء على نوع المستخدم
-  const renderNavbar = () => {
-    if (userRole === 'employer') {
-      return <EmployerNavbar />;
-    } else if (userRole === 'itian') {
-      return <ItianNavbar />;
-    }
-    // Default fallback - يمكن تغييرها حسب احتياجك
-    return <ItianNavbar />;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
@@ -342,9 +290,8 @@ const MyReportsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* عرض الناف بار المناسب */}
-      {renderNavbar()}
-      
+        {/* Navbar */}
+              <ItianNavbar />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Reports</h1>
@@ -470,7 +417,7 @@ const MyReportsPage = () => {
                       </button>
                       <button
                         className="flex-1 flex items-center justify-center bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-red-700 transition-colors"
-                        onClick={() => handleDeleteClick(report)}
+                        onClick={() => deleteReport(report.report_id)}
                         disabled={actionLoading}
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
@@ -480,6 +427,85 @@ const MyReportsPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+            
+            {/* Pagination Component */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={getTotalPages(filteredReports.length)}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
+
+        {/* Details Modal */}
+        {showDetailsModal && selectedReport && (
+          <div className="fixed inset-0  bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">Report Details</h3>
+                  <button
+                    onClick={() => setShowDetailsModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Reporter Information</h4>
+                    <div className="flex items-center">
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {selectedReport.reporter?.name || 'Deleted User'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadge(selectedReport.reporter?.role)}`}>
+                            {getRoleDisplayName(selectedReport.reporter?.role)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <User className="h-3 w-5 text-gray-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Report Content</h4>
+                    <div className="bg-white-50 p-4 rounded-lg">
+                      <p className="text-gray-900 whitespace-pre-wrap">{selectedReport.content}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Status</h4>
+                      <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(selectedReport.report_status)}`}>
+                        {getStatusIcon(selectedReport.report_status)}
+                        <span className="mr-1">
+                          {selectedReport.report_status}
+                        </span>
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Created At</h4>
+                      <p className="text-sm font-medium text-gray-900">{formatDate(selectedReport.created_at)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-start space-x-3 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => deleteReport(selectedReport.report_id)}
+                      disabled={actionLoading}
+                      className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Trash2 className="w-4 h-4 ml-2" />}
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
