@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; 
-import { useSelector } from 'react-redux'; // اضافة useSelector
+import { useSelector } from 'react-redux';
 import ItianNavbar from '../components/ItianNavbar'; 
-import EmployerNavbar from '../components/EmployerNavbar'; // اضافة EmployerNavbar
+import EmployerNavbar from '../components/EmployerNavbar';
 import { 
   Search, 
   Eye, 
@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 
 const MyReportsPage = () => {
-  const user = useSelector(state => state.user); // الحصول على بيانات المستخدم من Redux
+  const user = useSelector(state => state.user);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,18 +46,16 @@ const MyReportsPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [reportToDelete, setReportToDelete] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [userRole, setUserRole] = useState(''); // اضافة state للدور
+  const [userRole, setUserRole] = useState('');
 
   const API_BASE_URL = 'http://localhost:8000/api';
 
   const getAuthToken = () => localStorage.getItem('access-token');
 
-  // useEffect لتحديد دور المستخدم
   useEffect(() => {
     if (user && user.role) {
       setUserRole(user.role);
     } else {
-      // Fallback: try to get role from localStorage
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
@@ -235,7 +233,6 @@ const MyReportsPage = () => {
       await apiCall(`${API_BASE_URL}/reports/${reportToDelete.report_id}`, { method: 'DELETE' });
       setReports(prevReports => prevReports.filter(report => report.report_id !== reportToDelete.report_id));
       
-      // Close modals if the deleted report was being viewed
       if (showDetailsModal && selectedReport?.report_id === reportToDelete.report_id) {
         setShowDetailsModal(false);
         setSelectedReport(null);
@@ -300,14 +297,12 @@ const MyReportsPage = () => {
     });
   };
 
-  // تحديد الناف بار بناء على نوع المستخدم
   const renderNavbar = () => {
     if (userRole === 'employer') {
       return <EmployerNavbar />;
     } else if (userRole === 'itian') {
       return <ItianNavbar />;
     }
-    // Default fallback - يمكن تغييرها حسب احتياجك
     return <ItianNavbar />;
   };
 
@@ -342,7 +337,6 @@ const MyReportsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* عرض الناف بار المناسب */}
       {renderNavbar()}
       
       <div className="container mx-auto px-4 py-8">
@@ -351,7 +345,6 @@ const MyReportsPage = () => {
           <p className="text-gray-600">View and manage the reports you've submitted</p>
         </div>
         
-        {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex gap-2 flex-wrap md:flex-nowrap md:gap-2 md:mr-4">
@@ -405,7 +398,6 @@ const MyReportsPage = () => {
           </p>
         </div>
 
-        {/* Reports Grid */}
         {filteredReports.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -480,6 +472,108 @@ const MyReportsPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Pagination added here */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={getTotalPages(filteredReports.length)}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && reportToDelete && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/3 shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Confirm Deletion</h3>
+                <button onClick={cancelDelete} className="text-gray-500 hover:text-gray-700">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this report? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={actionLoading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center"
+                >
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Trash2 className="w-4 h-4 mr-2" />
+                  )}
+                  Delete Report
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Report Details Modal */}
+        {showDetailsModal && selectedReport && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Report Details</h3>
+                <button onClick={() => setShowDetailsModal(false)} className="text-gray-500 hover:text-gray-700">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Reporter Information</h4>
+                  <div className="flex items-center">
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {selectedReport.reporter?.name || 'Deleted User'}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadge(selectedReport.reporter?.role)}`}>
+                          {getRoleDisplayName(selectedReport.reporter?.role)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 h-10 w-10">
+                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <User className="h-3 w-5 text-gray-500" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Report Content</h4>
+                  <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedReport.content}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Created At</h4>
+                    <p className="text-gray-900">{formatDate(selectedReport.created_at)}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Status</h4>
+                    <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(selectedReport.report_status)}`}>
+                      {getStatusIcon(selectedReport.report_status)}
+                      <span className="mr-1">{selectedReport.report_status}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
