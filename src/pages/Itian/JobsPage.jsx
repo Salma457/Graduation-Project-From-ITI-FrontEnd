@@ -57,7 +57,13 @@ const JobsPage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim() === '') return;
+    // If search bar is empty, retrieve all jobs immediately
+    if (!searchQuery.trim()) {
+      dispatch(setSubmittedSearch(''));
+      dispatch(setPagination({ currentPage: 1 }));
+      return;
+    }
+    // Make search case-insensitive
     dispatch(setSubmittedSearch(searchQuery));
     dispatch(setPagination({ currentPage: 1 }));
   };
@@ -112,7 +118,13 @@ const JobsPage = () => {
   );
 
   const filteredJobs = jobs.filter(
-    job => (job.status || '').toLowerCase() !== 'pending'
+    job => (job.status || '').toLowerCase() !== 'pending' &&
+      (
+        !searchQuery.trim() ||
+        (job.job_title && job.job_title.toLocaleLowerCase('en-US').includes(searchQuery.trim().toLocaleLowerCase('en-US')))
+        ||
+        (job.employer?.name && job.employer.name.toLocaleLowerCase('en-US').includes(searchQuery.trim().toLocaleLowerCase('en-US')))
+      )
   );
 
   return (
@@ -124,10 +136,11 @@ const JobsPage = () => {
             <Search size={20} className="search-icon" />
             <input
               type="text"
-              placeholder="Search by job title..."
+              placeholder="Search by job title or company name..."
               value={searchQuery}
               onChange={(e) => dispatch(setSearchQuery(e.target.value))}
               className="search-input"
+              style={{ textTransform: 'none' }}
             />
             <button 
               type="submit" 

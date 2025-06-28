@@ -57,7 +57,6 @@ import useAuthInit from './hooks/useAuthInit';
 // RAG Search
 import RagChat from "./AI Chat/RagChat.jsx";
 import ChatbotButton from "./AI Chat/ChatbotButton.jsx";
-
 // Report Page
 import LandingPageContent from "./pages/homePage/app/page"
 // import ReportsPage from './pages/ReportsPage.jsx';          // للمستخدم العادي (ITian/Employer)
@@ -182,7 +181,6 @@ function App() {
 
           {/* cahtAI route */}
           <Route path="/rag" element={<RagChat />} />
-
           {/* <Route path="/reports" element={<ReportsPage />} /> */}
           <Route path="/reports/create" element={<CreateReportPage />} />
 
@@ -193,14 +191,16 @@ function App() {
           {/* <Route path="/reportss" element={<ReportsPage />} /> */}
           {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
           {/* Standalone Routes */}
-          <Route path="/rag" element={<RagChat />} />
-          <Route path="/reports/create" element={<CreateReportPage />} />
-          
-          <Route path="/my-reports" element={<MyReportsPage />} />
+          <Route path="/itian/reports/create" element={<CreateReportPage />} />
+    
+          <Route path="/itian/my-reports" element={<MyReportsPage />} />
+          <Route path="/employer/reports/create" element={<CreateReportPage />} />
+    
+          <Route path="/employer/my-reports" element={<MyReportsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-        {/* Show ChatbotButton only if user is logged in */}
         {user && <ChatbotButton />}
+
       </Router>
     </Provider>
   );

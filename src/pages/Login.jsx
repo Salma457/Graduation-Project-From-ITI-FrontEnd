@@ -80,7 +80,7 @@ dispatch(setUser({
           }
         }
       } else if (userRole === 'admin') {
-        navigate('/admin');
+        navigate('/admin/approvals');
       }
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
