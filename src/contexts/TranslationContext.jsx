@@ -290,7 +290,7 @@ const translations = {
     // Locations
     locations: {
       title: "انتشار معهد ITI على مستوى الجمهورية",
-      titleHighlight: "انتشار على مستوى الجمهورية", 
+      titleHighlight: " على مستوى الجمهورية", 
       description: "مع وجود مواقع في جميع أنحاء مصر، يوفر معهد ITI تعليماً عالي الجودة وفرص مهنية في كل مكان"
     },
     
