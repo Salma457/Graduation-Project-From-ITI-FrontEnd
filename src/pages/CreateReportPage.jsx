@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Send, Loader2, X, AlertCircle } from 'lucide-react';
-import ItianNavbar from '../components/ItianNavbar'; // Adjust the import path as necessary
+import ItianNavbar from '../components/ItianNavbar';
+import EmployerNavbar from '../components/EmployerNavbar'; // اضافة EmployerNavbar
 const API_BASE_URL = 'http://localhost:8000/api';
 
 const CreateReportPage = () => {
@@ -79,10 +80,22 @@ const CreateReportPage = () => {
     }
   };
 
+  // تحديد الناف بار بناء على نوع المستخدم
+  const renderNavbar = () => {
+    if (userRole === 'employer') {
+      return <EmployerNavbar />;
+    } else if (userRole === 'itian') {
+      return <ItianNavbar />;
+    }
+    // Default fallback - يمكن تغييرها حسب احتياجك
+    return <ItianNavbar />;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-      {/* Navbar */}
-      <ItianNavbar />
+      {/* عرض الناف بار المناسب */}
+      {renderNavbar()}
+      
       <div className="max-w-3xl mx-auto">
         {/* Header Card */}
         <div className="bg-gradient-to-r from-[#d0443c] to-[#a0302c] rounded-xl shadow-lg mb-8 overflow-hidden">
