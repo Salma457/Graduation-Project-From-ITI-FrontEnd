@@ -12,6 +12,7 @@ import AdminLayout from "./pages/layouts/AdminLayout";
 import WithoutLoginLayout from './pages/layouts/layoutWithoutLogin';
 
 // Route Protectors
+import PrivateRoute from "./components/auth/PrivateRoute";
 import PublicRoute from "./components/auth/PublicRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import ItianRoute from "./components/auth/ItianRoute";
@@ -97,7 +98,7 @@ function AppContent() {
           </Route>
 
           {/* Admin Routes */}
-          <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
               {adminRoutes}
             </Route>
@@ -116,9 +117,9 @@ function AppContent() {
               <Route path="/my-posts" element={<MyPostsPage />} />
               <Route path="/itian-profile" element={<ItianProfile />} />
               <Route path="/create-itian-profile" element={<CreateItianProfile />} />
-              <Route path="/mychat" element={<ChatApp />} />
-              <Route path="/reports/create" element={<CreateReportPage />} />
-              <Route path="/my-reports" element={<MyReportsPage />} />
+              <Route path="/itian/mychat" element={<ChatApp />} />
+              <Route path="/itian/reports/create" element={<CreateReportPage />} />
+              <Route path="/itian/my-reports" element={<MyReportsPage />} />
             </Route>
           </Route>
 
@@ -135,17 +136,15 @@ function AppContent() {
               <Route path="/payment" element={<PaymentPage />} />
               <Route path="/employer-profile" element={<EmployerProfile />} />
               <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
-              <Route path="/reports/create" element={<CreateReportPage />} />
-              <Route path="/my-reports" element={<MyReportsPage />} />
+              <Route path="/employer/reports/create" element={<CreateReportPage />} />
+              <Route path="/employer/my-reports" element={<MyReportsPage />} />
             </Route>
           </Route>
 
-          {/* AI Chat Route (Public but protected) */}
-          <Route path="/rag" element={
-            <PublicRoute>
-              <RagChat />
-            </PublicRoute>
-          } />
+          {/* AI Chat Route (for any authenticated user) */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/rag" element={<RagChat />} />
+          </Route>
 
           {/* Error Pages */}
           <Route path="/unauthorized" element={<Unauthorized />} />
@@ -153,7 +152,7 @@ function AppContent() {
         </Routes>
         
         {/* Chatbot Button (shown when authenticated) */}
-        {user && <ChatbotButton />}
+        {user && user.id && <ChatbotButton />}
       </Router>
   );
 }
