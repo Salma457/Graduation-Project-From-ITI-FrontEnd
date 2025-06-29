@@ -11,35 +11,33 @@ const schema = Yup.object().shape({
     .required("Company name is required")
     .max(255, "Company name must be at most 255 characters"),
   company_logo: Yup.mixed()
-    .nullable()
-    .test("fileSize", "Company logo is too large (max 2MB)", (value) => {
-      if (!value || !value[0]) return true;
-      return value[0].size <= 2048 * 1024;
-    })
-    .test("fileType", "Invalid company logo type (jpeg, png, jpg, gif)", (value) => {
-      if (!value || !value[0]) return true;
-      return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
-    }),
-  company_description: Yup.string().nullable(),
+    .nullable(),
+  company_description: Yup.string()
+    .required("Company description is required"),
   website_url: Yup.string()
-    .nullable()
+    .required("Website URL is required")
     .url("Website URL must be a valid URL")
     .max(500, "Website URL must be at most 500 characters"),
-  industry: Yup.string().nullable().max(255, "Industry must be at most 255 characters"),
+  industry: Yup.string()
+    .required("Industry is required")
+    .max(255, "Industry must be at most 255 characters"),
   company_size: Yup.string()
-    .nullable()
-    .notRequired()
+    .required("Company size is required")
     .matches(/^\d*$/, "Company size must contain numbers only")
     .max(100, "Company size must be at most 100 characters"),
-  location: Yup.string().nullable().max(255, "Location must be at most 255 characters"),
+  location: Yup.string()
+    .required("Location is required")
+    .max(255, "Location must be at most 255 characters"),
   contact_person_name: Yup.string()
-    .nullable()
+    .required("Contact person name is required")
     .max(255, "Contact person name must be at most 255 characters"),
   contact_email: Yup.string()
-    .nullable()
+    .required("Contact email is required")
     .email("Contact email must be a valid email address")
     .max(255, "Contact email must be at most 255 characters"),
-  phone_number: Yup.string().nullable().max(20, "Phone number must be at most 20 characters"),
+  phone_number: Yup.string()
+    .required("Phone number is required")
+    .max(20, "Phone number must be at most 20 characters"),
 });
 
 const CreateEmployerProfile = () => {
@@ -204,7 +202,7 @@ const CreateEmployerProfile = () => {
                 </label>
                 <input
                   type="text"
-                  {...register("company_name")}
+                  {...register("company_name", { required: true })}
                   className={`w-full px-4 py-3 border-2 ${errors.company_name ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
                   placeholder="Enter company name"
                 />
@@ -368,7 +366,7 @@ const CreateEmployerProfile = () => {
               {/* Contact Email */}
               <div>
                 <label className="block text-sm font-bold text-gray-600 mb-2">
-                  Contact Email
+                  Contact Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -376,7 +374,7 @@ const CreateEmployerProfile = () => {
                   </div>
                   <input
                     type="text"
-                    {...register("contact_email")}
+                    {...register("contact_email", { required: true })}
                     className={`w-full pl-10 px-4 py-3 border-2 ${errors.contact_email ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
                     placeholder="Enter contact email"
                   />
@@ -389,11 +387,11 @@ const CreateEmployerProfile = () => {
               {/* Phone Number */}
               <div>
                 <label className="block text-sm font-bold text-gray-600 mb-2">
-                  Phone Number
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  {...register("phone_number")}
+                  {...register("phone_number", { required: true })}
                   className={`w-full px-4 py-3 border-2 ${errors.phone_number ? 'border-red-500' : 'border-gray-300'} rounded-lg text-base transition-all focus:border-[#d0443c] focus:ring-2 focus:ring-[#d0443c]/50`}
                   placeholder="Enter phone number"
                 />
