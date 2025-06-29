@@ -153,7 +153,8 @@ const translations = {
           findJobs: "Find Jobs",
           postJob: "Post a Job", 
           community: "Community",
-          aboutIti: "About ITI"
+          aboutIti: "About ITI",
+          reports: "Reports"
         }
       },
       categories: {
@@ -213,7 +214,7 @@ const translations = {
     // Stats Section
     stats: {
       title: "إحصائيات نجاح معهد ITI",
-      titleHighlight: "إحصائيات نجاح",
+      titleHighlight: "نجاح",
       description: "اكتشف الإنجازات المذهلة ونطاق وصول معهد تكنولوجيا المعلومات",
       labels: {
         employmentRate: "معدل التوظيف السنوي",
@@ -290,7 +291,7 @@ const translations = {
     // Locations
     locations: {
       title: "انتشار معهد ITI على مستوى الجمهورية",
-      titleHighlight: "انتشار على مستوى الجمهورية", 
+      titleHighlight: " على مستوى الجمهورية", 
       description: "مع وجود مواقع في جميع أنحاء مصر، يوفر معهد ITI تعليماً عالي الجودة وفرص مهنية في كل مكان"
     },
     

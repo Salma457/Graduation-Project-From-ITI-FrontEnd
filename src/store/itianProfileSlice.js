@@ -5,7 +5,10 @@ export const fetchItianProfile = createAsyncThunk(
   'itianProfile/fetchItianProfile',
   async (userId, thunkAPI) => {
     try {
-      const response = await axios.get(`/api/itians/${userId}`);
+      const token = localStorage.getItem('access-token');
+      const response = await axios.get(`/api/itian-profile/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || 'Failed to fetch ITIAN profile');

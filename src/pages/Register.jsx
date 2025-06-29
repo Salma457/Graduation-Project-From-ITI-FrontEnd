@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import "./Register.css";
+import apiClient from "../api/axios";
 
 
 const Register = () => {
@@ -95,7 +95,7 @@ const Register = () => {
       if (value !== null && value !== "") apiData.append(key, value);
     });
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/register', apiData, {
+      const response = await apiClient.post('/api/register', apiData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       console.log('Registration successful!', response);
