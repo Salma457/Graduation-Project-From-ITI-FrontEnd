@@ -1,23 +1,30 @@
-// components/auth/PublicRoute.jsx
 import { useSelector } from 'react-redux';
 import { Navigate, Outlet } from 'react-router-dom';
-import LoaderOverlay from '../LoaderOverlay';
 
 const PublicRoute = () => {
-  const user = useSelector((state) => state.user.user);
-  const isLoading = useSelector((state) => state.user.isLoading);
+  const { user } = useSelector((state) => state.user);
 
-  if (isLoading) {
-    return <LoaderOverlay />;
+  // A more robust check for authentication.
+  // This prevents redirects if the user object is an empty `{}` after logout.
+  const isAuthenticated = user && user.id;
+
+  if (isAuthenticated) {
+    // Redirect authenticated users away from public pages like login/register.
+    if (user.role === 'admin') {
+      return <Navigate to="/admin/approvals" replace />;
+    }
+    if (user.role === 'itian') {
+      // The profile page will handle redirecting to create-profile if needed.
+      return <Navigate to="/itian-profile" replace />;
+    }
+    if (user.role === 'employer') {
+      return <Navigate to="/employer-profile" replace />;
+    }
+    // Fallback for any other authenticated role.
+    return <Navigate to="/" replace />;
   }
 
-  if (user) {
-    // Redirect to appropriate dashboard based on role
-    const redirectPath = user.role === 'admin' ? '/admin' : 
-                        user.role === 'employer' ? '/employer' : '/itian';
-    return <Navigate to={redirectPath} replace />;
-  }
-
+  // If not authenticated, allow access to the public page (Login, Register, etc.).
   return <Outlet />;
 };
 

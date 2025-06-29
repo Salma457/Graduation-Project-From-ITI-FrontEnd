@@ -62,25 +62,30 @@ import RagChat from "./AI Chat/RagChat";
 import ChatbotButton from "./AI Chat/ChatbotButton";
 import CreateReportPage from "./pages/CreateReportPage";
 import MyReportsPage from "./pages/MyReportsPage";
+import EmailVerifiedSuccess from "./pages/EmailVerifiedSuccess";
+import EmailVerificationFailed from "./pages/EmailVerificationFailed";
 
-function App() {
+function AppContent() {
   useAuthInit();
   const isLoading = useSelector((state) => state.user.isLoading);
+  const user = useSelector(state => state.user.user);
 
   if (isLoading) {
     return <LoaderOverlay text="Checking authentication..." />;
   }
 
   return (
-    <Provider store={store}>
-      <Router>
-        <Routes>
+    <Router>
+      <Routes>
           {/* Public Routes (No auth required) */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
+          {/* Add these two new routes for email verification */}
+          <Route path="/email-verified-successfully" element={<EmailVerifiedSuccess />} />
+          <Route path="/email-verification-failed" element={<EmailVerificationFailed />} />
 
           {/* Public Landing Page */}
           <Route path="/" element={<WithoutLoginLayout />}>
@@ -148,8 +153,15 @@ function App() {
         </Routes>
         
         {/* Chatbot Button (shown when authenticated) */}
-        {useSelector(state => state.user.user) && <ChatbotButton />}
+        {user && <ChatbotButton />}
       </Router>
+  );
+}
+
+function App() {
+  return (
+    <Provider store={store}>
+      <AppContent />
     </Provider>
   );
 }
