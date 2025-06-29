@@ -43,6 +43,10 @@ const AdminSidebar = () => {
           <span className="admin-sidebar-icon">📧</span>
           <span>Send Emails</span>
         </Link>
+        <Link to="/admin/testimonials" className="admin-sidebar-link">
+          <span className="admin-sidebar-icon">🗣️</span>
+          <span>Testimonials</span>
+        </Link>
       </nav>
     </aside>
   );

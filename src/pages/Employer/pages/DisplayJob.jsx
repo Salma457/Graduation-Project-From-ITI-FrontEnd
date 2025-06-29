@@ -29,36 +29,36 @@ const JobList = () => {
 
 const checkAndUpdateExpiredJobs = async () => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0); // نحافظ عليه لو حابب تستخدمه لاحقًا
 
   const jobsArray = Array.isArray(jobs) ? jobs : [];
-  
+
   for (const job of jobsArray) {
-    if (job.application_deadline && job.status === 'Open') {
-      const deadlineDate = new Date(job.application_deadline);
-      deadlineDate.setHours(0, 0, 0, 0);
+    if (!job.application_deadline) continue;
 
-      if (today > deadlineDate) {
-        try {
-          console.log(`Closing expired job ${job.id}...`);
-          const result = await dispatch(editJob({ 
-            jobId: job.id, 
-            jobData: { 
-              ...job,
-              status: 'Closed' 
-            } 
-          }));
+    const deadline = new Date(job.application_deadline);
+    deadline.setHours(23, 59, 59, 999); // نخلي الجوب تفضل مفتوحة لحد نهاية اليوم
 
-          if (result.error) {
-            console.error(`Failed to close job ${job.id}:`, result.error);
-          } else {
-            console.log(`Successfully closed job ${job.id}`);
-            // إعادة تحميل البيانات بعد التحديث
-            dispatch(fetchEmployerData());
-          }
-        } catch (error) {
-          console.error(`Error closing job ${job.id}:`, error);
+    const isOpen = job.status === 'Open';
+
+    if (isOpen && today > deadline) {
+      try {
+        console.log(`⛔ Closing job ${job.id} with deadline ${job.application_deadline}`);
+
+        const result = await dispatch(editJob({
+          jobId: job.id,
+          jobData: { status: 'Closed' }
+        }));
+
+        if (!result.error) {
+          console.log(`✅ Job ${job.id} closed successfully`);
+          dispatch(fetchEmployerData());
+        } else {
+          console.error(`❌ Failed to close job ${job.id}:`, result.error);
         }
+
+      } catch (err) {
+        console.error(`🚨 Error updating job ${job.id}:`, err);
       }
     }
   }
@@ -72,11 +72,12 @@ useEffect(() => {
   console.log("Fetched jobs:", jobs);
 }, [jobs]);
 
-  useEffect(() => {
-    if (jobs.length > 0) {
-      checkAndUpdateExpiredJobs();
-    }
-  }, [jobs, dispatch]);
+useEffect(() => {
+  if (!loading && jobs.length > 0) {
+    checkAndUpdateExpiredJobs();
+  }
+}, [jobs, loading]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -92,10 +93,9 @@ useEffect(() => {
 
 const isJobExpired = (job) => {
   if (!job.application_deadline) return false;
-  const currentDate = new Date();
-  const deadlineDate = new Date(job.application_deadline);
-  return currentDate > deadlineDate;
+  return new Date().toDateString() > new Date(job.application_deadline).toDateString();
 };
+
 
     const filteredJobs = jobsArray.filter(job => !job.deleted_at).filter(job => {
     const statusMatch = filter === 'all' || job.status === filter;
@@ -198,7 +198,7 @@ const isJobExpired = (job) => {
     
     const currentDate = new Date();
     const deadlineDate = new Date(job.application_deadline);
-    const isExpired = currentDate > deadlineDate;
+    const isExpired = new Date(currentDate.toDateString()) > new Date(deadlineDate.toDateString());
     
     const formattedDate = deadlineDate.toLocaleDateString('en-GB');
     

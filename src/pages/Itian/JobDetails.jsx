@@ -253,7 +253,11 @@ useEffect(() => {
     View My Proposal
   </button>
 ) : (
-  <button onClick={handleApply} className="apply-btnn">
+  <button 
+    onClick={handleApply} 
+    className={`apply-btnn ${job.status === 'Closed' ? 'opacity-60 cursor-not-allowed' : ''}`}
+    disabled={job.status === 'Closed'}
+  >
     Apply Now
   </button>
 )}
@@ -316,7 +320,7 @@ useEffect(() => {
       name="cv"
       accept=".pdf,.doc,.docx"
       onChange={handleFileChange}
-      required
+      
       className={`application-form-file w-full rounded-lg border-2 border-white/30 focus:border-white bg-white/90 text-black p-2 outline-none transition ${(!formData.cv || submitError === 'CV file is required' || (submitError && submitError.toLowerCase().includes('cv'))) ? 'border-red-500' : ''}`}
     />
     {(!formData.cv || submitError === 'CV file is required' || (submitError && submitError.toLowerCase().includes('cv'))) && (

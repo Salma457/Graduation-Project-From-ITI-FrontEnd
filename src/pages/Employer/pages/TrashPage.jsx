@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEmployerJobs, deleteJob, restoreJob } from "../jobPostSlice";
 import Swal from "sweetalert2";
-import { Trash2, RotateCcw, Calendar, MapPin, DollarSign, Clock, AlertTriangle, RefreshCw } from "lucide-react";
+import { Trash2, RotateCcw, Calendar, MapPin, DollarSign, Clock, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 
 const TrashPage = () => {
   const dispatch = useDispatch();
   const { jobs, loading, error } = useSelector((state) => state.jobPost);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("deleted_at");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [jobsPerPage] = useState(6); // Number of jobs to show per page
 
   useEffect(() => {
     dispatch(fetchEmployerJobs());
@@ -34,14 +36,14 @@ const TrashPage = () => {
       return 0;
     });
 
-  // Calculate days until permanent deletion (2 days instead of 30)
-  const getDaysUntilDeletion = (deletedAt) => {
-    const deletionDate = new Date(new Date(deletedAt).getTime() + 2 * 24 * 60 * 60 * 1000);
-    const today = new Date();
-    const diffTime = deletionDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
+  // Get current jobs for pagination
+  const indexOfLastJob = currentPage * jobsPerPage;
+  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
+  const currentJobs = filteredAndSortedJobs.slice(indexOfFirstJob, indexOfLastJob);
+  const totalPages = Math.ceil(filteredAndSortedJobs.length / jobsPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Handler for permanent delete
   const handlePermanentDelete = (jobId, jobTitle) => {
@@ -246,102 +248,153 @@ const TrashPage = () => {
 
             {/* Jobs Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredAndSortedJobs.map((job) => {
-                const daysLeft = getDaysUntilDeletion(job.deleted_at);
-                const isUrgent = daysLeft <= 7;
-                
-                return (
-                  <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
-                    {/* Card Header */}
-                    <div className="p-6 pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
-                          {job.job_title}
-                        </h3>
-                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          isUrgent 
-                            ? 'bg-red-100 text-red-700' 
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          <Clock className="h-3 w-3 mr-1" />
-                          {daysLeft}d left
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                          <span>{job.job_location || "Location not specified"}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                          <span>Deleted {new Date(job.deleted_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
+              {currentJobs.map((job) => (
+                <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                  {/* Card Header */}
+                  <div className="p-6 pb-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
+                        {job.job_title}
+                      </h3>
                     </div>
 
-                    {/* Job Details */}
-                    <div className="px-6 pb-4">
-                      <div className="grid grid-cols-1 gap-3 text-sm">
-                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                          <span className="font-medium text-gray-700">Type:</span>
-                          <span className="text-gray-900">{job.job_type || "Not specified"}</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                          <span className="font-medium text-gray-700 flex items-center">
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            Salary:
-                          </span>
-                          <span className="text-gray-900 font-medium">
-                            {(job.salary_range_min && job.salary_range_max)
-                              ? `${job.salary_range_min} - ${job.salary_range_max} ${job.currency || ""}`
-                              : (job.salary_range_min
-                                  ? `${job.salary_range_min}+ ${job.currency || ""}`
-                                  : (job.salary_range_max
-                                      ? `Up to ${job.salary_range_max} ${job.currency || ""}`
-                                      : "Not specified"))}
-                          </span>
-                        </div>
-
-                        <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-                          isUrgent ? 'bg-red-50' : 'bg-yellow-50'
-                        }`}>
-                          <span className="font-medium text-gray-700">Auto-delete:</span>
-                          <span className={`font-medium ${
-                            isUrgent ? 'text-red-700' : 'text-yellow-700'
-                          }`}>
-                            {new Date(
-                              new Date(job.deleted_at).getTime() + 2 * 24 * 60 * 60 * 1000
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                        <span>{job.job_location || "Location not specified"}</span>
                       </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="px-6 pb-6">
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleRestore(job.id, job.job_title)}
-                          className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          Restore
-                        </button>
-                        <button
-                          onClick={() => handlePermanentDelete(job.id, job.job_title)}
-                          className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Forever
-                        </button>
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                        <span>Deleted {new Date(job.deleted_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* Job Details */}
+                  <div className="px-6 pb-4">
+                    <div className="grid grid-cols-1 gap-3 text-sm">
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium text-gray-700">Type:</span>
+                        <span className="text-gray-900">{job.job_type || "Not specified"}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium text-gray-700 flex items-center">
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          Salary:
+                        </span>
+                        <span className="text-gray-900 font-medium">
+                          {(job.salary_range_min && job.salary_range_max)
+                            ? `${job.salary_range_min} - ${job.salary_range_max} ${job.currency || ""}`
+                            : (job.salary_range_min
+                                ? `${job.salary_range_min}+ ${job.currency || ""}`
+                                : (job.salary_range_max
+                                    ? `Up to ${job.salary_range_max} ${job.currency || ""}`
+                                    : "Not specified"))}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="px-6 pb-6">
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handleRestore(job.id, job.job_title)}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => handlePermanentDelete(job.id, job.job_title)}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Forever
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Pagination */}
+            {filteredAndSortedJobs.length > jobsPerPage && (
+              <div className="flex items-center justify-between mt-8 px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="flex-1 flex justify-between sm:hidden">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                      currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                      currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{indexOfFirstJob + 1}</span> to{' '}
+                      <span className="font-medium">
+                        {Math.min(indexOfLastJob, filteredAndSortedJobs.length)}
+                      </span>{' '}
+                      of <span className="font-medium">{filteredAndSortedJobs.length}</span> jobs
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                          currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="sr-only">Previous</span>
+                        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                      
+                      {/* Page numbers */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                        <button
+                          key={number}
+                          onClick={() => paginate(number)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            currentPage === number
+                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          {number}
+                        </button>
+                      ))}
+                      
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                          currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="sr-only">Next</span>
+                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {filteredAndSortedJobs.length === 0 && searchTerm && (
               <div className="text-center py-16">

@@ -9,6 +9,8 @@ import Reports from './Reports.jsx';
 import AdminRoute from '../../components/AdminRoute';
 import AdminSetPricePage from './AdminSetPricePage.jsx';
 import AdminSendEmail from './AdminSendEmailPage.jsx';
+import AdminTestimonials from './AdminTestimonials.jsx';
+
 
 const adminRoutes = (
 
@@ -20,6 +22,7 @@ const adminRoutes = (
       <Route path="reports" element={<Reports />} />
       <Route path="set-price" element={<AdminSetPricePage />} />
       <Route path="send-email" element={<AdminSendEmail />} />
+      <Route path='testimonials' element={<AdminTestimonials/>} />
   </Route>
 );
 

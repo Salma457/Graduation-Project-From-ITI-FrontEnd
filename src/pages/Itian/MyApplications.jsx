@@ -35,13 +35,14 @@ const MyApplications = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:8000/api/itian/job-application', {
+        const response = await axios.get('http://localhost:8000/api/my-applications', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        setApplications(response.data.data);
+        console.log("API Response:", response); // ⬅️ أضف دي
+        setApplications(response.data.applications);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching applications:", error);
@@ -211,10 +212,13 @@ const MyApplications = () => {
   };
 
   // Filtered and paginated applications
-  const filteredApplications = applications.filter(app =>
-    app.job.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    app.job.employer?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const filteredApplications = applications.filter(app => {
+  const title = app.job?.job_title?.toLowerCase() || "";
+  const employer = app.job?.employer?.name?.toLowerCase() || "";
+  return title.includes(searchTerm.toLowerCase()) || employer.includes(searchTerm.toLowerCase());
+});
+
+
   const totalPages = Math.ceil(filteredApplications.length / perPage);
   const paginatedApplications = filteredApplications
     .slice()
@@ -276,16 +280,21 @@ const MyApplications = () => {
       ) : (
         <>
         <div className="application-list">
-          {paginatedApplications.map(application => (
+       {paginatedApplications
+          .filter(application => application.job) // تأكد إن في job مربوط
+          .map(application => (
             <div key={application.id} className="application-item">
               <div className="application-item-header">
                 <h2 className="application-job-title">
-                  <Link to={`/jobs/${application.job.id}`}>{application.job.job_title}</Link>
+                  <Link to={`/jobs/${application.job.id}`}>
+                    {application.job.job_title}
+                  </Link>
                 </h2>
                 <span className={`application-status px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(application.status)}`}>
                   {application.status}
                 </span>
               </div>
+
               
               <div className="application-details">
                 <div className="application-detail">
