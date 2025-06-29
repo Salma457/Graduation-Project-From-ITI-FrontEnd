@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Provider, useSelector } from "react-redux";
+import { Provider, useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
 import store from "./store";
 import "./App.css";
 import useAuthInit from './hooks/useAuthInit';
@@ -54,6 +55,9 @@ import ItianProfile from './pages/profiles/ItianProfile';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
 import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile';
 
+// Redux Actions for Profiles
+import { fetchItianProfile } from "./store/itianProfileSlice";
+import { fetchEmployerProfile } from "./store/employerProfileSlice";
 // Other Pages
 import LandingPageContent from "./pages/homePage/app/page";
 import PaymentPage from "./pages/PaymentPage";
@@ -69,7 +73,19 @@ import EmailVerificationFailed from "./pages/EmailVerificationFailed";
 function AppContent() {
   useAuthInit();
   const isLoading = useSelector((state) => state.user.isLoading);
-  const user = useSelector(state => state.user.user);
+  const user = useSelector((state) => state.user.user);
+  const dispatch = useDispatch();
+
+  // Fetch user-specific profile data after login
+  useEffect(() => {
+    if (user && user.id) {
+      if (user.role === "itian") {
+        dispatch(fetchItianProfile(user.id));
+      } else if (user.role === "employer") {
+        dispatch(fetchEmployerProfile(user.id));
+      }
+    }
+  }, [user, dispatch]);
 
   if (isLoading) {
     return <LoaderOverlay text="Checking authentication..." />;
@@ -93,8 +109,8 @@ function AppContent() {
             <Route index element={<LandingPageContent />} />
             
             {/* Public Profile Views */}
-            <Route path="/profile/:username" element={<ViewItianProfile />} />
-            <Route path="/employer-profile/:username" element={<ViewEmployerProfile />} />
+            <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+            <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
           </Route>
 
           {/* Admin Routes */}
@@ -120,6 +136,8 @@ function AppContent() {
               <Route path="/itian/mychat" element={<ChatApp />} />
               <Route path="/itian/reports/create" element={<CreateReportPage />} />
               <Route path="/itian/my-reports" element={<MyReportsPage />} />
+              {/* Allow Itian to view employer profiles */}
+              <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
             </Route>
           </Route>
 
@@ -138,6 +156,8 @@ function AppContent() {
               <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
               <Route path="/employer/reports/create" element={<CreateReportPage />} />
               <Route path="/employer/my-reports" element={<MyReportsPage />} />
+              {/* Allow Employer to view itian profiles */}
+              <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
             </Route>
           </Route>
 

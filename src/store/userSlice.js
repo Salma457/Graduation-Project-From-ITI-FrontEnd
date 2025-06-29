@@ -1,5 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
-
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import apiClient from '../api/axios';
+import userLogout from '../hooks/useLogout';
 // Helper function to load initial state from localStorage
 const loadInitialState = () => {
   const storedUser = sessionStorage.getItem('userState'); // Using sessionStorage for better security
@@ -58,5 +59,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser, setRole, setUserLoading, setLoading } = userSlice.actions;
+export const { setUser, clearUser, setRole, setUserLoading, setLoading, logout } = userSlice.actions;
 export default userSlice.reducer;
+
+
