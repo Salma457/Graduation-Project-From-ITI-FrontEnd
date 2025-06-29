@@ -10,9 +10,13 @@ const ItianRoute = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user.role !== 'itian') {
-    // Use `replace` to avoid the back-button trap.
-    return <Navigate to="/unauthorized" replace />;
+  // Case 2: User is logged in, but has no role or the wrong role.
+  // This is a defensive check against an inconsistent API response from the backend
+  // where the user object might be missing the 'role' property.
+  if (!user.role || user.role !== 'itian') {
+    // Log the issue to help with debugging.
+    console.error(`Role-based route access denied. Expected role: 'itian', but user has role: '${user.role}'.`);
+    return <Navigate to="/not-found" replace />;
   }
 
   return <Outlet />;

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import "./Register.css";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from 'react-redux';
+import apiClient from '../api/axios';
 import { setUser } from '../store/userSlice';
 import LoaderOverlay from '../components/LoaderOverlay';
 
@@ -48,18 +48,15 @@ const Login = () => {
     }
 
     if (role === 'itian' || role === 'employer') {
-      const profileCheckUrl = role === 'itian'
-        ? 'http://127.0.0.1:8000/api/itian-profile'
-        : 'http://127.0.0.1:8000/api/employer-profile';
+      // Use relative paths. The apiClient will handle the base URL.
+      const profileCheckUrl = role === 'itian' ? '/api/itian-profile' : '/api/employer-profile';
 
       const successUrl = role === 'itian' ? '/itian-profile' : '/employer-profile';
       const createProfileUrl = role === 'itian' ? '/create-itian-profile' : '/create-employer-profile';
 
       try {
-        // Set auth header specifically for this check
-        await axios.get(profileCheckUrl, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // The apiClient interceptor adds the token header automatically.
+        await apiClient.get(profileCheckUrl);
         navigate(successUrl, { replace: true });
       } catch (err) {
         if (err.response?.status === 404) {
@@ -93,7 +90,7 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/login', dataToSubmit);
+      const response = await apiClient.post('/api/login', dataToSubmit);
       const { access_token, user } = response.data;
 
       localStorage.setItem('access-token', access_token);
@@ -149,18 +146,7 @@ const Login = () => {
                 type="button"
                 className="register-link"
                 style={{background: 'none', border: 'none', color: '#e35d5b', cursor: 'pointer', fontWeight: 600, padding: 0}}
-                onClick={async () => {
-                  if (!formData.email) {
-                    setErrors(prev => ({...prev, email: 'Please enter your email to reset password.'}));
-                    return;
-                  }
-                  try {
-                    await axios.post('http://localhost:8000/api/forgot-password', { email: formData.email });
-                    setGeneralError('Password reset link sent to your email.');
-                  } catch {
-                    setGeneralError('Failed to send reset link. Please try again.');
-                  }
-                }}
+                onClick={handleForgotPassword}
               >
                 Forgot password?
               </button>
@@ -183,6 +169,20 @@ const Login = () => {
       </div>
     )
   );
+
+  async function handleForgotPassword() {
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: 'Please enter your email to reset password.' }));
+      return;
+    }
+    try {
+      // Consider adding a loading state for this action
+      await apiClient.post('/api/forgot-password', { email: formData.email.trim() });
+      setGeneralError('Password reset link sent to your email.');
+    } catch {
+      setGeneralError('Failed to send reset link. Please try again.');
+    }
+  }
 };
 
 export default Login;
