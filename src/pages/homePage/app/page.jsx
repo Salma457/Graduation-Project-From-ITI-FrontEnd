@@ -21,8 +21,6 @@ const AnimatedCounter = ({ value, duration = 2000 }) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    const isPercent = typeof value === "string" && value.includes("%");
-    const isPlus = typeof value === "string" && value.includes("+");
     const cleanValue = parseInt(value);
     const increment = cleanValue / (duration / 50)
     const timer = setInterval(() => {
@@ -88,6 +86,7 @@ function LandingPageContent() {
   const [showModal, setShowModal] = useState(false)
   const [message, setMessage] = useState('')
   const [addTestimonial] = useAddTestimonialMutation();
+  const [rating, setRating] = useState(0);
 
   // ---- FIX: Correctly extract testimonials from API response ----
   const { data: response = {}, isLoading: testimonialsLoading } = useGetTestimonialsQuery();
@@ -112,9 +111,10 @@ function LandingPageContent() {
       email: email || "noemail@example.com",
       role: role,
       message: message,
-      rating: 5
+      rating: rating
     });
     setMessage('')
+    setRating(0)
     setShowModal(false)
   }
   const { t, isRTL } = useTranslation();
@@ -461,7 +461,7 @@ function LandingPageContent() {
                     className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 border-red-200 group"
                   >
                     <div className="flex items-center gap-1 mb-6">
-                      {[...Array(testimonial.rating || 5)].map((_, i) => (
+                      {[...Array(testimonial.rating || 0)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-red-400 text-red-400 group-hover:scale-110 transition-transform duration-300" />
                       ))}
                     </div>
@@ -490,7 +490,7 @@ function LandingPageContent() {
                   onClick={() => setShowModal(true)}
                   className="bg-red-600 text-white px-6 py-3 rounded-xl font-semibold shadow hover:bg-red-700 transition"
                 >
-                  Contact Us
+                  Review
                 </button>
               </div>
 
@@ -505,6 +505,26 @@ function LandingPageContent() {
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                     />
+               <div className="flex items-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      onClick={() => setRating(i + 1)}
+                      className={`w-6 h-6 cursor-pointer transition-all ${
+                        i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                  <p className="text-sm text-gray-500 ml-2">
+                    {rating === 1 && "Very Bad"}
+                    {rating === 2 && "Bad"}
+                    {rating === 3 && "Okay"}
+                    {rating === 4 && "Good"}
+                    {rating === 5 && "Excellent"}
+                  </p>
+                </div>
+
+
                     <div className="flex justify-end gap-3">
                       <button
                         onClick={() => setShowModal(false)}
