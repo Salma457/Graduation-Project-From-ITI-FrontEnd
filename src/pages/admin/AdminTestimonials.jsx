@@ -179,8 +179,8 @@ const testimonials = response.data || [];
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Testimonials Management</h1>
-          <p className="text-gray-600">Review and manage user testimonials</p>
+          {/* <h1 className="text-3xl font-bold text-gray-900 mb-2">Testimonials Management</h1>
+          <p className="text-gray-600">Review and manage user testimonials</p> */}
         </div>
 
         {/* Stats Cards */}
