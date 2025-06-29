@@ -48,7 +48,7 @@ function EmployerNavbar() {
             <MessageNotification iconClassName="nav-icon" /> {t('navbar.chat') || 'Chat'}
           </Link>
           
-          <div className="dropdown">
+          <div className={`dropdown ${openDropdown === 'jobs' ? 'open' : ''}`}>
             <button className="dropbtn" onClick={() => toggleDropdown('jobs')}>
               <FaBriefcase className="nav-icon" /> {t('navbar.jobs') || 'Jobs'}
             </button>
@@ -60,7 +60,7 @@ function EmployerNavbar() {
             )}
           </div>
 
-          <div className="dropdown">
+          <div className={`dropdown ${openDropdown === 'reports' ? 'open' : ''}`}>
             <button className="dropbtn" onClick={() => toggleDropdown('reports')}>
               <FaChartBar className="nav-icon" /> {t('navbar.reports') || 'Reports'}
             </button>
