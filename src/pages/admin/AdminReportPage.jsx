@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import Swal from 'sweetalert2';
+import {
   Search, 
   Eye, 
   Check, 
@@ -201,49 +202,63 @@ const AdminReportsPage = () => {
   const updateReportStatus = async (reportId, status) => {
     try {
       setActionLoading(true);
-      const response = await apiCall(`${API_BASE_URL}/reports/${reportId}/status`, {
+      await apiCall(`${API_BASE_URL}/reports/${reportId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ report_status: status }),
       });
-      console.log('Update Response:', response);
 
-      if (response.data) {
-        const updatedReport = response.data;
-        setReports(prevReports =>
-          prevReports.map(report =>
-            report.report_id === reportId ? { ...report, ...updatedReport } : report
-          )
-        );
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated!',
+        text: `The report status has been changed to ${status}.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
 
-        if (showDetailsModal && selectedReport && selectedReport.report_id === reportId) {
-          setSelectedReport(prev => ({ ...prev, ...updatedReport }));
-        }
-      } else {
-        console.warn('No data returned in response, refetching reports...');
-        await fetchReports();
+      await fetchReports(); // Refetch for consistency
+
+      if (showDetailsModal) {
+        setShowDetailsModal(false);
       }
     } catch (error) {
       console.error('Error updating report status:', error);
+      Swal.fire('Error!', 'Failed to update the report status.', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
   const deleteReport = async (reportId) => {
-    try {
-      setActionLoading(true);
-      await apiCall(`${API_BASE_URL}/reports/${reportId}`, { method: 'DELETE' });
-      setReports(prevReports => prevReports.filter(report => report.report_id !== reportId));
-      if (showDetailsModal) {
-        setShowDetailsModal(false);
-        setSelectedReport(null);
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          setActionLoading(true);
+          await apiCall(`${API_BASE_URL}/reports/${reportId}`, { method: 'DELETE' });
+          
+          Swal.fire('Deleted!', 'The report has been deleted.', 'success');
+
+          await fetchReports(); // Refetch to update the list
+
+          if (showDetailsModal) {
+            setShowDetailsModal(false);
+            setSelectedReport(null);
+          }
+        } catch (error) {
+          console.error('Error deleting report:', error);
+          Swal.fire('Error!', 'Failed to delete the report.', 'error');
+        } finally {
+          setActionLoading(false);
+        }
       }
-      await fetchReports();
-    } catch (error) {
-      console.error('Error deleting report:', error);
-    } finally {
-      setActionLoading(false);
-    }
+    });
   };
 
   const viewReportDetails = async (reportId) => {
@@ -311,8 +326,7 @@ const AdminReportsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Reports Management</h1>
-          <p className="text-gray-600">Review and manage user-submitted reports</p>
+          {/* <h1 className="text-3xl font-bold text-gray-900 mb-2">Reports Management</h1> */}
         </div>
 
         {/* Stats Cards */}
@@ -586,26 +600,36 @@ const AdminReportsPage = () => {
                       </span>
                     </div>
                   </div>
-                  {selectedReport.report_status === 'Pending' && (
-                    <div className="flex items-center justify-start space-x-3 pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => updateReportStatus(selectedReport.report_id, 'Resolved')}
-                        disabled={actionLoading}
-                        className="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-600 bg-white hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {actionLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Check className="w-4 h-4 ml-2" />}
-                        Resolve
-                      </button>
-                      <button
-                        onClick={() => updateReportStatus(selectedReport.report_id, 'Rejected')}
-                        disabled={actionLoading}
-                        className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {actionLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <X className="w-4 h-4 ml-2" />}
-                        Reject
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => deleteReport(selectedReport.report_id)}
+                      disabled={actionLoading}
+                      className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                      Delete
+                    </button>
+                    {selectedReport.report_status === 'Pending' && (
+                      <div className="flex items-center justify-start space-x-3">
+                        <button
+                          onClick={() => updateReportStatus(selectedReport.report_id, 'Resolved')}
+                          disabled={actionLoading}
+                          className="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-600 bg-white hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+                          Resolve
+                        </button>
+                        <button
+                          onClick={() => updateReportStatus(selectedReport.report_id, 'Rejected')}
+                          disabled={actionLoading}
+                          className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

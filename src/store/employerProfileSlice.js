@@ -5,7 +5,10 @@ export const fetchEmployerProfile = createAsyncThunk(
   'employerProfile/fetchEmployerProfile',
   async (userId, thunkAPI) => {
     try {
-      const response = await axios.get(`/api/employers/${userId}`);
+      const token = localStorage.getItem('access-token');
+      const response = await axios.get(`/api/employer-profile/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || 'Failed to fetch Employer profile');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   User,
   Mail,
@@ -26,6 +27,7 @@ import {
 const ViewItianProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.user.user);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -243,7 +245,7 @@ const ViewItianProfile = () => {
               <button
                 onClick={() => {
                   if (profile) {
-                    const role = JSON.parse(localStorage.getItem('user'))?.role;
+                    const role = currentUser?.role;
 
                     const chatRoute =
                       role === 'employer' ? '/employer/mychat' :

@@ -1,19 +1,14 @@
-import { useState } from "react";
 import { FaSignOutAlt } from "react-icons/fa";
+import useLogout from '../hooks/useLogout'; // Import the custom logout hook
 import "../css/Navbar.css";
-import logo from "../../public/logo.png"; 
 
 function AdminNavbar() {
-  const handleLogout = () => {
-    localStorage.removeItem("access-token");
-    window.location.href = "/login";
-  };
+  const handleLogout = useLogout(); // Use the custom logout hook
 
   return (
     <>
       <nav className="admin-navbar">
-
-        <img src={logo} alt="Logo" className="admin-logo-img ps-3" />
+        <img src="/logo.png" alt="Logo" className="admin-logo-img ps-3" />
 
         <div className="admin-navbar-container">
           <div className="admin-logo-container">

@@ -6,6 +6,8 @@ import Confetti from 'react-confetti';
 import 'react-toastify/dist/ReactToastify.css';
 import withReactContent from 'sweetalert2-react-content';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
+
 
 const JobApplications = () => {
   const { id } = useParams();
@@ -17,6 +19,7 @@ const JobApplications = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const MySwal = withReactContent(Swal);
+const navigate = useNavigate();
 
 
 const handleViewCV = (cvPath) => {
@@ -519,7 +522,7 @@ const handleViewCV = (cvPath) => {
                     onViewMore={() => setOpenCoverLetter(applications.findIndex(a => a.id === app.id))}
                    onViewProfile={() => {
                     const userId = app.itian?.user_id || app.user_id || app.user?.id || app.iti_id || app.id;
-                    if (userId) window.open(`/itian-profile/${userId}`);
+                    if (userId) navigate(`/itian-profile/${userId}`);
                   }}
                   />
                 ))}

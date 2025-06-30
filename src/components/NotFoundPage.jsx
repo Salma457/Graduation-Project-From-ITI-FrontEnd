@@ -9,12 +9,12 @@ const NotFoundPage = () => {
       <p className="text-lg text-gray-700 mb-8 text-center max-w-md">
         Sorry, the page you are looking for does not exist, was moved, or is temporarily unavailable.
       </p>
-      <Link
+      {/* <Link
         to="/"
         className="px-6 py-3 bg-[#e35d5b] text-white rounded-lg font-semibold text-lg shadow-md hover:bg-[#b53c35] transition-colors duration-150"
       >
         ← Back to Home
-      </Link>
+      </Link> */}
     </div>
   );
 };

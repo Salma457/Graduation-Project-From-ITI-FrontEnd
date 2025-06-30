@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { FaHome, FaUser, FaBriefcase, FaFileAlt, FaBars, FaTimes, FaSignOutAlt, FaExclamationTriangle } from "react-icons/fa";
+import useLogout from '../hooks/useLogout'; // Import the custom logout hook
 import "../css/Navbar.css";
 import Notifications from "./Notification";
 import MessageNotification from "./MessageNotification";
@@ -8,70 +9,70 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { useTranslation } from '../contexts/TranslationContext';
 
 function ItianNavbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [jobsDropdownOpen, setJobsDropdownOpen] = useState(false);
-  
-  // إضافة الترجمة
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null); // 'jobs', 'reports', or null
   const { t } = useTranslation();
-  
-  const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-  const toggleJobsDropdown = () => setJobsDropdownOpen(!jobsDropdownOpen);
+  const handleLogout = useLogout(); // Use the custom logout hook
 
-  const handleLogout = () => {
-    localStorage.removeItem("access-token");
-    window.location.href = "/login";
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  const toggleDropdown = (dropdownName) => {
+    setOpenDropdown(prev => (prev === dropdownName ? null : dropdownName));
+  };
+
+  // Close menus when a link is clicked
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+    setOpenDropdown(null);
   };
 
   return (
     <>
       <nav className="navbar">
         <div className="logo-container">
-          <img src="public/logo.png" alt="Logo" className="logo-img " />
+          <img src="/logo.png" alt="Logo" className="logo-img " />
           <div className="logo-text">
-            <Link to="/">ITIAN</Link>
+            <Link to="/itian" onClick={handleLinkClick}>ITIAN</Link>
           </div>
         </div>
 
-        <div className={`menu ${isOpen ? "open" : ""}`}>
-           <Link to="/itian" className="nav-link">
+        <div className={`menu ${isMobileMenuOpen ? "open" : ""}`}>
+           <Link to="/itian" className="nav-link" onClick={handleLinkClick}>
             <FaHome className="nav-icon" /> {t('navbar.home') || 'Home'}
           </Link>
-          <Link to="/posts" className="nav-link">
+          <Link to="/posts" className="nav-link" onClick={handleLinkClick}>
             <FaFileAlt className="nav-icon" /> {t('navbar.posts') || 'Posts'}
           </Link>
-          <Link to="/itian-profile" className="nav-link">
+          <Link to="/itian-profile" className="nav-link" onClick={handleLinkClick}>
             <FaUser className="nav-icon" /> {t('navbar.profile') || 'My Profile'}
           </Link>
           
-          <Link to="/itian/mychat" className="nav-link">
+          <Link to="/itian/mychat" className="nav-link" onClick={handleLinkClick}>
             <MessageNotification iconClassName="nav-icon" /> {t('navbar.chat') || 'Chat'}
           </Link>
           
-          <div className={`dropdown ${jobsDropdownOpen ? "open" : ""}`} onClick={toggleJobsDropdown}>
-            <button className="dropbtn">
+          <div className={`dropdown ${openDropdown === 'jobs' ? 'open' : ''}`}>
+            <button className="dropbtn" onClick={() => toggleDropdown('jobs')}>
               <FaBriefcase className="nav-icon" /> {t('navbar.jobs') || 'Jobs'}
             </button>
-            <div className="dropdown-content">
-              <Link to="/jobs">
-                <FaFileAlt className="dropdown-icon" /> {t('navbar.allJobs') || 'All Jobs'}
-              </Link>
-              <Link to="/my-applications">
-                <FaFileAlt className="dropdown-icon" /> {t('navbar.myApplications') || 'My Applications'}
-              </Link>
-            </div>
+            {openDropdown === 'jobs' && (
+              <div className="dropdown-content">
+                <Link to="/jobs" onClick={handleLinkClick}><FaFileAlt className="dropdown-icon" /> {t('navbar.allJobs') || 'All Jobs'}</Link>
+                <Link to="/my-applications" onClick={handleLinkClick}><FaFileAlt className="dropdown-icon" /> {t('navbar.myApplications') || 'My Applications'}</Link>
+              </div>
+            )}
           </div>
 
-          {/* New Reports Dropdown */}
-          <div className={`dropdown ${dropdownOpen ? "open" : ""}`} onClick={toggleDropdown}>
-            <button className="dropbtn">
+          <div className={`dropdown ${openDropdown === 'reports' ? 'open' : ''}`}>
+            <button className="dropbtn" onClick={() => toggleDropdown('reports')}>
               <FaExclamationTriangle className="nav-icon" /> {t('navbar.reports') || 'Reports'}
             </button>
-            <div className="dropdown-content">
-              <Link to="/itian/reports/create"><FaFileAlt className="dropdown-icon" /> {t('navbar.createReport') || 'Create Report'}</Link>
-              <Link to="/itian/my-reports"><FaFileAlt className="dropdown-icon" /> {t('navbar.myReports') || 'My Reports'}</Link>
-            </div>
+            {openDropdown === 'reports' && (
+              <div className="dropdown-content">
+                <Link to="/itian/reports/create" onClick={handleLinkClick}><FaFileAlt className="dropdown-icon" /> {t('navbar.createReport') || 'Create Report'}</Link>
+                <Link to="/itian/my-reports" onClick={handleLinkClick}><FaFileAlt className="dropdown-icon" /> {t('navbar.myReports') || 'My Reports'}</Link>
+              </div>
+            )}
           </div>
 
           <div className="notification-wrapper">
@@ -88,8 +89,8 @@ function ItianNavbar() {
           </button>
         </div>
 
-        <button className="toggle-btn" onClick={toggleMenu}>
-          {isOpen ? <FaTimes /> : <FaBars />}
+        <button className="toggle-btn" onClick={toggleMobileMenu}>
+          {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
       </nav>
       <div className="navbar-spacer"></div>

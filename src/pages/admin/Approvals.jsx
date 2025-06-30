@@ -43,6 +43,8 @@ const Approvals = () => {
         },
       });
       setEmployerRequests(empResponse.data);
+            console.log('Employer Data:', empResponse.data);
+
     } catch (error) {
       console.error('Failed to fetch unapproved employers:', error);
     }
@@ -141,12 +143,12 @@ const Approvals = () => {
   useEffect(() => { setEmployerPage(1); }, [employerSearch]);
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-0">
       {loading && <LoaderOverlay text="Loading approvals..." />}
       {!loading && (
         <>
-          <h1 className="text-2xl font-bold mb-2">Approvals</h1>
-          <p className="mb-4">Approve ITIANs and Employers requests to join the platform.</p>
+          {/* <h1 className="text-2xl font-bold mb-2">Approvals</h1>
+          <p className="mb-4">Approve ITIANs and Employers requests to join the platform.</p> */}
           {/* Tab Navigation */}
           <div className="flex gap-2 mb-6">
             <button
@@ -287,67 +289,67 @@ const Approvals = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedEmployers.length > 0 ? paginatedEmployers.map((emp) => (
-                      <tr key={emp.id} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-4">{emp.name}</td>
-                        <td className="py-2 px-4">{emp.email}</td>
-                        <td className="py-2 px-4">{emp.is_active ? 'Active' : 'Inactive'}</td>
-                        <td className="py-2 px-4 flex gap-2">
-                          <button
-                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
-                            onClick={async () => {
-                              setActionLoading(true);
-                              try {
-                                const token = localStorage.getItem('access-token');
-                                console.log(`Approving employer with ID: ${emp.id}`);
-                                await axios.post(`http://127.0.0.1:8000/api/users/${emp.id}/approve-employer`, {}, {
-                                  headers: { Authorization: `Bearer ${token}` },
-                                });
-                                Swal.fire('Approved!', 'The employer has been approved.', 'success');
-                                fetchEmployers();
-                              } catch (error) {
-                                console.error('Failed to approve employer:', error);
-                                Swal.fire('Error!', 'Failed to approve the employer. Please try again.', 'error');
-                              } finally {
-                                setActionLoading(false);
-                              }
-                            }}
-                            disabled={emp.is_active}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
-                            onClick={async () => {
-                              setActionLoading(true);
-                              try {
-                                const token = localStorage.getItem('access-token');
-                                await axios.post(`http://127.0.0.1:8000/api/users/${emp.id}/reject-employer`, {}, {
-                                  headers: { Authorization: `Bearer ${token}` },
-                                });
-                                Swal.fire('Rejected!', 'The employer has been rejected.', 'success');
-                                fetchEmployers();
-                              } catch (error) {
-                                console.error('Failed to reject employer:', error);
-                                Swal.fire('Error!', 'Failed to reject the employer. Please try again.', 'error');
-                              } finally {
-                                setActionLoading(false);
-                              }
-                            }}
-                            disabled={emp.is_active}
-                          >
-                            Reject
-                          </button>
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={4} className="text-center py-4 text-gray-500">
-                          No unapproved employers found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                  {paginatedEmployers.length > 0 ? paginatedEmployers.map((emp) => (
+                    <tr key={emp.id} className="border-b hover:bg-gray-50">
+                      <td className="py-2 px-4">{emp.user?.name}</td>
+                      <td className="py-2 px-4">{emp.user?.email}</td>
+                      <td className="py-2 px-4">{emp.user?.is_active ? 'Active' : 'Inactive'}</td>
+                      <td className="py-2 px-4 flex gap-2">
+                        <button
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+                          onClick={async () => {
+                            setActionLoading(true);
+                            try {
+                              const token = localStorage.getItem('access-token');
+                              await axios.post(`http://127.0.0.1:8000/api/users/${emp.user.id}/approve-employer`, {}, {
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+                              Swal.fire('Approved!', 'The employer has been approved.', 'success');
+                              fetchEmployers();
+                            } catch (error) {
+                              console.error('Failed to approve employer:', error);
+                              Swal.fire('Error!', 'Failed to approve the employer. Please try again.', 'error');
+                            } finally {
+                              setActionLoading(false);
+                            }
+                          }}
+                          disabled={emp.user?.is_active}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+                          onClick={async () => {
+                            setActionLoading(true);
+                            try {
+                              const token = localStorage.getItem('access-token');
+                              await axios.post(`http://127.0.0.1:8000/api/users/${emp.user.id}/reject-employer`, {}, {
+                                headers: { Authorization: `Bearer ${token}` },
+                              });
+                              Swal.fire('Rejected!', 'The employer has been rejected.', 'success');
+                              fetchEmployers();
+                            } catch (error) {
+                              console.error('Failed to reject employer:', error);
+                              Swal.fire('Error!', 'Failed to reject the employer. Please try again.', 'error');
+                            } finally {
+                              setActionLoading(false);
+                            }
+                          }}
+                          disabled={emp.user?.is_active}
+                        >
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="text-center py-4 text-gray-500">
+                        No unapproved employers found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+
                 </table>
               </div>
               {/* Pagination for Employers */}

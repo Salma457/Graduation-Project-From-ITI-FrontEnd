@@ -336,7 +336,7 @@ const MyReportsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br ">
       {renderNavbar()}
       
       <div className="container mx-auto px-4 py-8">
@@ -485,7 +485,7 @@ const MyReportsPage = () => {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && reportToDelete && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="fixed inset-0 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/3 shadow-lg rounded-md bg-white">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-gray-900">Confirm Deletion</h3>
@@ -522,7 +522,7 @@ const MyReportsPage = () => {
 
         {/* Report Details Modal */}
         {showDetailsModal && selectedReport && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="fixed inset-0  bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900">Report Details</h3>

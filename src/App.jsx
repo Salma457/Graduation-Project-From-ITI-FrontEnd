@@ -2,75 +2,83 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import store from "./store";
-// import store from './applicationStore';
 import "./App.css";
+import useAuthInit from './hooks/useAuthInit';
 
 // Layouts
 import NoLayout from "./pages/layouts/NoLayout";
 import ItianLayout from "./pages/layouts/ItianLayout";
 import EmployerLayout from "./pages/layouts/EmployerLayout";
-import AdminLayout from "./pages/layouts/AdminLayout.jsx"; // Default import
+import AdminLayout from "./pages/layouts/AdminLayout";
+import WithoutLoginLayout from './pages/layouts/layoutWithoutLogin';
 
-// Redux actions
-import { fetchItianProfile } from "./store/itianProfileSlice";
-import { fetchEmployerProfile } from "./store/employerProfileSlice";
+// Route Protectors
+import PrivateRoute from "./components/auth/PrivateRoute";
+import PublicRoute from "./components/auth/PublicRoute";
+import AdminRoute from "./components/auth/AdminRoute";
+import ItianRoute from "./components/auth/ItianRoute";
+import EmployerRoute from "./components/auth/EmployerRoute";
 
-// Auth
-import Register from "./pages/Register.jsx";
-import Login from "./pages/Login.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
+// Components
+import LoaderOverlay from "./components/LoaderOverlay";
+import Unauthorized from "./pages/Unauthorized";
+import NotFoundPage from "./components/NotFoundPage";
 
-// Employer
-import PostJob from "./pages/Employer/pages/PostJob.jsx";
+// Auth Pages
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
+
+// Admin
+import adminRoutes from "./pages/admin/adminRoutes";
+
+// Employer Pages
+import PostJob from "./pages/Employer/pages/PostJob";
 import JobList from "./pages/Employer/pages/DisplayJob";
 import TrashPage from "./pages/Employer/pages/TrashPage";
 import JobDetails from "./pages/Employer/pages/JobDetails";
 import JobApplications from "./pages/Employer/pages/JobApplications";
 import ChatApp from "./pages/Employer/pages/ChatApp";
-// Admin
-import adminRoutes from "./pages/admin/adminRoutes.jsx";
 
-// Payment
-import PaymentPage from "./pages/PaymentPage.jsx";
+// Itian Pages
+import JobsPage from "./pages/Itian/JobsPage";
+import JobDetailsPublic from "./pages/Itian/JobDetails";
+import ApplyForm from "./pages/Itian/ApplyForm";
+import MyApplications from "./pages/Itian/MyApplications";
+import ProposalDetails from "./pages/Itian/ProposalDetails";
 
-// Posts
-import PostsList from "./Posts/components/posts/PostList.jsx";
-import MyPostsPage from "./Posts/components/posts/MyPostsPage.jsx";
-
-// Itian
-import JobsPage from "./pages/Itian/JobsPage.jsx";
-import JobDetailsPublic from "./pages/Itian/JobDetails.jsx";
-import ApplyForm from "./pages/Itian/ApplyForm.jsx";
-import MyApplications from "./pages/Itian/MyApplications.jsx";
-import ProposalDetails from "./pages/Itian/ProposalDetails.jsx";
-
-// Profiles
+// Profile Pages
 import CreateEmployerProfile from './pages/profiles/CreateEmployerProfile';
-import EmployerProfile from './pages/profiles/EmployerProfile.jsx';
+import EmployerProfile from './pages/profiles/EmployerProfile';
 import CreateItianProfile from './pages/profiles/CreateItianProfile';
-import ItianProfile from './pages/profiles/ItianProfile.jsx';
+import ItianProfile from './pages/profiles/ItianProfile';
 import ViewItianProfile from './pages/profiles/ViewItianProfile';
-import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile.jsx';
-import WithoutLoginLayout from './pages/layouts/layoutWithoutLogin.jsx'
-import useAuthInit from './hooks/useAuthInit';
+import ViewEmployerProfile from './pages/profiles/ViewEmployerProfile';
 
-// RAG Search
-import RagChat from "./AI Chat/RagChat.jsx";
-import ChatbotButton from "./AI Chat/ChatbotButton.jsx";
-// Report Page
-import LandingPageContent from "./pages/homePage/app/page"
-// import ReportsPage from './pages/ReportsPage.jsx';          // للمستخدم العادي (ITian/Employer)
-import CreateReportPage from "./pages/CreateReportPage"; // لإنشاء التقارير
+// Redux Actions for Profiles
+import { fetchItianProfile } from "./store/itianProfileSlice";
+import { fetchEmployerProfile } from "./store/employerProfileSlice";
+// Other Pages
+import LandingPageContent from "./pages/homePage/app/page";
+import PaymentPage from "./pages/PaymentPage";
+import PostsList from "./Posts/components/posts/PostList";
+import MyPostsPage from "./Posts/components/posts/MyPostsPage";
+import RagChat from "./AI Chat/RagChat";
+import ChatbotButton from "./AI Chat/ChatbotButton";
+import CreateReportPage from "./pages/CreateReportPage";
+import MyReportsPage from "./pages/MyReportsPage";
+import EmailVerifiedSuccess from "./pages/EmailVerifiedSuccess";
+import EmailVerificationFailed from "./pages/EmailVerificationFailed";
 
-import MyReportsPage from "./pages/MyReportsPage.jsx"; // لعرض التقارير الخاصة بالمستخدم
-  import NotFoundPage from "./components/NotFoundPage.jsx"
-function App() {
+function AppContent() {
   useAuthInit();
+  const isLoading = useSelector((state) => state.user.isLoading);
   const user = useSelector((state) => state.user.user);
   const dispatch = useDispatch();
 
+  // Fetch user-specific profile data after login
   useEffect(() => {
-    if (user) {
+    if (user && user.id) {
       if (user.role === "itian") {
         dispatch(fetchItianProfile(user.id));
       } else if (user.role === "employer") {
@@ -79,129 +87,100 @@ function App() {
     }
   }, [user, dispatch]);
 
+  if (isLoading) {
+    return <LoaderOverlay text="Checking authentication..." />;
+  }
+
   return (
-       <Provider store={store}>
-      <Router>
-        <Routes>
-          {/* No Layout - Auth */}
-          <Route element={<NoLayout />}>
-            <Route path="/register" element={<Register />} />
+    <Router>
+      <Routes>
+          {/* Public Routes (No auth required) */}
+          <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
+          {/* Add these two new routes for email verification */}
+          <Route path="/email-verified-successfully" element={<EmailVerifiedSuccess />} />
+          <Route path="/email-verification-failed" element={<EmailVerificationFailed />} />
 
-          {/* Public Landing */}
-          <Route element={<WithoutLoginLayout />}>
-            <Route path="/" element={<LandingPageContent />} />
+          {/* Public Landing Page */}
+          <Route path="/" element={<WithoutLoginLayout />}>
+            <Route index element={<LandingPageContent />} />
+            
+            {/* Public Profile Views */}
+            <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+            <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
           </Route>
 
-          {/* Admin */}
-          <Route element={<AdminLayout />}>{adminRoutes}</Route>
-
-          {/* Itian Layout */}
-          <Route element={<ItianLayout />}>
-            <Route path="/itian" element={<LandingPageContent />} />
-            <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/jobs/:id" element={<JobDetailsPublic />} />
-            <Route path="/apply/:id" element={<ApplyForm />} />
-            <Route path="/my-applications" element={<MyApplications />} />
-            <Route path="/my-applications/:id" element={<ProposalDetails />} />
-            <Route path="/posts" element={<PostsList />} />
-            <Route path="/my-posts" element={<MyPostsPage />} />
-            <Route path="/itian-profile" element={<ItianProfile />} />
-            <Route
-              path="/create-itian-profile"
-              element={<CreateItianProfile />}
-            />
-            <Route path="/itian/mychat" element={<ChatApp />} />
-            <Route
-              path="/employer-public-profile/:username"
-              element={<ViewEmployerProfile />}
-            />
-            <Route
-              path="/employer-profile/:userId"
-              element={<ViewEmployerProfile />}
-            />
-            <Route
-              path="/employer-profiles/:userId"
-              element={<ViewEmployerProfile />}
-            />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminRoute />}>
+            <Route element={<AdminLayout />}>
+              {adminRoutes}
+            </Route>
           </Route>
 
-          {/* Employer Layout */}
-          <Route element={<EmployerLayout />}>
-            <Route path="/employer" element={<LandingPageContent />} />
-            <Route path="/employer/post-job" element={<PostJob />} />
-            <Route path="/employer/jobs" element={<JobList />} />
-            <Route path="/employer/trash" element={<TrashPage />} />
-            <Route path="/employer/job/:id" element={<JobDetails />} />
-            <Route
-              path="/employer/job/:id/applications"
-              element={<JobApplications />}
-            />
-            <Route path="/employer/mychat" element={<ChatApp />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/employer-profile" element={<EmployerProfile />} />
-            <Route
-              path="/create-employer-profile"
-              element={<CreateEmployerProfile />}
-            />
-            <Route
-              path="/itian-profile/:userId"
-              element={<ViewItianProfile />}
-            />
-            <Route path="/profile/:username" element={<ViewItianProfile />} />
+          {/* Itian Routes */}
+          <Route element={<ItianRoute />}>
+            <Route element={<ItianLayout />}>
+              <Route path="/itian" element={<LandingPageContent />} />
+              <Route path="/jobs" element={<JobsPage />} />
+              <Route path="/jobs/:id" element={<JobDetailsPublic />} />
+              <Route path="/apply/:id" element={<ApplyForm />} />
+              <Route path="/my-applications" element={<MyApplications />} />
+              <Route path="/my-applications/:id" element={<ProposalDetails />} />
+              <Route path="/posts" element={<PostsList />} />
+              <Route path="/my-posts" element={<MyPostsPage />} />
+              <Route path="/itian-profile" element={<ItianProfile />} />
+              <Route path="/create-itian-profile" element={<CreateItianProfile />} />
+              <Route path="/itian/mychat" element={<ChatApp />} />
+              <Route path="/itian/reports/create" element={<CreateReportPage />} />
+              <Route path="/itian/my-reports" element={<MyReportsPage />} />
+              {/* Allow Itian to view employer profiles */}
+              <Route path="/employer-profile/:userId" element={<ViewEmployerProfile />} />
+            </Route>
           </Route>
 
-          {/* 🟪 Public profiles (outside layout or custom later) */}
-          <Route
-            path="/create-employer-profile"
-            element={<CreateEmployerProfile />}
-          />
-          <Route path="/employer-profile" element={<EmployerProfile />} />
-          <Route
-            path="/employer-public-profile/:username"
-            element={<ViewEmployerProfile />}
-          />
-          <Route
-            path="/employer-profiles/:userId"
-            element={<ViewEmployerProfile />}
-          />
-          <Route
-            path="/create-itian-profile"
-            element={<CreateItianProfile />}
-          />
-          <Route path="/itian-profile" element={<ItianProfile />} />
-          <Route
-            path="/employer-profile/:userId"
-            element={<ViewEmployerProfile />}
-          />
-          <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
-          <Route path="/profile/:username" element={<ViewItianProfile />} />
+          {/* Employer Routes */}
+          <Route element={<EmployerRoute />}>
+            <Route element={<EmployerLayout />}>
+              <Route path="/employer" element={<LandingPageContent />} />
+              <Route path="/employer/post-job" element={<PostJob />} />
+              <Route path="/employer/jobs" element={<JobList />} />
+              <Route path="/employer/trash" element={<TrashPage />} />
+              <Route path="/employer/job/:id" element={<JobDetails />} />
+              <Route path="/employer/job/:id/applications" element={<JobApplications />} />
+              <Route path="/employer/mychat" element={<ChatApp />} />
+              <Route path="/payment" element={<PaymentPage />} />
+              <Route path="/employer-profile" element={<EmployerProfile />} />
+              <Route path="/create-employer-profile" element={<CreateEmployerProfile />} />
+              <Route path="/employer/reports/create" element={<CreateReportPage />} />
+              <Route path="/employer/my-reports" element={<MyReportsPage />} />
+              {/* Allow Employer to view itian profiles */}
+              <Route path="/itian-profile/:userId" element={<ViewItianProfile />} />
+            </Route>
+          </Route>
 
-          {/* cahtAI route */}
-          <Route path="/rag" element={<RagChat />} />
-          {/* <Route path="/reports" element={<ReportsPage />} /> */}
-          <Route path="/reports/create" element={<CreateReportPage />} />
+          {/* AI Chat Route (for any authenticated user) */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/rag" element={<RagChat />} />
+          </Route>
 
-          {/* For Admin */}
-          {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
-          
-
-          {/* <Route path="/reportss" element={<ReportsPage />} /> */}
-          {/* <Route path="/admin/reports" element={<AdminReportPage />} /> */}
-          {/* Standalone Routes */}
-          <Route path="/itian/reports/create" element={<CreateReportPage />} />
-    
-          <Route path="/itian/my-reports" element={<MyReportsPage />} />
-          <Route path="/employer/reports/create" element={<CreateReportPage />} />
-    
-          <Route path="/employer/my-reports" element={<MyReportsPage />} />
+          {/* Error Pages */}
+          <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-        {user && <ChatbotButton />}
-
+        
+        {/* Chatbot Button (shown when authenticated) */}
+        {user && user.id && <ChatbotButton />}
       </Router>
+  );
+}
+
+function App() {
+  return (
+    <Provider store={store}>
+      <AppContent />
     </Provider>
   );
 }
