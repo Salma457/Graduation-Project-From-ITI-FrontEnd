@@ -43,6 +43,7 @@ const AdminReportsPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [loadingButton, setLoadingButton] = useState(null); 
 
   const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -203,6 +204,7 @@ const AdminReportsPage = () => {
 
   const updateReportStatus = async (reportId, status) => {
     try {
+      setLoadingButton(status + reportId); // Set loading for this button only
       setActionLoading(true);
       await apiCall(`${API_BASE_URL}/reports/${reportId}/status`, {
         method: 'PATCH',
@@ -227,6 +229,7 @@ const AdminReportsPage = () => {
       Swal.fire('Error!', 'Failed to update the report status.', 'error');
     } finally {
       setActionLoading(false);
+      setLoadingButton(null);
     }
   };
 
@@ -242,6 +245,7 @@ const AdminReportsPage = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
+          setLoadingButton('delete' + reportId); // Set loading for this button only
           setActionLoading(true);
           await apiCall(`${API_BASE_URL}/reports/${reportId}`, { method: 'DELETE' });
           
@@ -258,6 +262,7 @@ const AdminReportsPage = () => {
           Swal.fire('Error!', 'Failed to delete the report.', 'error');
         } finally {
           setActionLoading(false);
+          setLoadingButton(null);
         }
       }
     });
@@ -610,7 +615,7 @@ const AdminReportsPage = () => {
                       disabled={actionLoading}
                       className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                      {loadingButton === 'delete' + selectedReport.report_id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
                       Delete
                     </button>
                     {selectedReport.report_status === 'Pending' && (
@@ -620,7 +625,7 @@ const AdminReportsPage = () => {
                           disabled={actionLoading}
                           className="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-600 bg-white hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+                          {loadingButton === 'Resolved' + selectedReport.report_id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
                           Resolve
                         </button>
                         <button
@@ -628,7 +633,7 @@ const AdminReportsPage = () => {
                           disabled={actionLoading}
                           className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-600 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {actionLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
+                          {loadingButton === 'Rejected' + selectedReport.report_id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
                           Reject
                         </button>
                       </div>
