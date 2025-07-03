@@ -88,6 +88,8 @@ const AdminReportsPage = () => {
       } else {
         console.error('Unexpected API response structure:', data);
       }
+      // Sort reports so newest is first
+      reportsData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setReports(reportsData);
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -484,7 +486,9 @@ const AdminReportsPage = () => {
                 >
                   <div className="p-4 pb-2 flex justify-between items-start">
                     <div className="w-8 h-8 bg-[#d0443c] rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">{(currentPage - 1) * itemsPerPage + index + 1}</span>
+                      <span className="text-white text-sm font-bold">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(report.report_status)}
