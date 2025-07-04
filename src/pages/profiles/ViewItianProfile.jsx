@@ -23,6 +23,7 @@ import {
   Link,
   Phone,
 } from "lucide-react";
+import ItianNavbar from "../../components/ItianNavbar";
 
 const ViewItianProfile = () => {
   const { userId } = useParams();
@@ -178,6 +179,7 @@ const ViewItianProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <ItianNavbar />
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Profile Card */}
