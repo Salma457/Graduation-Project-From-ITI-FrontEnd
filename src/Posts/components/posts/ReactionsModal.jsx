@@ -127,7 +127,7 @@ const ReactionsModal = ({ postId, onClose, isOpen, darkMode = false }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       >
         {/* Backdrop */}
         <motion.div
@@ -332,14 +332,6 @@ className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
                           >
                             {user.name}
                           </motion.h4>
-                          <motion.p
-                            className={`text-xs ${
-                              darkMode ? "text-gray-400" : "text-gray-500"
-                            }`}
-                            whileHover={{ x: 2 }}
-                          >
-                            {formatDate(user.reacted_at)}
-                          </motion.p>
                         </div>
                       </Link>
 
