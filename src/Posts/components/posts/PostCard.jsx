@@ -107,41 +107,52 @@ const PostCard = memo(
       setShowOptions(false);
     }, [onEditClick, post]);
 
-    const UserAvatar = () => (
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="relative cursor-pointer"
-        onClick={handleProfileClick}
-      >
-        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center overflow-hidden ring-2 ring-white group-hover:ring-red-300 transition-all duration-300">
-          {post.itian.profile_picture ? (
-            <motion.img
-              src={`http://localhost:8000/storage/${post.itian.profile_picture}`}
-              alt="Profile"
-              className="h-full w-full object-cover"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            />
-          ) : (
-            <span className="text-red-600 font-semibold text-xl">
-              {post.itian.first_name?.charAt(0)}
-            </span>
+    const UserAvatar = () => {
+      const [imgError, setImgError] = useState(false);
+      const firstName = post.itian.first_name || "";
+      const lastName = post.itian.last_name || "";
+      const initials =
+        (
+          firstName.charAt(0) + (lastName ? lastName.charAt(0) : "")
+        ).toUpperCase() || "U";
+      const hasProfilePic = post.itian.profile_picture && !imgError;
+      return (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative cursor-pointer"
+          onClick={handleProfileClick}
+        >
+          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center overflow-hidden ring-2 ring-white group-hover:ring-red-300 transition-all duration-300">
+            {hasProfilePic ? (
+              <motion.img
+                src={`http://localhost:8000/storage/${post.itian.profile_picture}`}
+                alt="Profile"
+                className="h-full w-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <span className="text-red-600 font-semibold text-xl">
+                {initials}
+              </span>
+            )}
+          </div>
+          {userReaction && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileHover={{ scale: 1.1 }}
+              className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm"
+            >
+              <span className="text-sm">{reactionIcons[userReaction]}</span>
+            </motion.div>
           )}
-        </div>
-        {userReaction && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.1 }}
-            className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-sm"
-          >
-            <span className="text-sm">{reactionIcons[userReaction]}</span>
-          </motion.div>
-        )}
-      </motion.div>
-    );
+        </motion.div>
+      );
+    };
 
     const PostOptions = () => (
       <div className="relative">

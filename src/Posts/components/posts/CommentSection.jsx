@@ -51,6 +51,7 @@ const CommentSection = ({ postId }) => {
     perPage: 5,
     total: 0,
   });
+  const [imgErrorMap, setImgErrorMap] = useState({});
 
   // Load initial comments
   useEffect(() => {
@@ -283,28 +284,40 @@ const CommentSection = ({ postId }) => {
           <div className="flex justify-between items-start">
             <div className="flex items-center space-x-3">
               {/* Avatar clickable for profile navigation */}
-              {comment.user.profile_picture ? (
-                <motion.img
-                  whileHover={{ scale: 1.05 }}
-                  src={`http://localhost:8000/storage/${comment.user.profile_picture}`}
-                  alt="Profile"
-                  className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md cursor-pointer"
-                  onClick={() => handleProfileClick(comment.user.id)}
-                />
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="h-10 w-10 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-lg shadow-md cursor-pointer"
-                  onClick={() => handleProfileClick(comment.user.id)}
-                >
-                  {(
+              {(() => {
+                const initials =
+                  (
                     (comment.user.first_name || "").charAt(0) +
                     (comment.user.last_name
                       ? comment.user.last_name.charAt(0)
                       : "")
-                  ).toUpperCase() || "U"}
-                </motion.div>
-              )}
+                  ).toUpperCase() || "U";
+                const hasProfilePic =
+                  comment.user.profile_picture && !imgErrorMap[comment.id];
+                return hasProfilePic ? (
+                  <motion.img
+                    whileHover={{ scale: 1.05 }}
+                    src={`http://localhost:8000/storage/${comment.user.profile_picture}`}
+                    alt="Profile"
+                    className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-md cursor-pointer"
+                    onClick={() => handleProfileClick(comment.user.id)}
+                    onError={() =>
+                      setImgErrorMap((prev) => ({
+                        ...prev,
+                        [comment.id]: true,
+                      }))
+                    }
+                  />
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="h-10 w-10 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-lg shadow-md cursor-pointer"
+                    onClick={() => handleProfileClick(comment.user.id)}
+                  >
+                    {initials}
+                  </motion.div>
+                );
+              })()}
               <div>
                 {/* Name clickable for profile navigation */}
                 <h4
