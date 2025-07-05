@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchEmployerJobs, deleteJob, restoreJob } from "../jobPostSlice";
+import { fetchEmployerJobs, forceDeleteJob, restoreJob } from "../jobPostSlice";
 import Swal from "sweetalert2";
 import { Trash2, RotateCcw, Calendar, MapPin, DollarSign, Clock, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -46,7 +46,7 @@ const TrashPage = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Handler for permanent delete
-  const handlePermanentDelete = (jobId, jobTitle) => {
+  const handlePermanentDelete = async (jobId, jobTitle) => {
     Swal.fire({
       title: 'Permanent Deletion',
       html: `
@@ -69,22 +69,33 @@ const TrashPage = () => {
         confirmButton: 'swal-confirm-delete',
         cancelButton: 'swal-cancel-button'
       }
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        dispatch(deleteJob(jobId));
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'The job has been permanently removed.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
+        try {
+          await dispatch(forceDeleteJob(jobId)).unwrap();
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'The job has been permanently removed.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          dispatch(fetchEmployerJobs()); // تحديث البيانات بعد الحذف النهائي
+        } catch (err) {
+          Swal.fire({
+            title: 'Error',
+            text: err?.message || 'Failed to delete job.',
+            icon: 'error',
+            timer: 3000,
+            showConfirmButton: true
+          });
+        }
       }
     });
   };
 
   // Handler for restore job
-  const handleRestore = (jobId, jobTitle) => {
+  const handleRestore = async (jobId, jobTitle) => {
     Swal.fire({
       title: 'Restore Job',
       html: `
@@ -102,16 +113,27 @@ const TrashPage = () => {
       cancelButtonColor: '#6b7280',
       confirmButtonText: '<i class="fas fa-undo"></i> Restore Job',
       cancelButtonText: 'Cancel'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        dispatch(restoreJob(jobId));
-        Swal.fire({
-          title: 'Restored!',
-          text: 'The job has been restored to your job list.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
+        try {
+          await dispatch(restoreJob(jobId)).unwrap();
+          Swal.fire({
+            title: 'Restored!',
+            text: 'The job has been restored to your job list.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          dispatch(fetchEmployerJobs()); // تحديث البيانات بعد الريستور
+        } catch (err) {
+          Swal.fire({
+            title: 'Error',
+            text: err?.message || 'Failed to restore job.',
+            icon: 'error',
+            timer: 3000,
+            showConfirmButton: true
+          });
+        }
       }
     });
   };
@@ -137,16 +159,26 @@ const TrashPage = () => {
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Empty Trash',
       cancelButtonText: 'Cancel'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        trashedJobs.forEach(job => dispatch(deleteJob(job.id)));
-        Swal.fire({
-          title: 'Trash Emptied!',
-          text: 'All jobs have been permanently deleted.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
+        try {
+          await Promise.all(trashedJobs.map(job => dispatch(forceDeleteJob(job.id)).unwrap()));
+          Swal.fire({
+            title: 'Trash Emptied!',
+            text: 'All jobs have been permanently deleted.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } catch (err) {
+          Swal.fire({
+            title: 'Error',
+            text: err?.message || 'Failed to empty trash.',
+            icon: 'error',
+            timer: 3000,
+            showConfirmButton: true
+          });
+        }
       }
     });
   };

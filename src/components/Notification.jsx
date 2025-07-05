@@ -127,7 +127,7 @@ const Notifications = () => {
 
         {/* Notifications Dropdown */}
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 transform origin-top-right">
+<div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 origin-top">
             
             {/* Header */}
             <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-red-50 to-pink-50 rounded-t-2xl">

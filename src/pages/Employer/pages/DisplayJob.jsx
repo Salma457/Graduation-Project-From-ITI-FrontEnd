@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchEmployerData, editJob, deleteJob } from '../jobPostSlice';
+import { fetchEmployerData, editJob, softDeleteJob } from '../jobPostSlice';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
 import { Sparkles, ChevronLeft, ChevronRight, Building2, MapPin, Calendar, Users } from 'lucide-react';
@@ -175,10 +175,15 @@ const isJobExpired = (job) => {
       confirmButtonColor: '#b91c1c',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, move to trash!'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        dispatch(deleteJob(jobId));
-        Swal.fire('Moved!', 'The job is now in trash.', 'success');
+        try {
+          await dispatch(softDeleteJob(jobId)).unwrap();
+          Swal.fire('Moved!', 'The job is now in trash.', 'success');
+          dispatch(fetchEmployerData()); // تحديث البيانات بعد الحذف مباشرة
+        } catch (err) {
+          Swal.fire('Error', err?.message || 'Failed to move job to trash.', 'error');
+        }
       }
     });
   };

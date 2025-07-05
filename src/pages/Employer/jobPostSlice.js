@@ -130,7 +130,7 @@ export const deleteJob = createAsyncThunk(
         throw new Error('Authentication token not found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/force-delete`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -145,6 +145,26 @@ export const deleteJob = createAsyncThunk(
         message: error.message || 'Failed to delete job',
         status: error.status
       });
+    }
+  }
+);
+export const softDeleteJob = createAsyncThunk(
+  'jobPost/softDeleteJob',
+  async (jobId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('access-token');
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      await handleApiResponse(response);
+      return jobId;
+    } catch (error) {
+      return rejectWithValue({ message: error.message || 'Failed to soft delete' });
     }
   }
 );
@@ -329,6 +349,19 @@ const jobPostSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      // Force Delete Job
+      .addCase(forceDeleteJob.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forceDeleteJob.fulfilled, (state, action) => {
+        state.loading = false;
+        state.jobs = state.jobs.filter(job => job.id !== action.payload);
+      })
+      .addCase(forceDeleteJob.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
       // Fetch Employer Jobs
       .addCase(fetchEmployerJobs.pending, (state) => {
@@ -428,6 +461,26 @@ const jobPostSlice = createSlice({
       });
   }
 });
+export const forceDeleteJob = createAsyncThunk(
+  'jobPost/forceDeleteJob',
+  async (jobId, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('access-token');
+      const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/force-delete`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      await handleApiResponse(response);
+      return jobId;
+    } catch (error) {
+      return rejectWithValue({ message: error.message || 'Failed to permanently delete job' });
+    }
+  }
+);
 
 export const { resetJobState, clearJobDetails } = jobPostSlice.actions;
 export default jobPostSlice.reducer;

@@ -19,6 +19,8 @@ import {
   FiMessageSquare,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom"; // Added for navigation
+import DeleteCommentModal from "./DeleteCommentModal";
+import { createPortal } from "react-dom";
 
 const CommentSection = ({ postId }) => {
   const dispatch = useDispatch();
@@ -295,7 +297,12 @@ const CommentSection = ({ postId }) => {
                   className="h-10 w-10 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-lg shadow-md cursor-pointer"
                   onClick={() => handleProfileClick(comment.user.id)}
                 >
-                  {comment.user.name?.charAt(0) || "U"}
+                  {(
+                    (comment.user.first_name || "").charAt(0) +
+                    (comment.user.last_name
+                      ? comment.user.last_name.charAt(0)
+                      : "")
+                  ).toUpperCase() || "U"}
                 </motion.div>
               )}
               <div>
@@ -448,7 +455,10 @@ const CommentSection = ({ postId }) => {
                 />
               ) : (
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-sm shadow-sm">
-                  {user?.first_name?.charAt(0) || "Y"}
+                  {(
+                    (user?.first_name || "").charAt(0) +
+                    (user?.last_name ? user.last_name.charAt(0) : "")
+                  ).toUpperCase() || "Y"}
                 </div>
               )}
               <div className="flex-1">
@@ -525,193 +535,158 @@ const CommentSection = ({ postId }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4">
-      {/* Comment Input */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white rounded-xl shadow-sm p-6 mb-6"
-      >
-        <div className="flex items-start space-x-4">
-          {user?.profile_picture ? (
-            <motion.img
-              whileHover={{ scale: 1.05 }}
-              src={`http://localhost:8000/storage/${user.profile_picture}`}
-              alt="Profile"
-              className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-md"
-            />
-          ) : (
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="h-12 w-12 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-xl shadow-md"
-            >
-              {user?.name?.charAt(0) || "Y"}
-            </motion.div>
-          )}
-
-          <div className="flex-1 space-y-3">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Share your thoughts..."
-              className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all shadow-sm"
-              rows={3}
-            />
-            <div className="flex justify-end">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleAddComment}
-                className={`px-5 py-2.5 rounded-xl transition-all shadow-sm flex items-center space-x-2 ${
-                  newComment.trim()
-                    ? "bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600"
-                    : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                }`}
-                disabled={!newComment.trim()}
-              >
-                <FiSend size={18} />
-                <span>Post Comment</span>
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Comments Count */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="flex items-center mb-6"
-      >
-        <div className="h-px bg-gray-200 flex-1"></div>
-        <span className="px-4 text-gray-500 font-medium">
-          {pagination.total} {pagination.total === 1 ? "Comment" : "Comments"}
-        </span>
-        <div className="h-px bg-gray-200 flex-1"></div>
-      </motion.div>
-
-      {/* Comments List */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="h-10 w-10 rounded-full border-4 border-red-500 border-t-transparent"
-          ></motion.div>
-        </div>
-      ) : error ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-3">
-            <FiX className="h-6 w-6 text-red-500" />
-          </div>
-          <p className="text-red-500">{error}</p>
-        </div>
-      ) : comments.length === 0 ? (
+    <>
+      {createPortal(
+        <DeleteCommentModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteComment}
+        />,
+        document.body
+      )}
+      <div className="max-w-3xl mx-auto px-4">
+        {/* Comment Input */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-12 bg-white rounded-xl p-6 shadow-sm"
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-xl shadow-sm p-6 mb-6"
         >
-          <div className="mx-auto h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-            <FiSend className="h-6 w-6 text-red-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">
-            No comments yet
-          </h3>
-          <p className="text-gray-500">Be the first to share what you think!</p>
-        </motion.div>
-      ) : (
-        <div className="space-y-6">
-          {comments.map((comment) => renderComment(comment))}
-
-          {/* Load More Button */}
-          {pagination.currentPage < pagination.lastPage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex justify-center pt-4"
-            >
-              <motion.button
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={loadMoreComments}
-                disabled={loadingMore}
-                className={`px-5 py-2.5 rounded-xl flex items-center space-x-2 transition-all ${
-                  loadingMore
-                    ? "bg-gray-100 text-gray-500"
-                    : "bg-white border border-gray-200 text-gray-700 hover:border-red-300 hover:text-red-600 shadow-sm"
-                }`}
+          <div className="flex items-start space-x-4">
+            {user?.profile_picture ? (
+              <motion.img
+                whileHover={{ scale: 1.05 }}
+                src={`http://localhost:8000/storage/${user.profile_picture}`}
+                alt="Profile"
+                className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-md"
+              />
+            ) : (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="h-12 w-12 rounded-full bg-gradient-to-br from-red-100 to-red-300 flex items-center justify-center text-red-600 font-bold text-xl shadow-md"
               >
-                {loadingMore ? (
-                  <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-500 mr-2"></span>
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <FiChevronDown />
-                    <span>Load more comments</span>
-                  </>
-                )}
-              </motion.button>
-            </motion.div>
-          )}
-        </div>
-      )}
+                {(
+                  (user?.first_name || "").charAt(0) +
+                  (user?.last_name ? user.last_name.charAt(0) : "")
+                ).toUpperCase() || "Y"}
+              </motion.div>
+            )}
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 overflow-hidden"
-            >
-              <div className="text-center space-y-5">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
-                  <FiTrash2 className="h-6 w-6 text-red-600" />
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Delete comment?
-                  </h3>
-                  <p className="text-gray-500 mt-2">
-                    This will permanently remove the comment and all its
-                    replies.
-                  </p>
-                </div>
-
-                <div className="flex justify-center space-x-3 pt-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-5 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-all text-sm"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleDeleteComment}
-                    className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm shadow-sm"
-                  >
-                    Delete
-                  </motion.button>
-                </div>
+            <div className="flex-1 space-y-3">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Share your thoughts..."
+                className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all shadow-sm"
+                rows={3}
+              />
+              <div className="flex justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAddComment}
+                  className={`px-5 py-2.5 rounded-xl transition-all shadow-sm flex items-center space-x-2 ${
+                    newComment.trim()
+                      ? "bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600"
+                      : "bg-gray-100 text-gray-500 cursor-not-allowed"
+                  }`}
+                  disabled={!newComment.trim()}
+                >
+                  <FiSend size={18} />
+                  <span>Post Comment</span>
+                </motion.button>
               </div>
-            </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Comments Count */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center mb-6"
+        >
+          <div className="h-px bg-gray-200 flex-1"></div>
+          <span className="px-4 text-gray-500 font-medium">
+            {pagination.total} {pagination.total === 1 ? "Comment" : "Comments"}
+          </span>
+          <div className="h-px bg-gray-200 flex-1"></div>
+        </motion.div>
+
+        {/* Comments List */}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="h-10 w-10 rounded-full border-4 border-red-500 border-t-transparent"
+            ></motion.div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-3">
+              <FiX className="h-6 w-6 text-red-500" />
+            </div>
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : comments.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-12 bg-white rounded-xl p-6 shadow-sm"
+          >
+            <div className="mx-auto h-16 w-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+              <FiSend className="h-6 w-6 text-red-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              No comments yet
+            </h3>
+            <p className="text-gray-500">
+              Be the first to share what you think!
+            </p>
+          </motion.div>
+        ) : (
+          <div className="space-y-6">
+            {comments.map((comment) => renderComment(comment))}
+
+            {/* Load More Button */}
+            {pagination.currentPage < pagination.lastPage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex justify-center pt-4"
+              >
+                <motion.button
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={loadMoreComments}
+                  disabled={loadingMore}
+                  className={`px-5 py-2.5 rounded-xl flex items-center space-x-2 transition-all ${
+                    loadingMore
+                      ? "bg-gray-100 text-gray-500"
+                      : "bg-white border border-gray-200 text-gray-700 hover:border-red-300 hover:text-red-600 shadow-sm"
+                  }`}
+                >
+                  {loadingMore ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-500 mr-2"></span>
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <FiChevronDown />
+                      <span>Load more comments</span>
+                    </>
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
           </div>
         )}
-      </AnimatePresence>
-    </div>
+      </div>
+    </>
   );
 };
 
